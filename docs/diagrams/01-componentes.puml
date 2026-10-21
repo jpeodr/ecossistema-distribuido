@@ -1,0 +1,39 @@
+@startuml
+title Ecossistema Distribuido - Diagrama de Componentes
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 13
+
+actor "Usuario / Pitch" as User
+
+component "Manager (Coordenador)\nFastAPI + Uvicorn\nsrc/manager" as Manager
+component "Store\nSQLite (jobs, tarefas, registros)\nvolume: dados" as DB
+component "Broker\nRedis 7 - fila sidra:tasks" as Redis
+component "Worker 1..N\nPython asyncio\nsrc/worker" as Worker
+component "API SIDRA (IBGE)\nHTTPS / JSON" as Sidra
+component "Demo\nscripts/demo.py" as Demo
+
+User --> Manager : POST /api/v1/jobs
+Demo --> Manager : POST /api/v1/jobs\nGET /jobs/{id}/results
+Manager --> Redis : RPUSH (1 tarefa por UF)
+Redis --> Worker : BLPOP (consumo pull)
+Worker --> Sidra : GET /values/t/6588/n3/{uf}
+Sidra --> Worker : JSON (dados da UF)
+Worker --> Manager : POST /api/v1/internal/results
+Manager --> DB : INSERT registros + status
+Manager --> User : GET /api/v1/jobs/{id}/results
+Worker --> Manager : POST /api/v1/workers/heartbeat
+
+note right of Manager
+  Coordena: fatia o job,
+  despacha, recebe e consolida
+  (etapa REDUCE do MapReduce)
+end note
+
+note bottom of Worker
+  Paralelismo interno:
+  asyncio (I/O) + thread (CPU)
+end note
+@enduml

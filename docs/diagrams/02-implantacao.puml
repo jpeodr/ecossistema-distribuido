@@ -1,0 +1,64 @@
+@startuml
+title Topologia Distribuida - Diagrama de Implantacao (Docker)
+
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 12
+skinparam rectangle {
+  BorderColor #4A5568
+}
+
+node "Host Docker (bridge 'ecossistema')" {
+
+  node "eco-manager" {
+    artifact "Uvicorn + FastAPI\ncontainer: eco-manager\nporta 8000 (host)" as M
+  }
+
+  node "eco-redis" {
+    artifact "Redis 7 (alpine)\ncontainer: eco-redis\nfila: sidra:tasks" as R
+  }
+
+  node "eco-sidra-worker-1" {
+    artifact "Worker asyncio\ncapacidade 4 tarefas" as W1
+  }
+
+  node "eco-sidra-worker-2" {
+    artifact "Worker asyncio\ncapacidade 4 tarefas" as W2
+  }
+
+  node "eco-sidra-worker-3" {
+    artifact "Worker asyncio\ncapacidade 4 tarefas" as W3
+  }
+
+  node "eco-sidra-demo (perfil 'demo')" {
+    artifact "scripts/demo.py\nsob demanda" as D
+  }
+}
+
+node "Internet" {
+  artifact "API SIDRA - IBGE\napisidra.ibge.gov.br" as S
+}
+
+M --> R : redis://redis:6379/0
+W1 --> R : BLPOP
+W2 --> R : BLPOP
+W3 --> R : BLPOP
+R --> M : fila de tarefas
+
+W1 --> M : POST /api/v1/internal/results
+W2 --> M : POST /api/v1/internal/results
+W3 --> M : POST /api/v1/internal/results
+M --> W1 : heartbeat
+
+W1 --> S : HTTPS
+W2 --> S : HTTPS
+W3 --> S : HTTPS
+
+D --> M : HTTP :8000
+M --> S : HTTPS (periodo p/last)
+
+note bottom of W1
+  Escala elastica:
+  docker compose up -d --scale worker=5
+end note
+@enduml

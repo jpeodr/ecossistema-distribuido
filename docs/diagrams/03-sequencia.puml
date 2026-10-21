@@ -1,0 +1,47 @@
+@startuml
+title Ciclo de vida de um Job - Diagrama de Sequencia
+
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 12
+autonumber
+
+actor "Usuario" as U
+participant "Manager" as M
+database "Redis (fila)" as Q
+participant "Worker 1" as W1
+participant "Worker 2" as W2
+participant "API SIDRA" as S
+database "SQLite" as DB
+
+U -> M : POST /api/v1/jobs {dataset}
+M -> S : GET /values/t/6588/.../p/last
+S --> M : ultimo periodo (AAAAmm)
+M -> M : fatia o job (1 tarefa por UF)
+M -> Q : RPUSH 27 tarefas
+M --> U : 202 Accepted {job_id, total_tasks}
+
+Q -> W1 : BLPOP (tarefa: UF 11)
+Q -> W2 : BLPOP (tarefa: UF 12)
+W1 -> S : GET /values/t/6588/n3/11/v/35,p/109/...
+S --> W1 : JSON da UF
+W2 -> S : GET /values/t/6588/n3/12/...
+S --> W2 : JSON da UF
+note right of W1
+  Processamento paralelo:
+  ate 4 tarefas em voo
+  normalizacao em thread
+end note
+W1 -> M : POST /api/v1/internal/results (records)
+M -> DB : INSERT records + status da tarefa
+W2 -> M : POST /api/v1/internal/results (records)
+M -> DB : INSERT records + status da tarefa
+
+note over M
+  Ultima tarefa concluida:
+  dispara o REDUCE
+end note
+M -> DB : consolida (sum, media ponderada, HHI)
+M --> U : GET /api/v1/jobs/{id}/results
+M --> U : ranking de UFs, participacao, HHI
+@enduml

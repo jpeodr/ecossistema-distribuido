@@ -1,0 +1,43 @@
+@startuml
+title Execucao de um Job - Diagrama de Atividade
+
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 12
+start
+
+:Usuario: POST /api/v1/jobs;
+if (dataset valido?) then (nao)
+  :HTTP 400;
+  stop
+else (sim)
+endif
+
+:Manager resolve o ultimo periodo\nno SIDRA (p/last);
+:Manager fatia o job em\n1 tarefa por UF (27);
+:RPUSH das tarefas na fila Redis;
+:Job = running;
+
+repeat
+  :Worker faz BLPOP na fila;
+  :GET na API SIDRA (async);
+  if (falhou?) then (sim)
+    if (tentativa < max_retries?) then (sim)
+      :Re-enfileira a tarefa;
+    else (nao)
+      :Marca a tarefa como failed;
+    endif
+  else (nao)
+    :Normaliza registros (pandas em thread);
+    :POST /api/v1/internal/results;
+    :Manager grava em SQLite;
+  endif
+repeat while (todas as tarefas concluidas?) is (nao)
+-> sim;
+
+:REDUCE: soma, media ponderada,\nranking de UFs e HHI;
+:Manager marca o job como completed;
+:Usuario: GET /jobs/{id}/results;
+
+stop
+@enduml

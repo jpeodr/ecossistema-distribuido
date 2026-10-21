@@ -1,0 +1,120 @@
+@startuml
+title Modelo de Dominio - Diagrama de Classes
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 12
+
+class Dataset {
+  +key : str
+  +label : str
+  +theme : str
+  +table : int
+  +classification_id : int
+  +level : str
+  +primary_variable : int
+  +primary_agg : str
+  +narrative : str
+}
+
+class Variable {
+  +code : int
+  +name : str
+  +unit : str
+  +agg : str
+  +weight_by : int
+}
+
+class Category {
+  +code : int
+  +name : str
+}
+
+class JobRequest {
+  +dataset : str
+  +period : str
+  +categories : list
+  +variables : list
+}
+
+class Task {
+  +task_id : str
+  +job_id : str
+  +dataset : str
+  +table : int
+  +territory_code : str
+  +territory_name : str
+  +variables : list
+  +categories : list
+  +period : str
+  +attempt : int
+}
+
+class Record {
+  +territory_code : str
+  +territory_name : str
+  +variable_code : int
+  +variable_name : str
+  +unit : str
+  +category_code : int
+  +category_name : str
+  +period : str
+  +value : float
+  +raw_value : str
+}
+
+class TaskResult {
+  +task_id : str
+  +job_id : str
+  +worker_id : str
+  +duration_ms : int
+  +attempt : int
+  +records : list
+  +error : str
+}
+
+class JobStatus {
+  +job_id : str
+  +status : str
+  +total_tasks : int
+  +done_tasks : int
+  +failed_tasks : int
+  +workers_involved : list
+}
+
+class SidraClient {
+  +fetch(...) : list
+  +last_period(...) : str
+}
+
+class Store {
+  +create_job(...)
+  +complete_task(...)
+  +finish_job(...)
+  +records_of_job(...)
+}
+
+class Worker {
+  +worker_id : str
+  +tasks_done : int
+  +handle(task) : TaskResult
+  +run() : void
+}
+
+Dataset "1" o-- "n" Variable
+Dataset "1" o-- "n" Category
+JobRequest ..> Dataset : escolhe
+JobRequest ..> Dispatcher : gera
+Dispatcher ..> Task : cria 1 por UF
+Task "1" --> "1" Dataset : consulta
+Task ..> SidraClient : busca
+Task ..> Worker : executa
+Worker ..> TaskResult : devolve
+TaskResult "1" *-- "n" Record
+TaskResult ..> Store : persiste
+Store ..> JobStatus : status
+Store ..> Reduce : agrega
+Reduce ..> Dataset : metricas
+
+@enduml
