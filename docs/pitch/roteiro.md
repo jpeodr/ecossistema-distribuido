@@ -99,7 +99,7 @@ docker compose ps                     # topologia explícita
 
 ```
 http://localhost:8000/painel/                # 1) os dados do SIDRA
-http://localhost:8000/painel/como-funciona   # 2) o que acontece por trás
+http://localhost:8000/painel/como-funciona   # 2) o fluxo de trabalho
 ```
 
 1. em `/painel/`, clicar em **"Buscar dados"** (pesquisa LSPA, período = último publicado);

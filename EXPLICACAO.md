@@ -19,7 +19,8 @@ docker compose --profile demo run --rm demo
 
 ## Telas
 - `/painel/` — leitura dos dados do SIDRA (botão "Buscar dados" + tabelas do REDUCE)
-- `/painel/como-funciona` — o que acontece por trás: topologia ao vivo, caminho de um clique,
-  os 3 níveis de paralelismo, quem executou cada UF no último job, as fórmulas do REDUCE e o mapa do código
+- `/painel/como-funciona` — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
+  processamento, os 3 níveis de paralelismo, quem executou cada UF no último job, as fórmulas
+  do REDUCE e os arquivos do projeto
 - botão "Ver a infraestrutura trabalhando" (na página acima): dispara um job real e anima o
   fluxo Manager → Redis → Workers → SIDRA → Manager, com contadores e log ao vivo

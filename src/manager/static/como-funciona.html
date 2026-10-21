@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Por trás dos panos — Ecossistema Distribuído</title>
+<title>Como funciona — Ecossistema Distribuído</title>
 <style>
   :root {
     --bg: #0b1020;
@@ -205,8 +205,8 @@
 
   <header class="top">
     <div>
-      <h1>Por trás dos panos</h1>
-      <p>Como o clique na tela vira dados do SIDRA distribuídos entre Manager, Redis e Workers</p>
+      <h1>Como funciona</h1>
+      <p>Fluxo de trabalho entre Manager, Redis, Workers e a API do SIDRA</p>
     </div>
     <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
       <div class="badges" id="badges">
@@ -219,7 +219,7 @@
   </header>
 
   <!-- ================= TOPOLOGIA ================= -->
-  <h2 class="sec">1 · Topologia ao vivo</h2>
+  <h2 class="sec">1 · Topologia</h2>
   <div class="card topo">
     <div class="row">
       <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
@@ -242,7 +242,7 @@
   </div>
 
   <!-- ================= AO VIVO ================= -->
-  <h2 class="sec">2 · Infraestrutura trabalhando (ao vivo)</h2>
+  <h2 class="sec">2 · Execução ao vivo</h2>
   <div class="card">
     <div class="livebar">
       <button id="btnLive" class="livebtn">▶ Ver a infraestrutura trabalhando</button>
@@ -251,7 +251,7 @@
       <span id="liveState" class="muted">parado</span>
     </div>
 
-    <div id="stage" role="img" aria-label="Fluxo ao vivo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem o resultado ao Manager.">
+    <div id="stage" role="img" aria-label="Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager.">
       <svg id="wires" class="wires"></svg>
       <div id="nodes">
         <div class="lnode sidra" id="n-sidra"><b>SIDRA / IBGE</b><small>API pública</small></div>
@@ -271,42 +271,42 @@
       <div class="counter"><div class="v" id="c-tempo">0,0 s</div><div class="l">tempo total</div></div>
     </div>
 
-    <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto: clique em "Ver a infraestrutura trabalhando"</span></div>
+    <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto</span></div>
     <p class="note">
-      A animação é ilustrativa (movimento desacelerado para leitura); <b>números, tempos e log vêm do sistema real</b>:
-      cada linha é uma tarefa real concluída por um Worker. Legenda: <span style="color:#fbbf24">amarelo</span> = tarefa publicada ·
-      <span style="color:#38bdf8">azul</span> = tarefa retirada da fila ·
-      <span style="color:#34d399">verde</span> = consulta ao SIDRA ·
-      <span style="color:#a78bfa">roxo</span> = callback ao Manager.
+      Animação ilustrativa do fluxo. Contadores, tempos e log vêm do sistema real.
+      Legenda: <span style="color:#fbbf24">amarelo</span> tarefa publicada ·
+      <span style="color:#38bdf8">azul</span> tarefa retirada da fila ·
+      <span style="color:#34d399">verde</span> consulta ao SIDRA ·
+      <span style="color:#a78bfa">roxo</span> callback ao Manager.
     </p>
   </div>
 
   <!-- ================= ETAPAS ================= -->
-  <h2 class="sec">3 · O caminho de um clique</h2>
+  <h2 class="sec">3 · Fluxo de trabalho</h2>
   <div class="steps">
     <div class="step"><div class="n">1</div><h3>Pedido</h3>
-      <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa escolhida (LSPA ou PIM-PF).</p>
+      <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa (LSPA ou PIM-PF).</p>
       <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
     <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
-      <p>O Manager descobre o período corrente no SIDRA e quebra o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
+      <p>O Manager obtém o período no SIDRA e divide o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
       <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
     <div class="step"><div class="n">3</div><h3>Publicação</h3>
-      <p>As tarefas entram na fila do Redis em um pipeline (<code>RPUSH</code>). O Redis é só o broker.</p>
+      <p>As tarefas são publicadas na fila do Redis (<code>RPUSH</code> em pipeline).</p>
       <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
     <div class="step"><div class="n">4</div><h3>Consumo</h3>
-      <p>Cada Worker espera a fila com <code>BLPOP</code> (bloqueante, sem polling) e pega uma tarefa por vez.</p>
+      <p>Cada Worker espera a fila com <code>BLPOP</code> e retira uma tarefa por vez.</p>
       <span class="who"><b>Worker</b> · worker/main.py</span></div>
     <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
-      <p>O Worker consulta a API do SIDRA, converte os números do formato pt-BR e normaliza com pandas.</p>
+      <p>O Worker consulta a API do SIDRA, converte os números pt-BR e normaliza com pandas.</p>
       <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
     <div class="step"><div class="n">6</div><h3>Callback</h3>
-      <p>O resultado volta por HTTP ao Manager, que grava os registros no SQLite e conta a tarefa como concluída.</p>
+      <p>O Worker devolve os registros ao Manager, que grava no SQLite e conta a tarefa como concluída.</p>
       <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
     <div class="step"><div class="n">7</div><h3>REDUCE</h3>
-      <p>Quando a última tarefa fecha, o Manager consolida tudo e libera o relatório final na tela.</p>
+      <p>Quando todas as tarefas terminam, o Manager consolida os registros e gera o relatório.</p>
       <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
     <div class="step"><div class="n">8</div><h3>Leitura</h3>
-      <p>A interface busca <code>GET /api/v1/results</code> e desenha as tabelas com o relatório já pronto.</p>
+      <p>A interface busca <code>GET /api/v1/results</code> e mostra as tabelas do relatório.</p>
       <span class="who"><b>Painel</b> · /painel/</span></div>
   </div>
 
@@ -317,19 +317,19 @@
       <div class="k">Nível 1 · entre os nós</div>
       <h3>Distribuído</h3>
       <div class="big" id="p1">—<small> tarefas</small></div>
-      <p id="p1b">O volume é quebrado por UF: cada tarefa é uma consulta independente ao SIDRA, executada por um Worker diferente.</p>
+      <p id="p1b">Uma tarefa por UF: cada tarefa é uma consulta independente ao SIDRA.</p>
     </div>
     <div class="lvl">
       <div class="k">Nível 2 · dentro do nó</div>
       <h3>Assíncrono (I/O)</h3>
       <div class="big" id="p2">—<small> tarefas em voo</small></div>
-      <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições ao SIDRA simultâneas (<code>asyncio.create_task</code>), sem bloquear a fila.</p>
+      <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições simultâneas ao SIDRA (<code>asyncio.create_task</code>).</p>
     </div>
     <div class="lvl">
       <div class="k">Nível 3 · dentro da tarefa</div>
       <h3>Thread (CPU)</h3>
       <div class="big">1<small> thread dedicada</small></div>
-      <p>A normalização em pandas é CPU-bound: roda em <code>asyncio.to_thread</code> para não travar o event loop do Worker.</p>
+      <p>A normalização com pandas roda em <code>asyncio.to_thread</code> para não bloquear o event loop.</p>
     </div>
   </div>
 
@@ -349,7 +349,7 @@
         <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
         <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
       </table>
-      <p class="note">O <i>heartbeat</i> a cada 10 s é o que permite ao Manager saber que um nó está vivo.</p>
+      <p class="note">Heartbeat a cada 10 s: é o que o Manager usa para saber quais nós estão ativos.</p>
     </div>
   </div>
 
@@ -362,11 +362,11 @@
         <tbody id="reduce"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
       </table>
       <p class="note" id="reduceinfo"></p>
-      <p class="note">O ranking usa a variável principal da pesquisa (participação de cada UF no total); o HHI mede a concentração.</p>
+      <p class="note">Ranking pela variável principal da pesquisa; HHI mede a concentração entre as UFs.</p>
     </div>
     <div class="card">
       <h3 style="margin:0 0 4px; font-size:14px;">As fórmulas</h3>
-      <p class="note">Rodam no Manager, depois que todas as tarefas terminam.</p>
+      <p class="note">Executadas no Manager, depois que todas as tarefas terminam.</p>
       <div class="formula">soma      = Σ valor(UF)
 média     = Σ (valor(UF) × peso(UF)) / Σ peso(UF)
 part. %   = 100 × valor(UF) / Σ valor(UF)
@@ -381,7 +381,7 @@ HHI       = Σ (part. % / 100)²</div>
   </div>
 
   <!-- ================= CODIGO ================= -->
-  <h2 class="sec">7 · Onde cada coisa acontece no código</h2>
+  <h2 class="sec">7 · Arquivos</h2>
   <div class="card">
     <table>
       <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
@@ -400,20 +400,20 @@ HHI       = Σ (part. % / 100)²</div>
   </div>
 
   <!-- ================= RESILIENCIA ================= -->
-  <h2 class="sec">8 · Quando algo falha</h2>
+  <h2 class="sec">8 · Falhas</h2>
   <div class="levels">
     <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
-      <p>Falha no envio ao Manager ou no acesso ao SIDRA? O Worker tenta de novo com espera exponencial (1 s, 2 s, 4 s) até <code>MAX_RETRIES</code>.</p></div>
+      <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s, 2 s e 4 s, até <code>MAX_RETRIES</code>.</p></div>
     <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
-      <p>Tarefa com erro volta para a fila do Redis com a tentativa incrementada; só é marcada como falha definitiva depois de esgotar as tentativas.</p></div>
-    <div class="lvl"><div class="k">Nó morto</div><h3>Heartbeat</h3>
-      <p>Worker que para de responder some da lista em ~30 s (<code>WORKER_STALE_SECONDS</code>) — o Manager não depende de ninguém para continuar.</p></div>
-    <div class="lvl"><div class="k">Escala</div><h3>Mais nós, sem código</h3>
-      <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos entram na conta sozinhos.</p></div>
+      <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
+    <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>
+      <p>Worker sem heartbeat há 30 s (<code>WORKER_STALE_SECONDS</code>) sai da lista de ativos.</p></div>
+    <div class="lvl"><div class="k">Escala</div><h3>Mais nós</h3>
+      <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos consomem as mesmas tarefas.</p></div>
   </div>
 
   <footer>
-    Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em containers Docker ·
+    Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em Docker ·
     <a href="/painel/">voltar à interface de leitura</a> ·
     <a href="/docs">API (Swagger)</a>
   </footer>
@@ -548,7 +548,7 @@ const FLOWS = {
   req:  { color: "#34d399", from: "n-workers", to: "n-sidra", a: "L", b: "R", dur: 1.1 },
   cb:   { color: "#a78bfa", from: "n-workers", to: "n-manager", a: "TOP", b: "TOP", arc: true, dur: 1.2 },
 };
-const LENTIDAO = 2.2;               // partículas em câmera lenta (para dar tempo de ler)
+const LENTIDAO = 2.2;               // partículas em movimento lento
 const stage = $("#stage"), svgWires = $("#wires"), layer = $("#particles");
 let partes = [], ultimoT = 0, live = null, anchors = {};
 
@@ -605,7 +605,7 @@ function spawn(f, atraso = 0) {
 }
 function rotular() {
   stage.setAttribute("aria-label",
-    `Fluxo ao vivo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem o resultado ao Manager. ${partes.length} pacotes em trânsito.`);
+    `Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager. ${partes.length} pacotes em trânsito.`);
 }
 function laco(ts) {
   const dt = ultimoT ? (ts - ultimoT) / 1000 : 0;
@@ -661,8 +661,8 @@ async function iniciarLive() {
 
   live = { job, total: job.total_tasks, vistos: new Set(), t0: Date.now() };
   $("#liveState").textContent = "rodando…";
-  log(`job ${esc(job.job_id)} criado · ${job.total_tasks} tarefas (1 por UF) · período ${esc(job.period)}`, "w");
-  log("manager fatia o job e publica todas as tarefas na fila do Redis (RPUSH)", "w");
+  log(`job ${esc(job.job_id)} · ${job.total_tasks} tarefas (1 por UF) · período ${esc(job.period)}`, "w");
+  log("manager publica as tarefas na fila do Redis (RPUSH)", "w");
   for (let i = 0; i < job.total_tasks; i++) spawn(FLOWS.push, i * 0.05);
   $("#c-desp").textContent = job.total_tasks;
   monitorar();
@@ -682,7 +682,7 @@ async function monitorar() {
     live.vistos.add(t.task_id);
     spawn(FLOWS.cb, 0);
     flash($("#n-manager"));
-    log(`<b>${esc(t.worker_id || "worker")}</b> concluiu ${esc(t.territory_name)} · ${t.duration_ms} ms · callback recebido`, "");
+    log(`<b>${esc(t.worker_id || "worker")}</b> concluiu ${esc(t.territory_name)} · ${t.duration_ms} ms · callback`, "");
   }
 
   const emVoo = Math.max(0, live.total - j.done_tasks);
@@ -706,7 +706,7 @@ async function monitorar() {
 
   if (j.status === "completed" || j.status === "failed") {
     log(j.status === "completed"
-      ? `REDUCE concluído em ${secs.toFixed(1).replace(".", ",")} s · relatório consolidado`
+      ? `REDUCE concluído em ${secs.toFixed(1).replace(".", ",")} s · relatório pronto`
       : "job falhou", "fin");
     $("#liveState").textContent = "concluído";
     $("#btnLive").disabled = false;
@@ -722,7 +722,7 @@ function pararLive() {
   $("#btnLive").disabled = false;
   $("#btnStop").disabled = true;
   $("#liveState").textContent = "parado";
-  log("demonstração interrompida (o job segue rodando no sistema)", "w");
+  log("interrompido", "w");
 }
 
 $("#btnLive").addEventListener("click", iniciarLive);

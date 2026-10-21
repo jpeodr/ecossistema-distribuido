@@ -57,9 +57,9 @@ http://localhost:8000/painel/como-funciona    # página explicativa
 
 - **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI).
-- **`/painel/como-funciona`** — o que acontece por trás: topologia ao vivo, o caminho de um clique
-  em 8 etapas, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
-  do REDUCE e o mapa do código. Tem também o **modo ao vivo**: o botão *"Ver a infraestrutura
+- **`/painel/como-funciona`** — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
+  processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
+  do REDUCE e os arquivos do projeto. Tem também o **modo ao vivo**: o botão *"Ver a infraestrutura
   trabalhando"* dispara um job real e mostra o fluxo Manager → Redis → Workers → SIDRA → Manager
   em movimento, com contadores e log de tarefas em tempo real.
 
@@ -304,7 +304,7 @@ docker compose down -v       # remove também o volume do SQLite
 │   │   ├── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
 │   │   └── static/
 │   │       ├── index.html        # interface de leitura dos dados do SIDRA
-│   │       └── como-funciona.html  # página explicativa (por trás dos panos)
+│   │       └── como-funciona.html  # página de explicação (fluxo de trabalho)
 │   └── worker/
 │       ├── main.py             # consumidor da fila (BLPOP) + paralelismo interno
 │       └── processor.py        # normalização dos dados (pandas em thread)

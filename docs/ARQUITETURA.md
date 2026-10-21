@@ -116,7 +116,7 @@ O Manager serve duas páginas estáticas, em `/painel/`:
 | Página | Arquivo | Papel |
 |--------|---------|-------|
 | Leitura | `src/manager/static/index.html` | escolhe a pesquisa, dispara a coleta e mostra as tabelas do relatório |
-| Explicativa | `src/manager/static/como-funciona.html` | topologia ao vivo, caminho de um clique, paralelismo, quem fez o quê, REDUCE e mapa do código |
+| Explicativa | `src/manager/static/como-funciona.html` | topologia, execução ao vivo, fluxo de trabalho em 8 etapas, paralelismo, quem fez o quê, REDUCE e arquivos |
 
 Características comuns:
 
