@@ -59,7 +59,9 @@ http://localhost:8000/painel/como-funciona    # página explicativa
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI).
 - **`/painel/como-funciona`** — o que acontece por trás: topologia ao vivo, o caminho de um clique
   em 8 etapas, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
-  do REDUCE e o mapa do código.
+  do REDUCE e o mapa do código. Tem também o **modo ao vivo**: o botão *"Ver a infraestrutura
+  trabalhando"* dispara um job real e mostra o fluxo Manager → Redis → Workers → SIDRA → Manager
+  em movimento, com contadores e log de tarefas em tempo real.
 
 ---
 

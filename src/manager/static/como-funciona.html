@@ -139,6 +139,65 @@
   ul.tight { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
   ul.tight li { margin-bottom: 4px; }
   footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+
+  /* ---------------- modo ao vivo ---------------- */
+  .livebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .livebtn {
+    background: linear-gradient(90deg, #2563eb, #7c3aed); color: #fff; border: 0;
+    border-radius: 9px; padding: 9px 15px; font-size: 13.5px; cursor: pointer;
+  }
+  .livebtn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  .livebtn:disabled { opacity: .45; cursor: not-allowed; }
+  .livebar select { font: inherit; padding: 8px 9px; border-radius: 8px; background: #101a33; color: var(--txt); border: 1px solid var(--line); }
+
+  #stage {
+    position: relative; height: 252px; border: 1px solid var(--line); border-radius: 12px;
+    background: linear-gradient(180deg, #0e1730, #0a1124); overflow: hidden;
+  }
+  .wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .wire { animation: dash 1.3s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -28; } }
+  #nodes { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 12px; }
+  .lnode {
+    width: 148px; padding: 12px 10px; border-radius: 12px; background: #121d3b;
+    border: 1px solid var(--line); text-align: center; position: relative; z-index: 2;
+  }
+  .lnode b { display: block; font-size: 13.5px; }
+  .lnode small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .lnode.sidra { border-color: #2f6b57; }
+  .lnode.redis { border-color: #7a3b3b; }
+  .lnode.manager { border-color: #3b4f8a; }
+  .lnode.workers { border-color: #2c5a7a; }
+  .lnode.flash { animation: flash .7s ease-out; }
+  @keyframes flash {
+    0% { box-shadow: 0 0 0 0 rgba(167,139,250,.85); }
+    100% { box-shadow: 0 0 0 20px rgba(167,139,250,0); }
+  }
+  .idles { display: flex; gap: 4px; justify-content: center; margin-top: 7px; }
+  .idles i { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); animation: idle 1.5s infinite; }
+  .idles i:nth-child(2) { animation-delay: .3s; }
+  .idles i:nth-child(3) { animation-delay: .6s; }
+  .idles i:nth-child(4) { animation-delay: .9s; }
+  @keyframes idle { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+
+  #particles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+  .particle { position: absolute; width: 9px; height: 9px; border-radius: 50%; transform: translate(-50%, -50%); }
+
+  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-top: 12px; }
+  .counter { background: #0e1830; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+  .counter .v { font-size: 21px; font-weight: 700; color: var(--cyan); line-height: 1.2; }
+  .counter .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
+  .counter.warn .v { color: var(--amber); }
+  .counter.ok .v { color: var(--green); }
+
+  .log {
+    margin-top: 12px; height: 128px; overflow-y: auto; background: #080e1c; border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; font-family: Consolas, monospace; font-size: 12px; line-height: 1.65; color: #9fd3f5;
+  }
+  .log .ev { white-space: pre-wrap; }
+  .log .t { color: #5b6b8c; }
+  .log .w { color: #c7b6ff; }
+  .log .fin { color: #7ee2b8; }
 </style>
 </head>
 <body>
@@ -182,8 +241,48 @@
     </div>
   </div>
 
+  <!-- ================= AO VIVO ================= -->
+  <h2 class="sec">2 · Infraestrutura trabalhando (ao vivo)</h2>
+  <div class="card">
+    <div class="livebar">
+      <button id="btnLive" class="livebtn">▶ Ver a infraestrutura trabalhando</button>
+      <button id="btnStop" class="livebtn ghost" disabled>■ Parar</button>
+      <select id="liveDataset"></select>
+      <span id="liveState" class="muted">parado</span>
+    </div>
+
+    <div id="stage" role="img" aria-label="Fluxo ao vivo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem o resultado ao Manager.">
+      <svg id="wires" class="wires"></svg>
+      <div id="nodes">
+        <div class="lnode sidra" id="n-sidra"><b>SIDRA / IBGE</b><small>API pública</small></div>
+        <div class="lnode workers" id="n-workers"><b>Workers</b><small id="l-workers">—</small><div class="idles" id="l-idle"></div></div>
+        <div class="lnode redis" id="n-redis"><b>Redis</b><small id="l-fila">fila sidra:tasks</small></div>
+        <div class="lnode manager" id="n-manager"><b>Manager</b><small id="l-manager">fatia + REDUCE</small></div>
+      </div>
+      <div id="particles"></div>
+    </div>
+
+    <div class="counters">
+      <div class="counter"><div class="v" id="c-desp">0</div><div class="l">despachadas</div></div>
+      <div class="counter"><div class="v" id="c-voo">0</div><div class="l">em voo</div></div>
+      <div class="counter"><div class="v" id="c-ok">0</div><div class="l">concluídas</div></div>
+      <div class="counter"><div class="v" id="c-fila">0</div><div class="l">na fila</div></div>
+      <div class="counter"><div class="v" id="c-wk">0</div><div class="l">workers</div></div>
+      <div class="counter"><div class="v" id="c-tempo">0,0 s</div><div class="l">tempo total</div></div>
+    </div>
+
+    <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto: clique em "Ver a infraestrutura trabalhando"</span></div>
+    <p class="note">
+      A animação é ilustrativa (movimento desacelerado para leitura); <b>números, tempos e log vêm do sistema real</b>:
+      cada linha é uma tarefa real concluída por um Worker. Legenda: <span style="color:#fbbf24">amarelo</span> = tarefa publicada ·
+      <span style="color:#38bdf8">azul</span> = tarefa retirada da fila ·
+      <span style="color:#34d399">verde</span> = consulta ao SIDRA ·
+      <span style="color:#a78bfa">roxo</span> = callback ao Manager.
+    </p>
+  </div>
+
   <!-- ================= ETAPAS ================= -->
-  <h2 class="sec">2 · O caminho de um clique</h2>
+  <h2 class="sec">3 · O caminho de um clique</h2>
   <div class="steps">
     <div class="step"><div class="n">1</div><h3>Pedido</h3>
       <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa escolhida (LSPA ou PIM-PF).</p>
@@ -212,7 +311,7 @@
   </div>
 
   <!-- ================= PARALELISMO ================= -->
-  <h2 class="sec">3 · Três níveis de paralelismo</h2>
+  <h2 class="sec">4 · Três níveis de paralelismo</h2>
   <div class="levels">
     <div class="lvl">
       <div class="k">Nível 1 · entre os nós</div>
@@ -235,7 +334,7 @@
   </div>
 
   <!-- ================= QUEM FEZ O QUE ================= -->
-  <h2 class="sec">4 · Quem fez o quê (último job)</h2>
+  <h2 class="sec">5 · Quem fez o quê (último job)</h2>
   <div class="grid2">
     <div class="card">
       <table>
@@ -255,7 +354,7 @@
   </div>
 
   <!-- ================= REDUCE ================= -->
-  <h2 class="sec">5 · O que o REDUCE calcula</h2>
+  <h2 class="sec">6 · O que o REDUCE calcula</h2>
   <div class="grid2">
     <div class="card">
       <table>
@@ -282,7 +381,7 @@ HHI       = Σ (part. % / 100)²</div>
   </div>
 
   <!-- ================= CODIGO ================= -->
-  <h2 class="sec">6 · Onde cada coisa acontece no código</h2>
+  <h2 class="sec">7 · Onde cada coisa acontece no código</h2>
   <div class="card">
     <table>
       <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
@@ -301,7 +400,7 @@ HHI       = Σ (part. % / 100)²</div>
   </div>
 
   <!-- ================= RESILIENCIA ================= -->
-  <h2 class="sec">7 · Quando algo falha</h2>
+  <h2 class="sec">8 · Quando algo falha</h2>
   <div class="levels">
     <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
       <p>Falha no envio ao Manager ou no acesso ao SIDRA? O Worker tenta de novo com espera exponencial (1 s, 2 s, 4 s) até <code>MAX_RETRIES</code>.</p></div>
@@ -439,6 +538,195 @@ async function ciclo() {
 
 ciclo();
 setInterval(ciclo, 3000);
+
+/* ============================================================
+   MODO AO VIVO — anima a infraestrutura trabalhando
+   ============================================================ */
+const FLOWS = {
+  push: { color: "#fbbf24", from: "n-manager", to: "n-redis", a: "L", b: "R", dur: 0.9 },
+  pop:  { color: "#38bdf8", from: "n-redis", to: "n-workers", a: "L", b: "R", dur: 1.0 },
+  req:  { color: "#34d399", from: "n-workers", to: "n-sidra", a: "L", b: "R", dur: 1.1 },
+  cb:   { color: "#a78bfa", from: "n-workers", to: "n-manager", a: "TOP", b: "TOP", arc: true, dur: 1.2 },
+};
+const LENTIDAO = 2.2;               // partículas em câmera lenta (para dar tempo de ler)
+const stage = $("#stage"), svgWires = $("#wires"), layer = $("#particles");
+let partes = [], ultimoT = 0, live = null, anchors = {};
+
+function caixa(id, lado) {
+  const r = document.getElementById(id).getBoundingClientRect();
+  const s = stage.getBoundingClientRect();
+  if (lado === "L") return { x: r.left - s.left, y: r.top - s.top + r.height / 2 };
+  if (lado === "R") return { x: r.right - s.left, y: r.top - s.top + r.height / 2 };
+  return { x: r.left - s.left + r.width / 2, y: r.top - s.top };
+}
+function medir() {
+  anchors = {};
+  for (const f of Object.values(FLOWS)) {
+    anchors[f.from + f.a] = caixa(f.from, f.a);
+    anchors[f.to + f.b] = caixa(f.to, f.b);
+  }
+}
+function ponto(f, k) {
+  const p0 = anchors[f.from + f.a], p1 = anchors[f.to + f.b];
+  if (!p0 || !p1) return { x: 0, y: 0 };
+  if (!f.arc) return { x: p0.x + (p1.x - p0.x) * k, y: p0.y + (p1.y - p0.y) * k };
+  const cx = (p0.x + p1.x) / 2, cy = Math.max(10, Math.min(p0.y, p1.y) - 78), m = 1 - k;
+  return { x: m * m * p0.x + 2 * m * k * cx + k * k * p1.x, y: m * m * p0.y + 2 * m * k * cy + k * k * p1.y };
+}
+function desenharFios() {
+  medir();
+  svgWires.innerHTML = "";
+  svgWires.setAttribute("width", stage.clientWidth);
+  svgWires.setAttribute("height", stage.clientHeight);
+  for (const f of Object.values(FLOWS)) {
+    const p0 = anchors[f.from + f.a], p1 = anchors[f.to + f.b];
+    const d = f.arc
+      ? `M ${p0.x} ${p0.y} Q ${(p0.x + p1.x) / 2} ${Math.max(10, Math.min(p0.y, p1.y) - 78)} ${p1.x} ${p1.y}`
+      : `M ${p0.x} ${p0.y} L ${p1.x} ${p1.y}`;
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    el.setAttribute("d", d);
+    el.setAttribute("stroke", f.color);
+    el.setAttribute("stroke-width", "1.6");
+    el.setAttribute("fill", "none");
+    el.setAttribute("opacity", ".4");
+    el.setAttribute("stroke-dasharray", "6 8");
+    el.setAttribute("class", "wire");
+    svgWires.appendChild(el);
+  }
+}
+function spawn(f, atraso = 0) {
+  const el = document.createElement("i");
+  el.className = "particle";
+  el.style.background = f.color;
+  el.style.boxShadow = "0 0 10px " + f.color;
+  layer.appendChild(el);
+  partes.push({ el, f, t: -atraso, dur: f.dur * LENTIDAO });
+  rotular();
+}
+function rotular() {
+  stage.setAttribute("aria-label",
+    `Fluxo ao vivo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem o resultado ao Manager. ${partes.length} pacotes em trânsito.`);
+}
+function laco(ts) {
+  const dt = ultimoT ? (ts - ultimoT) / 1000 : 0;
+  ultimoT = ts;
+  medir();
+  for (let i = partes.length - 1; i >= 0; i--) {
+    const p = partes[i];
+    p.t += dt;
+    if (p.t < 0) { p.el.style.opacity = "0"; continue; }
+    const k = Math.min(1, p.t / p.dur);
+    const pos = ponto(p.f, k);
+    p.el.style.left = pos.x + "px";
+    p.el.style.top = pos.y + "px";
+    p.el.style.opacity = k > 0.88 ? String((1 - k) / 0.12) : "1";
+    if (k >= 1) { p.el.remove(); partes.splice(i, 1); rotular(); }
+  }
+  requestAnimationFrame(laco);
+}
+function log(msg, cls = "") {
+  const box = $("#log");
+  const div = document.createElement("div");
+  div.className = "ev";
+  div.innerHTML = `<span class="t">${new Date().toLocaleTimeString("pt-BR")}</span> <span class="${cls}">${msg}</span>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 80) box.removeChild(box.firstChild);
+}
+function flash(el) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+
+async function iniciarLive() {
+  $("#btnLive").disabled = true;
+  $("#btnStop").disabled = false;
+  $("#liveState").textContent = "rodando…";
+  $("#log").innerHTML = "";
+  partes.forEach(p => p.el.remove());
+  partes = [];
+  desenharFios();
+
+  const dataset = $("#liveDataset").value || "lspa";
+  const r = await fetch("/api/v1/jobs", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataset })
+  });
+  const job = await r.json();
+  if (!r.ok) { log("erro ao criar o job: " + esc(job.detail || r.status), "fin"); pararLive(); return; }
+
+  live = { job, total: job.total_tasks, vistos: new Set(), t0: Date.now() };
+  log(`job ${esc(job.job_id)} criado · ${job.total_tasks} tarefas (1 por UF) · período ${esc(job.period)}`, "w");
+  log("manager fatia o job e publica todas as tarefas na fila do Redis (RPUSH)", "w");
+  for (let i = 0; i < job.total_tasks; i++) spawn(FLOWS.push, i * 0.05);
+  $("#c-desp").textContent = job.total_tasks;
+  monitorar();
+}
+
+async function monitorar() {
+  if (!live) return;
+  const id = live.job.job_id;
+  let j, tasks;
+  try {
+    j = await (await fetch(`/api/v1/jobs/${id}`)).json();
+    tasks = (await (await fetch(`/api/v1/jobs/${id}/tasks`)).json()).tasks;
+  } catch (e) { setTimeout(monitorar, 800); return; }
+
+  for (const t of tasks) {
+    if (t.status !== "done" || live.vistos.has(t.task_id)) continue;
+    live.vistos.add(t.task_id);
+    spawn(FLOWS.cb, 0);
+    flash($("#n-manager"));
+    log(`<b>${esc(t.worker_id || "worker")}</b> concluiu ${esc(t.territory_name)} · ${t.duration_ms} ms · callback recebido`, "");
+  }
+
+  const emVoo = Math.max(0, live.total - j.done_tasks);
+  if (emVoo > 0) {
+    const n = Math.min(4, 1 + Math.round(emVoo / 6));
+    for (let i = 0; i < n; i++) { spawn(FLOWS.pop, i * 0.12); spawn(FLOWS.req, i * 0.16); }
+  }
+
+  const h = await (await fetch("/api/v1/health")).json();
+  const secs = (Date.now() - live.t0) / 1000;
+  $("#c-desp").textContent = live.total;
+  $("#c-voo").textContent = emVoo;
+  $("#c-ok").textContent = j.done_tasks;
+  $("#c-fila").textContent = h.fila;
+  $("#c-wk").textContent = h.workers_ativos;
+  $("#c-tempo").textContent = secs.toFixed(1).replace(".", ",") + " s";
+  $("#l-fila").textContent = "fila: " + h.fila + " tarefa(s)";
+  $("#l-workers").textContent = h.workers_ativos + " ativos · 4 em voo cada";
+  $("#l-manager").textContent = j.done_tasks + "/" + j.total_tasks + " consolidadas";
+  $("#l-idle").innerHTML = Array.from({ length: Math.min(4, h.workers_ativos) }, () => "<i></i>").join("");
+
+  if (j.status === "completed" || j.status === "failed") {
+    log(j.status === "completed"
+      ? `REDUCE concluído em ${secs.toFixed(1).replace(".", ",")} s · relatório consolidado`
+      : "job falhou", "fin");
+    $("#liveState").textContent = "concluído";
+    $("#btnLive").disabled = false;
+    $("#btnStop").disabled = true;
+    live = null;
+    return;
+  }
+  setTimeout(monitorar, 600);
+}
+
+function pararLive() {
+  live = null;
+  $("#btnLive").disabled = false;
+  $("#btnStop").disabled = true;
+  $("#liveState").textContent = "parado";
+  log("demonstração interrompida (o job segue rodando no sistema)", "w");
+}
+
+$("#btnLive").addEventListener("click", iniciarLive);
+$("#btnStop").addEventListener("click", pararLive);
+window.addEventListener("resize", desenharFios);
+(async () => {
+  const d = await (await fetch("/api/v1/datasets")).json();
+  $("#liveDataset").innerHTML =
+    Object.values(d).map(x => `<option value="${x.key}">${esc(x.label)}</option>`).join("");
+})();
+desenharFios();
+requestAnimationFrame(laco);
 </script>
 </body>
 </html>
