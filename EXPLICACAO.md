@@ -126,7 +126,10 @@ Documentação interativa: `http://localhost:8000/docs`
 | URL | Conteúdo |
 |-----|----------|
 | `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório |
-| `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos |
+| `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas |
+
+Layout no padrão de documentação do MDN: cabeçalho fixo com breadcrumb, sumário lateral
+com âncoras, artigo em coluna única e alternador de tema claro/escuro.
 
 O botão **"Ver a infraestrutura trabalhando"** (segunda página) dispara um job real e mostra o
 fluxo Manager → Redis → Workers → SIDRA → Manager com contadores e log de tarefas.

@@ -5,418 +5,615 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Como funciona — Ecossistema Distribuído</title>
 <style>
+  /* ===================== tokens (padrão MDN) ===================== */
   :root {
-    --bg: #0b1020;
-    --bg2: #111a33;
-    --card: #151f3b;
-    --line: #243357;
-    --txt: #e8edf7;
-    --muted: #93a3c4;
-    --cyan: #38bdf8;
-    --violet: #a78bfa;
-    --green: #34d399;
-    --amber: #fbbf24;
-    --red: #f87171;
+    --bg: #ffffff;
+    --surface: #f9f9fa;
+    --surface-2: #f0f0f4;
+    --border: #d7d7db;
+    --border-strong: #b1b1b6;
+    --txt: #1b1b1f;
+    --txt-soft: #5b5b66;
+    --link: #005cc5;
+    --link-hover: #003b8e;
+    --code-bg: #f0f0f4;
+    --green: #007936;
+    --amber: #b26a00;
+    --red: #d32f2f;
+    --violet: #7c3aed;
+    --radius: 4px;
+    --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   }
+  html[data-theme="dark"] {
+    --bg: #1b1b1f;
+    --surface: #2a2a2e;
+    --surface-2: #38383d;
+    --border: #3f3f44;
+    --border-strong: #57575e;
+    --txt: #f0f0f4;
+    --txt-soft: #c8c8cd;
+    --link: #7ab7ff;
+    --link-hover: #a9cfff;
+    --code-bg: #38383d;
+    --green: #4fd18b;
+    --amber: #ffb84d;
+    --red: #ff8a8a;
+    --violet: #c4b5fd;
+  }
+
+  html[data-theme="dark"] .btn-primary { color: #1b1b1f; }
+  html[data-theme="dark"] .btn-primary:hover { color: #1b1b1f; }
+
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
   body {
-    margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #16224a 0%, var(--bg) 55%);
-    color: var(--txt); font: 15px/1.55 "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--bg); color: var(--txt);
+    font-family: var(--font); font-size: 1rem; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  a { color: var(--cyan); }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  code {
+    font-family: var(--mono); font-size: .875em; background: var(--code-bg);
+    padding: .12em .32em; border-radius: 3px; color: var(--txt);
+  }
+  pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; overflow-x: auto; margin: 0 0 1rem;
+  }
+  pre code { background: none; padding: 0; font-size: .8125rem; }
 
-  header.top {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    flex-wrap: wrap; padding: 18px 20px; margin-bottom: 26px;
-    background: linear-gradient(120deg, #16224a, #131c38);
-    border: 1px solid var(--line); border-radius: 14px;
+  /* ===================== topbar ===================== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50; background: var(--bg);
+    border-bottom: 1px solid var(--border);
   }
-  header.top h1 { margin: 0; font-size: 21px; letter-spacing: .2px; }
-  header.top p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-  .back {
-    display: inline-block; padding: 8px 14px; border-radius: 9px; text-decoration: none;
-    background: #1d2a4d; border: 1px solid var(--line); color: var(--txt); font-size: 13px;
+  .topbar-inner {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px; min-height: 60px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
   }
-  .back:hover { border-color: var(--cyan); color: var(--cyan); }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--txt); font-weight: 700; }
+  .brand:hover { text-decoration: none; }
+  .brand-logo {
+    background: var(--txt); color: var(--bg); padding: 5px 9px; border-radius: var(--radius);
+    font-size: .75rem; letter-spacing: .06em;
+  }
+  .brand-name { font-size: .9375rem; }
+  .brand-sub {
+    color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
+    border-left: 1px solid var(--border); padding-left: 10px;
+  }
+  .crumb ol { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; font-size: .8125rem; color: var(--txt-soft); }
+  .crumb li + li::before { content: "/"; margin-right: 8px; color: var(--border-strong); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; }
   .badge {
-    display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px;
-    border: 1px solid var(--line); border-radius: 999px; background: #101a33;
-    font-size: 12.5px; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+    font-size: .75rem; color: var(--txt-soft);
   }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .dot.on { background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,.55); animation: pulse 2s infinite; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--txt-soft); }
+  .dot.on { background: var(--green); animation: pulse 2s infinite; }
   .dot.off { background: var(--red); }
   .dot.warn { background: var(--amber); }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5); }
-    70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
-    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+    0% { box-shadow: 0 0 0 0 rgba(0,121,54,.45); }
+    70% { box-shadow: 0 0 0 6px rgba(0,121,54,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,121,54,0); }
   }
 
-  h2.sec {
-    font-size: 15px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--cyan);
-    margin: 38px 0 14px; display: flex; align-items: center; gap: 10px;
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-family: inherit; font-size: .8125rem; font-weight: 600; line-height: 1.4;
+    padding: 6px 12px; border-radius: var(--radius); border: 1px solid transparent;
+    text-decoration: none;
   }
-  h2.sec::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
-
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
-
-  /* ---------------- topologia ---------------- */
-  .topo { display: flex; flex-direction: column; gap: 14px; }
-  .row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
-  .node {
-    flex: 1 1 150px; min-width: 140px; background: var(--bg2); border: 1px solid var(--line);
-    border-radius: 11px; padding: 12px 13px; position: relative;
+  .btn:hover { text-decoration: none; }
+  .btn-primary { background: var(--link); color: #fff; }
+  .btn-primary:hover { background: var(--link-hover); color: #fff; }
+  .btn-subtle { background: var(--surface); color: var(--txt); border-color: var(--border); }
+  .btn-subtle:hover { background: var(--surface-2); color: var(--txt); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .theme-btn {
+    width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--txt-soft); cursor: pointer; font-size: .875rem;
   }
-  .node .t { font-size: 13.5px; font-weight: 600; }
-  .node .s { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
-  .node.manager { border-color: #3b4f8a; box-shadow: inset 0 0 0 1px rgba(167,139,250,.18); }
-  .node.redis   { border-color: #7a3b3b; box-shadow: inset 0 0 0 1px rgba(248,113,113,.18); }
-  .node.sidra   { border-color: #2f6b57; box-shadow: inset 0 0 0 1px rgba(52,211,153,.18); }
-  .node.worker  { border-color: #2c5a7a; box-shadow: inset 0 0 0 1px rgba(56,189,248,.18); }
-  .arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 76px; color: var(--muted); font-size: 10.5px; text-align: center; gap: 3px; }
-  .arrow .g { font-size: 20px; color: var(--cyan); animation: slide 1.6s ease-in-out infinite; }
-  .arrow .lbl { font-family: Consolas, monospace; font-size: 10px; color: var(--cyan); opacity: .85; }
-  @keyframes slide { 0%,100% { transform: translateX(0); opacity:.55 } 50% { transform: translateX(4px); opacity:1 } }
+  .theme-btn:hover { background: var(--surface-2); }
 
-  /* ---------------- etapas ---------------- */
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 12px; }
-  .step { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 15px 14px 52px; }
-  .step .n {
-    position: absolute; left: 14px; top: 14px; width: 26px; height: 26px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 13px; font-weight: 700;
-    background: #1d2a4d; color: var(--cyan); border: 1px solid #33477e;
+  /* ===================== layout ===================== */
+  .layout {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px;
+    display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px;
   }
-  .step h3 { margin: 0 0 5px; font-size: 14px; }
-  .step p { margin: 0; font-size: 13px; color: var(--muted); }
-  .step .who { display: inline-block; margin-top: 9px; font-size: 10.5px; font-family: Consolas, monospace;
-    color: #8fd6ff; background: #0e1830; border: 1px solid #23355f; border-radius: 6px; padding: 3px 7px; }
-  .step .who b { color: var(--violet); font-weight: 600; }
+  .sidebar {
+    position: sticky; top: 60px; align-self: start;
+    max-height: calc(100vh - 60px); overflow-y: auto; padding: 28px 0 48px;
+  }
+  .toc-title {
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--txt-soft); margin: 0 0 10px; font-weight: 700;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+  .toc a {
+    display: block; padding: 6px 14px; margin-left: -2px; border-left: 2px solid transparent;
+    font-size: .875rem; color: var(--txt-soft);
+  }
+  .toc a:hover { color: var(--link); text-decoration: none; }
+  .toc a.active { color: var(--link); font-weight: 600; border-left-color: var(--link); background: var(--surface); }
+  .toc-note {
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: .75rem; color: var(--txt-soft);
+  }
+  .toc-note a { color: var(--link); }
 
-  /* ---------------- niveis ---------------- */
-  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  .lvl { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; }
-  .lvl h3 { margin: 0 0 3px; font-size: 14.5px; }
-  .lvl .k { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--violet); }
-  .lvl p { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
-  .lvl .big { font-size: 30px; font-weight: 700; color: var(--cyan); line-height: 1.1; margin-top: 10px; }
-  .lvl .big small { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .article { padding: 36px 0 96px; max-width: 47em; }
+  .article h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
+  .lead { font-size: 1.0625rem; color: var(--txt-soft); margin: 0 0 2rem; }
+  .article h2 {
+    font-size: 1.5rem; line-height: 1.25; font-weight: 700;
+    margin: 3rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+  }
+  .article h3 { font-size: 1.0625rem; font-weight: 700; margin: 1.75rem 0 .5rem; }
+  .article p { margin: 0 0 1rem; }
+  .anchor { color: var(--border-strong); font-weight: 400; margin-left: 8px; opacity: 0; }
+  h2:hover .anchor, h3:hover .anchor { opacity: 1; }
 
-  /* ---------------- tabelas ---------------- */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+  .summary {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); padding: 16px 20px; margin-bottom: 2rem;
+  }
+  .summary h2 { font-size: 1rem; margin: 0 0 .5rem; padding: 0; border: 0; text-transform: uppercase; letter-spacing: .06em; }
+  .summary ul { margin: 0; padding-left: 20px; }
+  .summary li { margin-bottom: 4px; }
+
+  .note {
+    background: var(--surface); border-left: 4px solid var(--link);
+    padding: 12px 16px; margin: 1rem 0; border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: .9375rem; color: var(--txt-soft);
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .muted { color: var(--txt-soft); }
+  .empty { color: var(--txt-soft); font-size: .875rem; padding: 10px 0; }
+
+  /* ===================== blocos ===================== */
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg); }
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: .875rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--surface); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .mono { font-family: Consolas, monospace; font-size: 12px; }
-
+  .mono { font-family: var(--mono); font-size: .8125rem; }
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip {
-    font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #16213f;
-    border: 1px solid #2b3b66; color: #b8c6e6;
+    font-size: .6875rem; padding: 2px 7px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--txt-soft);
   }
-  .bar { height: 7px; border-radius: 99px; background: #1b2748; overflow: hidden; margin-top: 5px; }
-  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+  .bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
+  .bar > i { display: block; height: 100%; background: var(--link); }
+  .tag { font-size: .6875rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--txt-soft); }
+  .tag.hi { color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .tag.md { color: var(--amber); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+  .tag.lo { color: var(--green); border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
 
-  .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
-  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
-
-  .formula {
-    font-family: Consolas, monospace; font-size: 12px; background: #0e1830; color: #9fe0ff;
-    border: 1px solid #23355f; border-left: 3px solid var(--violet); border-radius: 8px;
-    padding: 9px 12px; margin: 10px 0; overflow-x: auto; white-space: pre;
+  /* ===================== topologia ===================== */
+  .topo { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+  .node {
+    flex: 1 1 140px; min-width: 132px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
   }
-  .note { font-size: 12.5px; color: var(--muted); }
-  .muted { color: var(--muted); }
-  .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-  .tag.hi { color: #ffdca8; border-color: #6b5326; background: #2a2110; }
-  .tag.md { color: #cfe0ff; border-color: #33507f; background: #101c33; }
-  .tag.lo { color: #b6f2d9; border-color: #2c6b52; background: #0f2a20; }
-  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
-  code { font-family: Consolas, monospace; font-size: 12.5px; color: #9fe0ff; }
-  ul.tight { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
-  ul.tight li { margin-bottom: 4px; }
-  footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+  .node .t { font-size: .875rem; font-weight: 700; }
+  .node .s { font-size: .75rem; color: var(--txt-soft); margin-top: 2px; }
+  .node.manager { border-left: 3px solid var(--violet); }
+  .node.redis { border-left: 3px solid var(--amber); }
+  .node.sidra { border-left: 3px solid var(--green); }
+  .node.worker { border-left: 3px solid #0369a1; }
+  .arrow {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    min-width: 78px; color: var(--txt-soft); font-size: .6875rem; text-align: center; gap: 2px;
+  }
+  .arrow .g { font-size: 16px; color: var(--link); animation: slide 1.6s ease-in-out infinite; }
+  .arrow .lbl { font-family: var(--mono); font-size: .6875rem; }
+  @keyframes slide { 0%,100% { transform: translateX(0); opacity: .6 } 50% { transform: translateX(4px); opacity: 1 } }
 
-  /* ---------------- modo ao vivo ---------------- */
+  /* ===================== etapas ===================== */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 12px; }
+  .step { position: relative; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 14px 50px; background: var(--bg); }
+  .step .n {
+    position: absolute; left: 13px; top: 13px; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--link); border: 1px solid var(--border);
+  }
+  .step h3 { margin: 0 0 4px; font-size: .9375rem; }
+  .step p { margin: 0; font-size: .8125rem; color: var(--txt-soft); }
+  .step .who {
+    display: inline-block; margin-top: 8px; font-size: .6875rem; font-family: var(--mono);
+    color: var(--txt-soft); background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2px 6px;
+  }
+  .step .who b { color: var(--violet); font-weight: 600; }
+
+  /* ===================== niveis ===================== */
+  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .lvl { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--bg); }
+  .lvl .k { font-size: .6875rem; letter-spacing: .07em; text-transform: uppercase; color: var(--txt-soft); }
+  .lvl h3 { margin: 4px 0 0; font-size: 1rem; }
+  .lvl p { margin: 8px 0 0; font-size: .8125rem; color: var(--txt-soft); }
+  .lvl .big { font-size: 1.75rem; font-weight: 700; color: var(--link); line-height: 1.2; margin-top: 10px; }
+  .lvl .big small { font-size: .8125rem; font-weight: 400; color: var(--txt-soft); }
+
+  /* ===================== modo ao vivo ===================== */
   .livebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  .livebtn {
-    background: linear-gradient(90deg, #2563eb, #7c3aed); color: #fff; border: 0;
-    border-radius: 9px; padding: 9px 15px; font-size: 13.5px; cursor: pointer;
+  .livebar select {
+    font: inherit; font-size: .8125rem; padding: 6px 8px; border-radius: var(--radius);
+    background: var(--bg); color: var(--txt); border: 1px solid var(--border);
   }
-  .livebtn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
-  .livebtn:disabled { opacity: .45; cursor: not-allowed; }
-  .livebar select { font: inherit; padding: 8px 9px; border-radius: 8px; background: #101a33; color: var(--txt); border: 1px solid var(--line); }
-
   #stage {
-    position: relative; height: 252px; border: 1px solid var(--line); border-radius: 12px;
-    background: linear-gradient(180deg, #0e1730, #0a1124); overflow: hidden;
+    position: relative; height: 250px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); overflow: hidden;
   }
   .wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .wire { animation: dash 1.3s linear infinite; }
   @keyframes dash { to { stroke-dashoffset: -28; } }
   #nodes { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 12px; }
   .lnode {
-    width: 148px; padding: 12px 10px; border-radius: 12px; background: #121d3b;
-    border: 1px solid var(--line); text-align: center; position: relative; z-index: 2;
+    width: 142px; padding: 10px; border-radius: var(--radius); background: var(--bg);
+    border: 1px solid var(--border); border-top: 3px solid var(--border-strong);
+    text-align: center; position: relative; z-index: 2;
   }
-  .lnode b { display: block; font-size: 13.5px; }
-  .lnode small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
-  .lnode.sidra { border-color: #2f6b57; }
-  .lnode.redis { border-color: #7a3b3b; }
-  .lnode.manager { border-color: #3b4f8a; }
-  .lnode.workers { border-color: #2c5a7a; }
+  .lnode b { display: block; font-size: .8125rem; }
+  .lnode small { display: block; color: var(--txt-soft); font-size: .6875rem; margin-top: 3px; }
+  .lnode.sidra { border-top-color: var(--green); }
+  .lnode.redis { border-top-color: var(--amber); }
+  .lnode.manager { border-top-color: var(--violet); }
+  .lnode.workers { border-top-color: #0369a1; }
   .lnode.flash { animation: flash .7s ease-out; }
   @keyframes flash {
-    0% { box-shadow: 0 0 0 0 rgba(167,139,250,.85); }
-    100% { box-shadow: 0 0 0 20px rgba(167,139,250,0); }
+    0% { box-shadow: 0 0 0 0 rgba(124,58,237,.75); }
+    100% { box-shadow: 0 0 0 18px rgba(124,58,237,0); }
   }
-  .idles { display: flex; gap: 4px; justify-content: center; margin-top: 7px; }
-  .idles i { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); animation: idle 1.5s infinite; }
+  .idles { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+  .idles i { width: 6px; height: 6px; border-radius: 50%; background: #0369a1; animation: idle 1.5s infinite; }
   .idles i:nth-child(2) { animation-delay: .3s; }
   .idles i:nth-child(3) { animation-delay: .6s; }
   .idles i:nth-child(4) { animation-delay: .9s; }
   @keyframes idle { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
-
   #particles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
   .particle { position: absolute; width: 9px; height: 9px; border-radius: 50%; transform: translate(-50%, -50%); }
 
-  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin-top: 12px; }
-  .counter { background: #0e1830; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
-  .counter .v { font-size: 21px; font-weight: 700; color: var(--cyan); line-height: 1.2; }
-  .counter .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
-  .counter.warn .v { color: var(--amber); }
-  .counter.ok .v { color: var(--green); }
+  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin: 12px 0; }
+  .counter { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; background: var(--bg); }
+  .counter .v { font-size: 1.375rem; font-weight: 700; color: var(--txt); line-height: 1.2; }
+  .counter .l { font-size: .6875rem; color: var(--txt-soft); text-transform: uppercase; letter-spacing: .05em; }
 
   .log {
-    margin-top: 12px; height: 128px; overflow-y: auto; background: #080e1c; border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; font-family: Consolas, monospace; font-size: 12px; line-height: 1.65; color: #9fd3f5;
+    margin: 0 0 1rem; height: 132px; overflow-y: auto; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
+    font-family: var(--mono); font-size: .75rem; line-height: 1.6; color: var(--txt);
   }
   .log .ev { white-space: pre-wrap; }
-  .log .t { color: #5b6b8c; }
-  .log .w { color: #c7b6ff; }
-  .log .fin { color: #7ee2b8; }
+  .log .t { color: var(--txt-soft); }
+  .log .w { color: var(--violet); }
+  .log .fin { color: var(--green); }
+
+  .formula {
+    font-family: var(--mono); font-size: .75rem; background: var(--surface); color: var(--txt);
+    border: 1px solid var(--border); border-left: 3px solid var(--violet); border-radius: var(--radius);
+    padding: 10px 12px; margin: 10px 0; overflow-x: auto; white-space: pre;
+  }
+  ul.tight { margin: 8px 0 0; padding-left: 20px; font-size: .8125rem; color: var(--txt-soft); }
+  ul.tight li { margin-bottom: 4px; }
+
+  .seealso { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1rem; }
+  .seealso h2 { font-size: 1.125rem; margin: 0 0 .5rem; padding: 0; border: 0; }
+  .seealso ul { margin: 0; padding-left: 20px; font-size: .875rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--txt-soft); font-size: .8125rem; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; max-height: none; padding: 20px 0 0; }
+    .article { padding-top: 24px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header class="top">
-    <div>
-      <h1>Como funciona</h1>
-      <p>Fluxo de trabalho entre Manager, Redis, Workers e a API do SIDRA</p>
-    </div>
-    <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/painel/">
+      <span class="brand-logo">ED</span>
+      <span class="brand-name">Ecossistema Distribuído</span>
+      <span class="brand-sub">Documentação</span>
+    </a>
+    <nav class="crumb" aria-label="Trilha de navegação">
+      <ol>
+        <li><a href="/painel/">Painel</a></li>
+        <li>Como funciona</li>
+      </ol>
+    </nav>
+    <div class="topbar-right">
       <div class="badges" id="badges">
         <span class="badge"><i class="dot" id="d-redis"></i>Redis</span>
         <span class="badge"><i class="dot" id="d-workers"></i>Workers</span>
         <span class="badge"><i class="dot" id="d-fila"></i>Fila</span>
       </div>
-      <a class="back" href="/painel/">← Voltar aos dados</a>
-    </div>
-  </header>
-
-  <!-- ================= TOPOLOGIA ================= -->
-  <h2 class="sec">1 · Topologia</h2>
-  <div class="card topo">
-    <div class="row">
-      <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">POST /jobs</div></div>
-      <div class="node manager"><div class="t">Manager</div><div class="s">FastAPI · fatia e consolida</div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">RPUSH</div></div>
-      <div class="node redis"><div class="t">Redis</div><div class="s">fila <code>sidra:tasks</code></div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">BLPOP</div></div>
-      <div class="node worker"><div class="t">Workers</div><div class="s" id="topo-workers">N nós</div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">HTTPS</div></div>
-      <div class="node sidra"><div class="t">SIDRA / IBGE</div><div class="s">API pública</div></div>
-    </div>
-    <div class="row">
-      <div class="node worker"><div class="t">Workers</div><div class="s">resposta normalizada</div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">POST /internal/results</div></div>
-      <div class="node manager"><div class="t">Manager</div><div class="s">grava no SQLite</div></div>
-      <div class="arrow"><div class="g">➜</div><div class="lbl">REDUCE</div></div>
-      <div class="node"><div class="t">Relatório</div><div class="s">somas · médias · ranking · HHI</div></div>
+      <a class="btn btn-subtle" href="/docs">API</a>
+      <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
+      <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
     </div>
   </div>
+</header>
 
-  <!-- ================= AO VIVO ================= -->
-  <h2 class="sec">2 · Execução ao vivo</h2>
-  <div class="card">
-    <div class="livebar">
-      <button id="btnLive" class="livebtn">▶ Ver a infraestrutura trabalhando</button>
-      <button id="btnStop" class="livebtn ghost" disabled>■ Parar</button>
-      <select id="liveDataset"></select>
-      <span id="liveState" class="muted">parado</span>
+<div class="layout">
+
+  <aside class="sidebar">
+    <nav class="toc" aria-label="Nesta página">
+      <h2 class="toc-title">Nesta página</h2>
+      <ol>
+        <li><a href="#topologia">Topologia</a></li>
+        <li><a href="#execucao-ao-vivo">Execução ao vivo</a></li>
+        <li><a href="#fluxo-de-trabalho">Fluxo de trabalho</a></li>
+        <li><a href="#paralelismo">Três níveis de paralelismo</a></li>
+        <li><a href="#quem-fez-o-que">Quem fez o quê</a></li>
+        <li><a href="#reduce">O que o REDUCE calcula</a></li>
+        <li><a href="#arquivos">Arquivos</a></li>
+        <li><a href="#falhas">Falhas</a></li>
+      </ol>
+      <p class="toc-note">
+        <a href="/painel/">Interface de leitura</a> ·
+        <a href="/docs">Swagger da API</a> ·
+        <a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a>
+      </p>
+    </nav>
+  </aside>
+
+  <main class="article">
+
+    <h1>Como funciona</h1>
+    <p class="lead">Fluxo de trabalho entre Manager, Redis, Workers e a API do SIDRA.</p>
+
+    <div class="summary">
+      <h2>Resumo</h2>
+      <ul>
+        <li>O Manager fatia o job em <b>uma tarefa por UF</b> (27 tarefas).</li>
+        <li>As tarefas vão para a fila do <b>Redis</b>; qualquer Worker pode consumi-las.</li>
+        <li>Cada Worker consulta a UF no <b>SIDRA</b> e devolve os registros ao Manager.</li>
+        <li>Com todas as tarefas prontas, o Manager roda o <b>REDUCE</b> e libera o relatório.</li>
+      </ul>
     </div>
 
-    <div id="stage" role="img" aria-label="Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager.">
-      <svg id="wires" class="wires"></svg>
-      <div id="nodes">
-        <div class="lnode sidra" id="n-sidra"><b>SIDRA / IBGE</b><small>API pública</small></div>
-        <div class="lnode workers" id="n-workers"><b>Workers</b><small id="l-workers">—</small><div class="idles" id="l-idle"></div></div>
-        <div class="lnode redis" id="n-redis"><b>Redis</b><small id="l-fila">fila sidra:tasks</small></div>
-        <div class="lnode manager" id="n-manager"><b>Manager</b><small id="l-manager">fatia + REDUCE</small></div>
+    <!-- ================= TOPOLOGIA ================= -->
+    <section id="topologia">
+      <h2>Topologia <a class="anchor" href="#topologia">#</a></h2>
+      <div class="card topo">
+        <div class="row">
+          <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /jobs</div></div>
+          <div class="node manager"><div class="t">Manager</div><div class="s">FastAPI · fatia e consolida</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">RPUSH</div></div>
+          <div class="node redis"><div class="t">Redis</div><div class="s">fila <code>sidra:tasks</code></div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">BLPOP</div></div>
+          <div class="node worker"><div class="t">Workers</div><div class="s" id="topo-workers">N nós</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">HTTPS</div></div>
+          <div class="node sidra"><div class="t">SIDRA / IBGE</div><div class="s">API pública</div></div>
+        </div>
+        <div class="row">
+          <div class="node worker"><div class="t">Workers</div><div class="s">resposta normalizada</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /internal/results</div></div>
+          <div class="node manager"><div class="t">Manager</div><div class="s">grava no SQLite</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">REDUCE</div></div>
+          <div class="node"><div class="t">Relatório</div><div class="s">somas · médias · ranking · HHI</div></div>
+        </div>
       </div>
-      <div id="particles"></div>
-    </div>
+    </section>
 
-    <div class="counters">
-      <div class="counter"><div class="v" id="c-desp">0</div><div class="l">despachadas</div></div>
-      <div class="counter"><div class="v" id="c-voo">0</div><div class="l">em voo</div></div>
-      <div class="counter"><div class="v" id="c-ok">0</div><div class="l">concluídas</div></div>
-      <div class="counter"><div class="v" id="c-fila">0</div><div class="l">na fila</div></div>
-      <div class="counter"><div class="v" id="c-wk">0</div><div class="l">workers</div></div>
-      <div class="counter"><div class="v" id="c-tempo">0,0 s</div><div class="l">tempo total</div></div>
-    </div>
+    <!-- ================= AO VIVO ================= -->
+    <section id="execucao-ao-vivo">
+      <h2>Execução ao vivo <a class="anchor" href="#execucao-ao-vivo">#</a></h2>
+      <div class="card">
+        <div class="livebar">
+          <button id="btnLive" class="btn btn-primary">▶ Ver a infraestrutura trabalhando</button>
+          <button id="btnStop" class="btn btn-subtle" disabled>■ Parar</button>
+          <select id="liveDataset" aria-label="Pesquisa"></select>
+          <span id="liveState" class="muted">parado</span>
+        </div>
 
-    <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto</span></div>
-    <p class="note">
-      Animação ilustrativa do fluxo. Contadores, tempos e log vêm do sistema real.
-      Legenda: <span style="color:#fbbf24">amarelo</span> tarefa publicada ·
-      <span style="color:#38bdf8">azul</span> tarefa retirada da fila ·
-      <span style="color:#34d399">verde</span> consulta ao SIDRA ·
-      <span style="color:#a78bfa">roxo</span> callback ao Manager.
-    </p>
-  </div>
+        <div id="stage" role="img" aria-label="Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager.">
+          <svg id="wires" class="wires"></svg>
+          <div id="nodes">
+            <div class="lnode sidra" id="n-sidra"><b>SIDRA / IBGE</b><small>API pública</small></div>
+            <div class="lnode workers" id="n-workers"><b>Workers</b><small id="l-workers">—</small><div class="idles" id="l-idle"></div></div>
+            <div class="lnode redis" id="n-redis"><b>Redis</b><small id="l-fila">fila sidra:tasks</small></div>
+            <div class="lnode manager" id="n-manager"><b>Manager</b><small id="l-manager">fatia + REDUCE</small></div>
+          </div>
+          <div id="particles"></div>
+        </div>
 
-  <!-- ================= ETAPAS ================= -->
-  <h2 class="sec">3 · Fluxo de trabalho</h2>
-  <div class="steps">
-    <div class="step"><div class="n">1</div><h3>Pedido</h3>
-      <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa (LSPA ou PIM-PF).</p>
-      <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
-    <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
-      <p>O Manager obtém o período no SIDRA e divide o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
-      <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
-    <div class="step"><div class="n">3</div><h3>Publicação</h3>
-      <p>As tarefas são publicadas na fila do Redis (<code>RPUSH</code> em pipeline).</p>
-      <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
-    <div class="step"><div class="n">4</div><h3>Consumo</h3>
-      <p>Cada Worker espera a fila com <code>BLPOP</code> e retira uma tarefa por vez.</p>
-      <span class="who"><b>Worker</b> · worker/main.py</span></div>
-    <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
-      <p>O Worker consulta a API do SIDRA, converte os números pt-BR e normaliza com pandas.</p>
-      <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
-    <div class="step"><div class="n">6</div><h3>Callback</h3>
-      <p>O Worker devolve os registros ao Manager, que grava no SQLite e conta a tarefa como concluída.</p>
-      <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
-    <div class="step"><div class="n">7</div><h3>REDUCE</h3>
-      <p>Quando todas as tarefas terminam, o Manager consolida os registros e gera o relatório.</p>
-      <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
-    <div class="step"><div class="n">8</div><h3>Leitura</h3>
-      <p>A interface busca <code>GET /api/v1/results</code> e mostra as tabelas do relatório.</p>
-      <span class="who"><b>Painel</b> · /painel/</span></div>
-  </div>
+        <div class="counters">
+          <div class="counter"><div class="v" id="c-desp">0</div><div class="l">despachadas</div></div>
+          <div class="counter"><div class="v" id="c-voo">0</div><div class="l">em voo</div></div>
+          <div class="counter"><div class="v" id="c-ok">0</div><div class="l">concluídas</div></div>
+          <div class="counter"><div class="v" id="c-fila">0</div><div class="l">na fila</div></div>
+          <div class="counter"><div class="v" id="c-wk">0</div><div class="l">workers</div></div>
+          <div class="counter"><div class="v" id="c-tempo">0,0 s</div><div class="l">tempo total</div></div>
+        </div>
 
-  <!-- ================= PARALELISMO ================= -->
-  <h2 class="sec">4 · Três níveis de paralelismo</h2>
-  <div class="levels">
-    <div class="lvl">
-      <div class="k">Nível 1 · entre os nós</div>
-      <h3>Distribuído</h3>
-      <div class="big" id="p1">—<small> tarefas</small></div>
-      <p id="p1b">Uma tarefa por UF: cada tarefa é uma consulta independente ao SIDRA.</p>
-    </div>
-    <div class="lvl">
-      <div class="k">Nível 2 · dentro do nó</div>
-      <h3>Assíncrono (I/O)</h3>
-      <div class="big" id="p2">—<small> tarefas em voo</small></div>
-      <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições simultâneas ao SIDRA (<code>asyncio.create_task</code>).</p>
-    </div>
-    <div class="lvl">
-      <div class="k">Nível 3 · dentro da tarefa</div>
-      <h3>Thread (CPU)</h3>
-      <div class="big">1<small> thread dedicada</small></div>
-      <p>A normalização com pandas roda em <code>asyncio.to_thread</code> para não bloquear o event loop.</p>
-    </div>
-  </div>
+        <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto</span></div>
 
-  <!-- ================= QUEM FEZ O QUE ================= -->
-  <h2 class="sec">5 · Quem fez o quê (último job)</h2>
-  <div class="grid2">
-    <div class="card">
-      <table>
-        <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo total</th><th>UFs coletadas</th></tr></thead>
-        <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
-      </table>
-      <p class="note" id="jobinfo"></p>
-    </div>
-    <div class="card">
-      <h3 style="margin:0 0 10px; font-size:14px;">Fila e nós agora</h3>
-      <table>
-        <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
-        <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
-      </table>
-      <p class="note">Heartbeat a cada 10 s: é o que o Manager usa para saber quais nós estão ativos.</p>
-    </div>
-  </div>
+        <div class="note">
+          <p>
+            A animação é ilustrativa do fluxo. Contadores, tempos e log vêm do sistema real.
+            Legenda: <span style="color:#fbbf24">●</span> tarefa publicada ·
+            <span style="color:#38bdf8">●</span> tarefa retirada da fila ·
+            <span style="color:#34d399">●</span> consulta ao SIDRA ·
+            <span style="color:#a78bfa">●</span> callback ao Manager.
+          </p>
+        </div>
+      </div>
+    </section>
 
-  <!-- ================= REDUCE ================= -->
-  <h2 class="sec">6 · O que o REDUCE calcula</h2>
-  <div class="grid2">
-    <div class="card">
-      <table>
-        <thead><tr><th>Categoria</th><th>Variáveis (agregado)</th><th class="num">HHI</th><th>Ranking (variável principal)</th></tr></thead>
-        <tbody id="reduce"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
-      </table>
-      <p class="note" id="reduceinfo"></p>
-      <p class="note">Ranking pela variável principal da pesquisa; HHI mede a concentração entre as UFs.</p>
-    </div>
-    <div class="card">
-      <h3 style="margin:0 0 4px; font-size:14px;">As fórmulas</h3>
-      <p class="note">Executadas no Manager, depois que todas as tarefas terminam.</p>
-      <div class="formula">soma      = Σ valor(UF)
+    <!-- ================= ETAPAS ================= -->
+    <section id="fluxo-de-trabalho">
+      <h2>Fluxo de trabalho <a class="anchor" href="#fluxo-de-trabalho">#</a></h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Pedido</h3>
+          <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa (LSPA ou PIM-PF).</p>
+          <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
+        <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
+          <p>O Manager obtém o período no SIDRA e divide o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
+          <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
+        <div class="step"><div class="n">3</div><h3>Publicação</h3>
+          <p>As tarefas são publicadas na fila do Redis (<code>RPUSH</code> em pipeline).</p>
+          <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
+        <div class="step"><div class="n">4</div><h3>Consumo</h3>
+          <p>Cada Worker espera a fila com <code>BLPOP</code> e retira uma tarefa por vez.</p>
+          <span class="who"><b>Worker</b> · worker/main.py</span></div>
+        <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
+          <p>O Worker consulta a API do SIDRA, converte os números pt-BR e normaliza com pandas.</p>
+          <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
+        <div class="step"><div class="n">6</div><h3>Callback</h3>
+          <p>O Worker devolve os registros ao Manager, que grava no SQLite e conta a tarefa como concluída.</p>
+          <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
+        <div class="step"><div class="n">7</div><h3>REDUCE</h3>
+          <p>Quando todas as tarefas terminam, o Manager consolida os registros e gera o relatório.</p>
+          <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
+        <div class="step"><div class="n">8</div><h3>Leitura</h3>
+          <p>A interface busca <code>GET /api/v1/results</code> e mostra as tabelas do relatório.</p>
+          <span class="who"><b>Painel</b> · /painel/</span></div>
+      </div>
+    </section>
+
+    <!-- ================= PARALELISMO ================= -->
+    <section id="paralelismo">
+      <h2>Três níveis de paralelismo <a class="anchor" href="#paralelismo">#</a></h2>
+      <div class="levels">
+        <div class="lvl">
+          <div class="k">Nível 1 · entre os nós</div>
+          <h3>Distribuído</h3>
+          <div class="big" id="p1">—<small> tarefas</small></div>
+          <p id="p1b">Uma tarefa por UF: cada tarefa é uma consulta independente ao SIDRA.</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Nível 2 · dentro do nó</div>
+          <h3>Assíncrono (I/O)</h3>
+          <div class="big" id="p2">—<small> tarefas em voo</small></div>
+          <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições simultâneas ao SIDRA (<code>asyncio.create_task</code>).</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Nível 3 · dentro da tarefa</div>
+          <h3>Thread (CPU)</h3>
+          <div class="big">1<small> thread dedicada</small></div>
+          <p>A normalização com pandas roda em <code>asyncio.to_thread</code> para não bloquear o event loop.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= QUEM FEZ O QUE ================= -->
+    <section id="quem-fez-o-que">
+      <h2>Quem fez o quê <a class="anchor" href="#quem-fez-o-que">#</a></h2>
+      <p class="muted">Distribuição das tarefas do último job entre os Workers.</p>
+      <div class="grid2">
+        <div class="card">
+          <table>
+            <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo total</th><th>UFs coletadas</th></tr></thead>
+            <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
+          </table>
+          <p class="note" id="jobinfo" style="margin-bottom:0"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 10px; font-size:.9375rem;">Fila e nós agora</h3>
+          <table>
+            <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
+            <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
+          </table>
+          <p class="note" style="margin-bottom:0">Heartbeat a cada 10 s: é o que o Manager usa para saber quais nós estão ativos.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= REDUCE ================= -->
+    <section id="reduce">
+      <h2>O que o REDUCE calcula <a class="anchor" href="#reduce">#</a></h2>
+      <div class="grid2">
+        <div class="card">
+          <table>
+            <thead><tr><th>Categoria</th><th>Variáveis (agregado)</th><th class="num">HHI</th><th>Ranking (variável principal)</th></tr></thead>
+            <tbody id="reduceRows"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
+          </table>
+          <p class="note" id="reduceinfo" style="margin-bottom:0"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 4px; font-size:.9375rem;">As fórmulas</h3>
+          <p class="muted" style="font-size:.8125rem;">Executadas no Manager, depois que todas as tarefas terminam.</p>
+          <div class="formula">soma      = Σ valor(UF)
 média     = Σ (valor(UF) × peso(UF)) / Σ peso(UF)
 part. %   = 100 × valor(UF) / Σ valor(UF)
 HHI       = Σ (part. % / 100)²</div>
-      <ul class="tight">
-        <li><b>Soma</b> — variáveis aditivas (produção, valor).</li>
-        <li><b>Média ponderada</b> — variáveis de índice (preço, área média).</li>
-        <li><b>Participação</b> — quanto cada UF responde pelo total.</li>
-        <li><b>HHI</b> — concentração: &lt;0,15 baixa · 0,15–0,25 moderada · &gt;0,25 alta.</li>
+          <ul class="tight">
+            <li><b>Soma</b> — variáveis aditivas (produção, valor).</li>
+            <li><b>Média ponderada</b> — variáveis de índice (preço, área média).</li>
+            <li><b>Participação</b> — quanto cada UF responde pelo total.</li>
+            <li><b>HHI</b> — concentração: &lt;0,15 baixa · 0,15–0,25 moderada · &gt;0,25 alta.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CODIGO ================= -->
+    <section id="arquivos">
+      <h2>Arquivos <a class="anchor" href="#arquivos">#</a></h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">src/manager/main.py</td><td>API FastAPI: cria o job, recebe callbacks, dispara o REDUCE, serve o painel</td></tr>
+            <tr><td class="mono">src/manager/dispatcher.py</td><td>Fatiamento: uma tarefa por Unidade da Federação</td></tr>
+            <tr><td class="mono">src/manager/analysis.py</td><td>REDUCE: somas, médias ponderadas, ranking de UFs e HHI</td></tr>
+            <tr><td class="mono">src/manager/store.py</td><td>Persistência SQLite: jobs, tarefas, registros e workers</td></tr>
+            <tr><td class="mono">src/worker/main.py</td><td>Ciclo do Worker: BLPOP, limite de concorrência, callback e heartbeat</td></tr>
+            <tr><td class="mono">src/worker/processor.py</td><td>MAP: parse das linhas do SIDRA e resumo com pandas</td></tr>
+            <tr><td class="mono">src/common/sidra.py</td><td>Cliente HTTP do SIDRA com retry e conversão de número pt-BR</td></tr>
+            <tr><td class="mono">src/common/datasets.py</td><td>Definição das pesquisas (LSPA 6588, PIM-PF 8888) e das 27 UFs</td></tr>
+            <tr><td class="mono">docker-compose.yml</td><td>Topologia: manager, redis, workers escaláveis e perfil de demo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= RESILIENCIA ================= -->
+    <section id="falhas">
+      <h2>Falhas <a class="anchor" href="#falhas">#</a></h2>
+      <div class="levels">
+        <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
+          <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s e 2 s, até <code>MAX_RETRIES</code>.</p></div>
+        <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
+          <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
+        <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>
+          <p>Worker sem heartbeat há 30 s (<code>WORKER_STALE_SECONDS</code>) sai da lista de ativos.</p></div>
+        <div class="lvl"><div class="k">Escala</div><h3>Mais nós</h3>
+          <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos consomem as mesmas tarefas.</p></div>
+      </div>
+    </section>
+
+    <div class="seealso">
+      <h2>Veja também</h2>
+      <ul>
+        <li><a href="/painel/">Interface de leitura</a> — os dados do SIDRA e as tabelas do relatório.</li>
+        <li><a href="/docs">Swagger da API</a> — endpoints, schemas e execução direta.</li>
+        <li><a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a> — código, README com POP Docker e diagramas UML.</li>
       </ul>
     </div>
-  </div>
 
-  <!-- ================= CODIGO ================= -->
-  <h2 class="sec">7 · Arquivos</h2>
-  <div class="card">
-    <table>
-      <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
-      <tbody>
-        <tr><td class="mono">src/manager/main.py</td><td>API FastAPI: cria o job, recebe callbacks, dispara o REDUCE, serve o painel</td></tr>
-        <tr><td class="mono">src/manager/dispatcher.py</td><td>Fatiamento: uma tarefa por Unidade da Federação</td></tr>
-        <tr><td class="mono">src/manager/analysis.py</td><td>REDUCE: somas, médias ponderadas, ranking de UFs e HHI</td></tr>
-        <tr><td class="mono">src/manager/store.py</td><td>Persistência SQLite: jobs, tarefas, registros e workers</td></tr>
-        <tr><td class="mono">src/worker/main.py</td><td>Ciclo do Worker: BLPOP, limite de concorrência, callback e heartbeat</td></tr>
-        <tr><td class="mono">src/worker/processor.py</td><td>MAP: parse das linhas do SIDRA e resumo com pandas</td></tr>
-        <tr><td class="mono">src/common/sidra.py</td><td>Cliente HTTP do SIDRA com retry e conversão de número pt-BR</td></tr>
-        <tr><td class="mono">src/common/datasets.py</td><td>Definição das pesquisas (LSPA 6588, PIM-PF 8888) e das 27 UFs</td></tr>
-        <tr><td class="mono">docker-compose.yml</td><td>Topologia: manager, redis, workers escaláveis e perfil de demo</td></tr>
-      </tbody>
-    </table>
-  </div>
+    <footer>
+      Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em Docker.
+    </footer>
 
-  <!-- ================= RESILIENCIA ================= -->
-  <h2 class="sec">8 · Falhas</h2>
-  <div class="levels">
-    <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
-      <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s e 2 s, até <code>MAX_RETRIES</code>.</p></div>
-    <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
-      <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
-    <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>
-      <p>Worker sem heartbeat há 30 s (<code>WORKER_STALE_SECONDS</code>) sai da lista de ativos.</p></div>
-    <div class="lvl"><div class="k">Escala</div><h3>Mais nós</h3>
-      <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos consomem as mesmas tarefas.</p></div>
-  </div>
-
-  <footer>
-    Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em Docker ·
-    <a href="/painel/">voltar à interface de leitura</a> ·
-    <a href="/docs">API (Swagger)</a>
-  </footer>
+  </main>
 </div>
 
 <script>
@@ -431,6 +628,31 @@ function ago(ts) {
   return s < 60 ? s + " s" : Math.round(s / 60) + " min";
 }
 function setDot(id, cls) { const el = $(id); if (el) el.className = "dot " + cls; }
+
+/* ---------- tema claro/escuro ---------- */
+const btnTema = $("#btnTema");
+const temaSalvo = localStorage.getItem("tema");
+if (temaSalvo) document.documentElement.dataset.theme = temaSalvo;
+btnTema.addEventListener("click", () => {
+  const escuro = document.documentElement.dataset.theme === "dark";
+  if (escuro) delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = "dark";
+  localStorage.setItem("tema", escuro ? "light" : "dark");
+  desenharFios();
+});
+
+/* ---------- item ativo do sumário ---------- */
+const secoes = [...document.querySelectorAll("main > section")];
+const links = [...document.querySelectorAll(".toc a")];
+if ("IntersectionObserver" in window && secoes.length) {
+  const obs = new IntersectionObserver((entradas) => {
+    for (const e of entradas) {
+      if (!e.isIntersecting) continue;
+      links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+    }
+  }, { rootMargin: "-80px 0px -70% 0px" });
+  secoes.forEach(s => obs.observe(s));
+}
 
 let ultimoJob = null;
 
@@ -522,7 +744,7 @@ async function job() {
         </div>`).join("")}</td>
     </tr>`);
   }
-  $("#reduce").innerHTML = linhasR.join("") || `<tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr>`;
+  $("#reduceRows").innerHTML = linhasR.join("") || `<tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr>`;
   const cats = Object.keys(s.categorias || {});
   const hh = cats.map(c => s.categorias[c].concentracao_hhi).filter(x => x != null);
   $("#reduceinfo").textContent = cats.length
@@ -588,7 +810,7 @@ function desenharFios() {
     el.setAttribute("stroke", f.color);
     el.setAttribute("stroke-width", "1.6");
     el.setAttribute("fill", "none");
-    el.setAttribute("opacity", ".4");
+    el.setAttribute("opacity", ".55");
     el.setAttribute("stroke-dasharray", "6 8");
     el.setAttribute("class", "wire");
     svgWires.appendChild(el);
@@ -598,7 +820,7 @@ function spawn(f, atraso = 0) {
   const el = document.createElement("i");
   el.className = "particle";
   el.style.background = f.color;
-  el.style.boxShadow = "0 0 10px " + f.color;
+  el.style.boxShadow = "0 0 8px " + f.color;
   layer.appendChild(el);
   partes.push({ el, f, t: -atraso, dur: f.dur * LENTIDAO });
   rotular();

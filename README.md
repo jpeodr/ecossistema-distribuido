@@ -59,9 +59,11 @@ http://localhost:8000/painel/como-funciona    # fluxo de trabalho
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI).
 - **`/painel/como-funciona`** — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
   processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
-  do REDUCE e os arquivos do projeto. Tem também o **modo ao vivo**: o botão *"Ver a infraestrutura
-  trabalhando"* dispara um job real e mostra o fluxo Manager → Redis → Workers → SIDRA → Manager
-  em movimento, com contadores e log de tarefas em tempo real.
+  do REDUCE e os arquivos do projeto. A página segue o padrão de documentação do MDN (cabeçalho
+  fixo, sumário lateral, âncoras e alternador de tema claro/escuro). Tem também o **modo ao vivo**:
+  o botão *"Ver a infraestrutura trabalhando"* dispara um job real e mostra o fluxo
+  Manager → Redis → Workers → SIDRA → Manager em movimento, com contadores e log de tarefas em
+  tempo real.
 
 ---
 
