@@ -177,8 +177,21 @@ docker compose ps          # 5 workers
 docker compose down        # volta ao estado original
 ```
 
-### Passo 8 — Acompanhe os logs (prova da distribuição)
+### Passo 8 — (Opcional) Teste de resiliência da fila
 
+Demonstra que a fila é o estado durável do sistema: o job é criado **sem nenhum Worker
+no ar**, as tarefas ficam guardadas no Redis e o job **termina sozinho** quando os
+Workers voltam.
+
+```bash
+docker compose stop worker                     # derruba os 3 workers
+curl -X POST http://localhost:8000/api/v1/jobs -H "Content-Type: application/json" -d "{\"dataset\":\"lspa\"}"
+curl http://localhost:8000/api/v1/health       # -> "fila":27
+docker compose start worker                    # os workers voltam e consomem a fila
+curl http://localhost:8000/api/v1/jobs/<job_id>   # -> "status":"completed"
+```
+
+### Passo 9 — Acompanhe os logs (prova da distribuição)
 ```bash
 docker compose logs -f worker        # todas as réplicas
 docker logs -f eco-sidra-worker-1    # um worker específico
@@ -190,7 +203,7 @@ Cada linha mostra o nó, a UF processada e a duração:
 {"ts":"...","level":"INFO","node":"worker-7f62655d","msg":"tarefa concluida","task_id":"...","uf":"Mato Grosso","registros":20,"duracao_ms":812}
 ```
 
-### Passo 9 — Encerre e limpe
+### Passo 10 — Encerre e limpe
 
 ```bash
 docker compose down          # para os containers (mantém o volume de dados)

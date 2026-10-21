@@ -104,6 +104,17 @@ docker compose --profile demo run --rm demo
 **Plano B (demo gravada):** deixar um vídeo de 90 s gravado em `docs/pitch/demo.mp4`.
 Se o SIDRA estiver indisponível no dia, use o vídeo e mostre os diagramas.
 
+**Carta extra (30 s, se sobrar tempo) — resiliência da fila:**
+
+```bash
+docker compose stop worker     # derruba os 3 workers
+# cria um job: as 27 tarefas ficam guardadas no Redis
+docker compose start worker    # o job termina sozinho, distribuído entre os workers
+```
+
+> "Nenhum Worker conhece o estado do job; o estado está na fila e no Manager.
+> Se um nó cai, o trabalho não se perde — ele é redistribuído."
+
 ```bash
 # registrado para a apresentação (opcional)
 docker compose up -d --scale worker=5
