@@ -1,0 +1,11 @@
+# Normaliza as quebras de linha no repositorio (evita diffs entre SO's)
+* text=auto eol=lf
+
+*.py text eol=lf
+*.md text eol=lf
+*.puml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.txt text eol=lf
+*.toml text eol=lf
+Dockerfile text eol=lf
