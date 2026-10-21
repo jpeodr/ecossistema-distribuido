@@ -85,6 +85,7 @@
   .btn-primary:hover { background: var(--link-hover); color: #fff; }
   .btn-subtle { background: var(--surface); color: var(--txt); border-color: var(--border); }
   .btn-subtle:hover { background: var(--surface-2); color: var(--txt); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
   .btn[aria-current="page"] { background: var(--surface-2); border-color: var(--border-strong); }
   .theme-btn {
     width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
@@ -113,6 +114,8 @@
   }
   .toc a:hover { color: var(--link); text-decoration: none; }
   .toc a.active { color: var(--link); font-weight: 600; border-left-color: var(--link); background: var(--surface); }
+  .toc ol.sub { margin: 2px 0 6px; padding-left: 14px; border-left: 0; }
+  .toc ol.sub a { padding: 4px 10px; font-size: .8125rem; border-left: 0; color: var(--txt-soft); }
 
   .article { padding: 36px 0 96px; max-width: 47em; }
   .article h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
@@ -155,6 +158,114 @@
   figcaption a { color: var(--link); }
 
   /* ===================== blocos ===================== */
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    font-size: .6875rem; padding: 2px 7px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--txt-soft);
+  }
+  .bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
+  .bar > i { display: block; height: 100%; background: var(--link); }
+  .tag { font-size: .6875rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--txt-soft); }
+  .tag.hi { color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .tag.md { color: var(--amber); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+  .tag.lo { color: var(--green); border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+  ul.tight { margin: 8px 0 0; padding-left: 20px; font-size: .8125rem; color: var(--txt-soft); }
+  ul.tight li { margin-bottom: 4px; }
+
+  /* ===================== topologia ===================== */
+  .topo { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+  .node {
+    flex: 1 1 140px; min-width: 132px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
+  }
+  .node .t { font-size: .875rem; font-weight: 700; }
+  .node .s { font-size: .75rem; color: var(--txt-soft); margin-top: 2px; }
+  .node.manager { border-left: 3px solid var(--violet); }
+  .node.redis { border-left: 3px solid var(--amber); }
+  .node.sidra { border-left: 3px solid var(--green); }
+  .node.worker { border-left: 3px solid #0369a1; }
+  .arrow {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    min-width: 78px; color: var(--txt-soft); font-size: .6875rem; text-align: center; gap: 2px;
+  }
+  .arrow .g { font-size: 16px; color: var(--link); animation: slide 1.6s ease-in-out infinite; }
+  .arrow .lbl { font-family: var(--mono); font-size: .6875rem; }
+  @keyframes slide { 0%,100% { transform: translateX(0); opacity: .6 } 50% { transform: translateX(4px); opacity: 1 } }
+
+  /* ===================== etapas ===================== */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 12px; }
+  .step { position: relative; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 14px 50px; background: var(--bg); }
+  .step .n {
+    position: absolute; left: 13px; top: 13px; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--link); border: 1px solid var(--border);
+  }
+  .step h3 { margin: 0 0 4px; font-size: .9375rem; }
+  .step p { margin: 0; font-size: .8125rem; color: var(--txt-soft); }
+  .step .who {
+    display: inline-block; margin-top: 8px; font-size: .6875rem; font-family: var(--mono);
+    color: var(--txt-soft); background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2px 6px;
+  }
+  .step .who b { color: var(--violet); font-weight: 600; }
+
+  /* ===================== modo ao vivo ===================== */
+  .livebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .livebar select {
+    font: inherit; font-size: .8125rem; padding: 6px 8px; border-radius: var(--radius);
+    background: var(--bg); color: var(--txt); border: 1px solid var(--border);
+  }
+  #stage {
+    position: relative; height: 250px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); overflow: hidden;
+  }
+  .wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .wire { animation: dash 1.3s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -28; } }
+  #nodes { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 12px; }
+  .lnode {
+    width: 142px; padding: 10px; border-radius: var(--radius); background: var(--bg);
+    border: 1px solid var(--border); border-top: 3px solid var(--border-strong);
+    text-align: center; position: relative; z-index: 2;
+  }
+  .lnode b { display: block; font-size: .8125rem; }
+  .lnode small { display: block; color: var(--txt-soft); font-size: .6875rem; margin-top: 3px; }
+  .lnode.sidra { border-top-color: var(--green); }
+  .lnode.redis { border-top-color: var(--amber); }
+  .lnode.manager { border-top-color: var(--violet); }
+  .lnode.workers { border-top-color: #0369a1; }
+  .lnode.flash { animation: flash .7s ease-out; }
+  @keyframes flash {
+    0% { box-shadow: 0 0 0 0 rgba(124,58,237,.75); }
+    100% { box-shadow: 0 0 0 18px rgba(124,58,237,0); }
+  }
+  .idles { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+  .idles i { width: 6px; height: 6px; border-radius: 50%; background: #0369a1; animation: idle 1.5s infinite; }
+  .idles i:nth-child(2) { animation-delay: .3s; }
+  .idles i:nth-child(3) { animation-delay: .6s; }
+  .idles i:nth-child(4) { animation-delay: .9s; }
+  @keyframes idle { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+  #particles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+  .particle { position: absolute; width: 9px; height: 9px; border-radius: 50%; transform: translate(-50%, -50%); }
+
+  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin: 12px 0; }
+  .counter { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; background: var(--bg); }
+  .counter .v { font-size: 1.375rem; font-weight: 700; color: var(--txt); line-height: 1.2; }
+  .counter .l { font-size: .6875rem; color: var(--txt-soft); text-transform: uppercase; letter-spacing: .05em; }
+
+  .log {
+    margin: 0 0 1rem; height: 132px; overflow-y: auto; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
+    font-family: var(--mono); font-size: .75rem; line-height: 1.6; color: var(--txt);
+  }
+  .log .ev { white-space: pre-wrap; }
+  .log .t { color: var(--txt-soft); }
+  .log .w { color: var(--violet); }
+  .log .fin { color: var(--green); }
+
   .formula {
     font-family: var(--mono); font-size: .8125rem; background: var(--surface); color: var(--txt);
     border: 1px solid var(--border); border-left: 3px solid var(--violet); border-radius: var(--radius);
@@ -219,6 +330,18 @@
         <li><a href="#sequencia">Ciclo de um job</a></li>
         <li><a href="#classes">Modelo de domínio</a></li>
         <li><a href="#atividade">Fluxo de execução</a></li>
+        <li>
+          <a href="#como-funciona">Como funciona</a>
+          <ol class="sub">
+            <li><a href="#cf-topologia">Topologia</a></li>
+            <li><a href="#cf-ao-vivo">Execução ao vivo</a></li>
+            <li><a href="#cf-fluxo">Fluxo de trabalho</a></li>
+            <li><a href="#cf-quem">Quem fez o quê</a></li>
+            <li><a href="#cf-reduce">O que o REDUCE calcula</a></li>
+            <li><a href="#cf-arquivos">Arquivos</a></li>
+            <li><a href="#cf-falhas">Falhas</a></li>
+          </ol>
+        </li>
         <li><a href="#paralelismo">Paralelismo</a></li>
         <li><a href="#speedup">Speedup</a></li>
         <li><a href="#fontes">Fontes dos diagramas</a></li>
@@ -231,8 +354,9 @@
     <h1>Arquitetura de solução</h1>
     <p class="lead">
       Topologia distribuída adotada no ecossistema SIDRA/IBGE, diagramas UML dos
-      componentes, da implantação, da sequência, das classes e da atividade, além do
-      cálculo de speedup medido no sistema.
+      componentes, da implantação, da sequência, das classes e da atividade, o
+      funcionamento do sistema passo a passo (com execução ao vivo) e o cálculo de
+      speedup medido no sistema.
     </p>
 
     <div class="summary">
@@ -243,6 +367,7 @@
         <li><b>27 tarefas por job</b>, uma por Unidade da Federação, consumidas por qualquer Worker.</li>
         <li><b>Três níveis de paralelismo</b>: entre os nós, dentro do nó (I/O) e dentro da tarefa (CPU).</li>
         <li><b>Speedup medido</b> contra o teto teórico da lei de Amdahl, com os números do último job.</li>
+        <li><b>Modo ao vivo</b>: <a href="#cf-ao-vivo">ver a infraestrutura trabalhando</a> com um job real.</li>
       </ul>
     </div>
 
@@ -385,6 +510,190 @@
       </figure>
     </section>
 
+    <!-- ================= COMO FUNCIONA ================= -->
+    <section id="como-funciona">
+      <h2>Como funciona <a class="anchor" href="#como-funciona">#</a></h2>
+      <p>
+        O mesmo sistema visto por dentro: topologia em execução, job real animado, as 8 etapas
+        do processamento, a distribuição das tarefas entre os Workers, o que o REDUCE calcula,
+        os arquivos do projeto e como as falhas são tratadas.
+      </p>
+
+      <!-- ---------- TOPOLOGIA ---------- -->
+      <h3 id="cf-topologia">Topologia <a class="anchor" href="#cf-topologia">#</a></h3>
+      <div class="card topo">
+        <div class="row">
+          <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /jobs</div></div>
+          <div class="node manager"><div class="t">Manager</div><div class="s">FastAPI · fatia e consolida</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">RPUSH</div></div>
+          <div class="node redis"><div class="t">Redis</div><div class="s">fila <code>sidra:tasks</code></div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">BLPOP</div></div>
+          <div class="node worker"><div class="t">Workers</div><div class="s" id="topo-workers">N nós</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">HTTPS</div></div>
+          <div class="node sidra"><div class="t">SIDRA / IBGE</div><div class="s">API pública</div></div>
+        </div>
+        <div class="row">
+          <div class="node worker"><div class="t">Workers</div><div class="s">resposta normalizada</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /internal/results</div></div>
+          <div class="node manager"><div class="t">Manager</div><div class="s">grava no SQLite</div></div>
+          <div class="arrow"><div class="g">➜</div><div class="lbl">REDUCE</div></div>
+          <div class="node"><div class="t">Relatório</div><div class="s">somas · médias · ranking · HHI</div></div>
+        </div>
+      </div>
+
+      <!-- ---------- EXECUÇÃO AO VIVO ---------- -->
+      <h3 id="cf-ao-vivo">Execução ao vivo <a class="anchor" href="#cf-ao-vivo">#</a></h3>
+      <div class="card">
+        <div class="livebar">
+          <button id="btnLive" class="btn btn-primary">▶ Ver a infraestrutura trabalhando</button>
+          <button id="btnStop" class="btn btn-subtle" disabled>■ Parar</button>
+          <select id="liveDataset" aria-label="Pesquisa"></select>
+          <span id="liveState" class="muted">parado</span>
+        </div>
+
+        <div id="stage" role="img" aria-label="Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager.">
+          <svg id="wires" class="wires"></svg>
+          <div id="nodes">
+            <div class="lnode sidra" id="n-sidra"><b>SIDRA / IBGE</b><small>API pública</small></div>
+            <div class="lnode workers" id="n-workers"><b>Workers</b><small id="l-workers">—</small><div class="idles" id="l-idle"></div></div>
+            <div class="lnode redis" id="n-redis"><b>Redis</b><small id="l-fila">fila sidra:tasks</small></div>
+            <div class="lnode manager" id="n-manager"><b>Manager</b><small id="l-manager">fatia + REDUCE</small></div>
+          </div>
+          <div id="particles"></div>
+        </div>
+
+        <div class="counters">
+          <div class="counter"><div class="v" id="c-desp">0</div><div class="l">despachadas</div></div>
+          <div class="counter"><div class="v" id="c-voo">0</div><div class="l">em voo</div></div>
+          <div class="counter"><div class="v" id="c-ok">0</div><div class="l">concluídas</div></div>
+          <div class="counter"><div class="v" id="c-fila">0</div><div class="l">na fila</div></div>
+          <div class="counter"><div class="v" id="c-wk">0</div><div class="l">workers</div></div>
+          <div class="counter"><div class="v" id="c-tempo">0,0 s</div><div class="l">tempo total</div></div>
+        </div>
+
+        <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto</span></div>
+
+        <div class="note">
+          <p>
+            A animação é ilustrativa do fluxo. Contadores, tempos e log vêm do sistema real.
+            Legenda: <span style="color:#fbbf24">●</span> tarefa publicada ·
+            <span style="color:#38bdf8">●</span> tarefa retirada da fila ·
+            <span style="color:#34d399">●</span> consulta ao SIDRA ·
+            <span style="color:#a78bfa">●</span> callback ao Manager.
+          </p>
+        </div>
+      </div>
+
+      <!-- ---------- FLUXO DE TRABALHO ---------- -->
+      <h3 id="cf-fluxo">Fluxo de trabalho <a class="anchor" href="#cf-fluxo">#</a></h3>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Pedido</h3>
+          <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa (LSPA ou PIM-PF).</p>
+          <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
+        <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
+          <p>O Manager obtém o período no SIDRA e divide o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
+          <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
+        <div class="step"><div class="n">3</div><h3>Publicação</h3>
+          <p>As tarefas são publicadas na fila do Redis (<code>RPUSH</code> em pipeline).</p>
+          <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
+        <div class="step"><div class="n">4</div><h3>Consumo</h3>
+          <p>Cada Worker espera a fila com <code>BLPOP</code> e retira uma tarefa por vez.</p>
+          <span class="who"><b>Worker</b> · worker/main.py</span></div>
+        <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
+          <p>O Worker consulta a API do SIDRA, converte os números pt-BR e normaliza com pandas.</p>
+          <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
+        <div class="step"><div class="n">6</div><h3>Callback</h3>
+          <p>O Worker devolve os registros ao Manager, que grava no SQLite e conta a tarefa como concluída.</p>
+          <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
+        <div class="step"><div class="n">7</div><h3>REDUCE</h3>
+          <p>Quando todas as tarefas terminam, o Manager consolida os registros e gera o relatório.</p>
+          <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
+        <div class="step"><div class="n">8</div><h3>Leitura</h3>
+          <p>A interface busca <code>GET /api/v1/results</code> e mostra as tabelas do relatório.</p>
+          <span class="who"><b>Painel</b> · /painel/</span></div>
+      </div>
+
+      <!-- ---------- QUEM FEZ O QUÊ ---------- -->
+      <h3 id="cf-quem">Quem fez o quê <a class="anchor" href="#cf-quem">#</a></h3>
+      <p class="muted">Distribuição das tarefas do último job entre os Workers.</p>
+      <div class="grid2">
+        <div class="card">
+          <table>
+            <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo total</th><th>UFs coletadas</th></tr></thead>
+            <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
+          </table>
+          <p class="note" id="jobinfo" style="margin-bottom:0"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 10px; font-size:.9375rem;">Fila e nós agora</h3>
+          <table>
+            <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
+            <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
+          </table>
+          <p class="note" style="margin-bottom:0">Heartbeat a cada 10 s: é o que o Manager usa para saber quais nós estão ativos.</p>
+        </div>
+      </div>
+
+      <!-- ---------- REDUCE ---------- -->
+      <h3 id="cf-reduce">O que o REDUCE calcula <a class="anchor" href="#cf-reduce">#</a></h3>
+      <div class="grid2">
+        <div class="card">
+          <table>
+            <thead><tr><th>Categoria</th><th>Variáveis (agregado)</th><th class="num">HHI</th><th>Ranking (variável principal)</th></tr></thead>
+            <tbody id="reduceRows"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
+          </table>
+          <p class="note" id="reduceinfo" style="margin-bottom:0"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 4px; font-size:.9375rem;">As fórmulas</h3>
+          <p class="muted" style="font-size:.8125rem;">Executadas no Manager, depois que todas as tarefas terminam.</p>
+          <div class="formula">soma      = Σ valor(UF)
+média     = Σ (valor(UF) × peso(UF)) / Σ peso(UF)
+part. %   = 100 × valor(UF) / Σ valor(UF)
+HHI       = Σ (part. % / 100)²</div>
+          <ul class="tight">
+            <li><b>Soma</b> — variáveis aditivas (produção, valor).</li>
+            <li><b>Média ponderada</b> — variáveis de índice (preço, área média).</li>
+            <li><b>Participação</b> — quanto cada UF responde pelo total.</li>
+            <li><b>HHI</b> — concentração: &lt;0,15 baixa · 0,15–0,25 moderada · &gt;0,25 alta.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ---------- ARQUIVOS ---------- -->
+      <h3 id="cf-arquivos">Arquivos <a class="anchor" href="#cf-arquivos">#</a></h3>
+      <div class="card">
+        <table>
+          <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">src/manager/main.py</td><td>API FastAPI: cria o job, recebe callbacks, dispara o REDUCE, serve o painel</td></tr>
+            <tr><td class="mono">src/manager/dispatcher.py</td><td>Fatiamento: uma tarefa por Unidade da Federação</td></tr>
+            <tr><td class="mono">src/manager/analysis.py</td><td>REDUCE: somas, médias ponderadas, ranking de UFs e HHI</td></tr>
+            <tr><td class="mono">src/manager/store.py</td><td>Persistência SQLite: jobs, tarefas, registros e workers</td></tr>
+            <tr><td class="mono">src/worker/main.py</td><td>Ciclo do Worker: BLPOP, limite de concorrência, callback e heartbeat</td></tr>
+            <tr><td class="mono">src/worker/processor.py</td><td>MAP: parse das linhas do SIDRA e resumo com pandas</td></tr>
+            <tr><td class="mono">src/common/sidra.py</td><td>Cliente HTTP do SIDRA com retry e conversão de número pt-BR</td></tr>
+            <tr><td class="mono">src/common/datasets.py</td><td>Definição das pesquisas (LSPA 6588, PIM-PF 8888) e das 27 UFs</td></tr>
+            <tr><td class="mono">docker-compose.yml</td><td>Topologia: manager, redis, workers escaláveis e perfil de demo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ---------- FALHAS ---------- -->
+      <h3 id="cf-falhas">Falhas <a class="anchor" href="#cf-falhas">#</a></h3>
+      <div class="levels">
+        <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
+          <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s e 2 s, até <code>MAX_RETRIES</code>.</p></div>
+        <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
+          <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
+        <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>
+          <p>Worker sem heartbeat há 30 s (<code>WORKER_STALE_SECONDS</code>) sai da lista de ativos.</p></div>
+        <div class="lvl"><div class="k">Escala</div><h3>Mais nós</h3>
+          <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos consomem as mesmas tarefas.</p></div>
+      </div>
+    </section>
+
     <!-- ================= PARALELISMO ================= -->
     <section id="paralelismo">
       <h2>Paralelismo <a class="anchor" href="#paralelismo">#</a></h2>
@@ -400,7 +709,7 @@
           <div class="k">Nível 1 · entre os nós</div>
           <h3>Distribuído</h3>
           <div class="big" id="p1">—<small> tarefas</small></div>
-          <p>Uma tarefa por UF: 27 consultas independentes ao SIDRA, espalhadas pelos Workers que retiram tarefas da fila.</p>
+          <p id="p1b">Uma tarefa por UF: 27 consultas independentes ao SIDRA, espalhadas pelos Workers que retiram tarefas da fila.</p>
         </div>
         <div class="lvl">
           <div class="k">Nível 2 · dentro do nó</div>
@@ -535,16 +844,6 @@ S_max = 1 / ((1 − P) + P / N)</div>
       servidor público do PlantUML.</p>
     </section>
 
-    <div class="seealso">
-      <h2>Veja também</h2>
-      <ul>
-        <li><a href="/painel/como-funciona">Como funciona</a> — o mesmo fluxo em modo animado, com job real.</li>
-        <li><a href="/painel/">Interface de leitura</a> — os dados do SIDRA e as tabelas do relatório.</li>
-        <li><a href="/docs">Swagger da API</a> — endpoints, schemas e execução direta.</li>
-        <li><a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a> — código, README e diagramas.</li>
-      </ul>
-    </div>
-
     <footer>
       Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em Docker.
     </footer>
@@ -556,7 +855,12 @@ S_max = 1 / ((1 − P) + P / N)</div>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const nf = (v, d = 2) => typeof v === "number" ? v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }) : v;
-const ms = (v) => v >= 1000 ? (v / 1000).toFixed(2).replace(".", ",") + " s" : Math.round(v) + " ms";
+const ms = (v) => v == null ? "—" : v >= 1000 ? (v / 1000).toFixed(2).replace(".", ",") + " s" : Math.round(v) + " ms";
+function ago(ts) {
+  if (!ts) return "—";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  return s < 60 ? s + " s" : Math.round(s / 60) + " min";
+}
 
 /* ---------- tema claro/escuro ---------- */
 const btnTema = $("#btnTema");
@@ -567,48 +871,97 @@ btnTema.addEventListener("click", () => {
   if (escuro) delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = "dark";
   localStorage.setItem("tema", escuro ? "light" : "dark");
+  desenharFios();
 });
 
 /* ---------- item ativo do sumário ---------- */
-const secoes = [...document.querySelectorAll("main > section")];
 const links = [...document.querySelectorAll(".toc a")];
-if ("IntersectionObserver" in window && secoes.length) {
-  const obs = new IntersectionObserver((entradas) => {
-    for (const e of entradas) {
-      if (!e.isIntersecting) continue;
-      links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
-    }
-  }, { rootMargin: "-80px 0px -70% 0px" });
-  secoes.forEach(s => obs.observe(s));
+const alvos = links
+  .map(a => ({ a, el: document.getElementById(a.getAttribute("href").slice(1)) }))
+  .filter(x => x.el);
+let alvoAtual = null;
+function marcarAtivo() {
+  const y = window.scrollY + 140;                 // ignora o cabeçalho fixo
+  let atual = null;
+  for (const x of alvos) {
+    if (x.el.getBoundingClientRect().top + window.scrollY <= y) atual = x;
+    else break;
+  }
+  const noFim = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+  if (noFim && alvos.length) atual = alvos[alvos.length - 1];
+  if (atual === alvoAtual) return;
+  alvoAtual = atual;
+  links.forEach(l => l.classList.remove("active"));
+  if (atual) atual.a.classList.add("active");
 }
+window.addEventListener("scroll", () => requestAnimationFrame(marcarAtivo), { passive: true });
+marcarAtivo();
 
-/* ---------- paralelismo e speedup medidos ---------- */
-async function medir() {
+/* ---------- medições: nós, workers, distribuição, REDUCE e speedup ---------- */
+async function atualizar() {
   try {
-    const lista = await (await fetch("/api/v1/jobs?limit=1")).json();
-    const job = lista.jobs && lista.jobs[0];
-    const w = await (await fetch("/api/v1/workers")).json();
-    const slots = w.workers.reduce((a, x) => a + (x.capacity || 0), 0);
+    const h = await (await fetch("/api/v1/health")).json();
+    $("#topo-workers").textContent = h.workers_ativos + " nós ativos";
+
+    const wl = await (await fetch("/api/v1/workers")).json();
+    $("#wtable").innerHTML = wl.workers.length
+      ? wl.workers.map(x => `<tr>
+          <td class="mono">${esc(x.worker_id)}</td>
+          <td class="num">${x.capacity}</td>
+          <td class="num">${x.tasks_done}</td>
+          <td class="num">${x.tasks_failed}</td>
+          <td class="num">${ago(x.last_seen)}</td></tr>`).join("")
+      : `<tr><td colspan="5" class="empty">Nenhum worker ativo.</td></tr>`;
+    const slots = wl.workers.reduce((a, x) => a + (x.capacity || 0), 0);
     $("#p2").innerHTML = slots + "<small> tarefas em voo</small>";
 
-    if (!job) {
+    const lista = await (await fetch("/api/v1/jobs?limit=1")).json();
+    const j = lista.jobs && lista.jobs[0];
+    if (!j) {
       $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Nenhum job executado ainda.</td></tr>`;
       return;
     }
-    const t = await (await fetch(`/api/v1/jobs/${job.job_id}/tasks`)).json();
+
+    const t = await (await fetch(`/api/v1/jobs/${j.job_id}/tasks`)).json();
+    const dist = t.distribuicao_por_worker || {};
+
+    /* quem fez o quê */
+    const porWorker = {};
+    for (const task of t.tasks) {
+      const w = task.worker_id || "sem worker";
+      porWorker[w] = porWorker[w] || { n: 0, ms: 0, ufs: [] };
+      porWorker[w].n++;
+      porWorker[w].ms += task.duration_ms || 0;
+      porWorker[w].ufs.push(task.territory_name);
+    }
+    const max = Math.max(1, ...Object.values(porWorker).map(x => x.n));
+    const linhasQuem = Object.entries(porWorker).sort((a, b) => b[1].n - a[1].n).map(([w, d]) => `
+      <tr>
+        <td class="mono">${esc(w)}<div class="bar"><i style="width:${100 * d.n / max}%"></i></div></td>
+        <td class="num">${d.n}</td>
+        <td class="num">${ms(d.ms)}</td>
+        <td><div class="chips">${d.ufs.map(u => `<span class="chip">${esc(u)}</span>`).join("")}</div></td>
+      </tr>`).join("");
+    $("#quem").innerHTML = linhasQuem || `<tr><td colspan="4" class="empty">Sem tarefas registradas.</td></tr>`;
+    $("#jobinfo").textContent =
+      `job ${j.job_id} · ${j.dataset} · ${j.status} · ${j.done_tasks}/${j.total_tasks} tarefas · `
+      + `distribuição: ${Object.entries(dist).map(([w, n]) => w + "=" + n).join(", ")}`;
+
+    $("#p1").innerHTML = j.total_tasks + "<small> tarefas</small>";
+    $("#p1b").textContent =
+      `${j.total_tasks} UFs em paralelo, repartidas entre ${Object.keys(dist).length} workers.`;
+
+    /* speedup */
     const soma = t.tasks.reduce((a, x) => a + (x.duration_ms || 0), 0);
-    const summary = typeof job.summary === "string" ? JSON.parse(job.summary) : (job.summary || {});
+    const summary = typeof j.summary === "string" ? JSON.parse(j.summary) : (j.summary || {});
     const reduceMs = summary.reduce_ms || 0;
-
-    $("#p1").innerHTML = job.total_tasks + "<small> tarefas</small>";
-
     const T1 = soma / 1000 + reduceMs / 1000;              // serial: tarefas + REDUCE
-    const Tp = Math.max(0.001, (job.finished_at || 0) - (job.started_at || 0));
+    const Tp = Math.max(0.001, (j.finished_at || 0) - (j.started_at || 0));
     const P = T1 ? (soma / 1000) / T1 : 0;
     const S = T1 / Tp;
     const Smax = slots ? 1 / ((1 - P) + P / slots) : null;
 
-    const linhas = [
+    const linhasSp = [
       ["Σ duração das tarefas (trabalho paralelo)", ms(soma), "soma de <code>duration_ms</code> das tarefas do job"],
       ["t_REDUCE (fração sequencial)", ms(reduceMs), "tempo do REDUCE medido no Manager"],
       ["T₁ — tempo serial equivalente", nf(T1) + " s", "Σ durações + REDUCE"],
@@ -618,15 +971,249 @@ async function medir() {
       ["S — speedup observado", nf(S) + "×", "T₁ / Tₚ"],
       ["S_max — teto de Amdahl", Smax === null ? "—" : nf(Smax) + "×", "1 / ((1 − P) + P / N)"],
     ];
-    $("#speedupRows").innerHTML = linhas.map(([k, v, o]) =>
+    $("#speedupRows").innerHTML = linhasSp.map(([k, v, o]) =>
       `<tr><td>${k}</td><td class="num"><b>${v}</b></td><td class="muted">${o}</td></tr>`).join("");
+
+    /* o que o REDUCE calculou */
+    const r = await (await fetch(`/api/v1/jobs/${j.job_id}/results`)).json();
+    const s = r.summary;
+    if (!s) return;
+    const linhasR = [];
+    for (const [cat, data] of Object.entries(s.categorias || {})) {
+      const listaVars = Object.entries(data.variaveis || {}).map(([nome, v]) =>
+        `<b>${esc(nome)}</b>: ${nf(v.valor_agregado)} ${esc(v.unidade || "")}`
+      ).join("<br>");
+      const ranking = (data.ufs_lideres || []).slice(0, 5);
+      const maior = Math.max(1, ...ranking.map(x => x.valor || 0));
+      const hhi = data.concentracao_hhi;
+      const tag = hhi == null ? "" : hhi >= 0.25 ? "hi" : hhi >= 0.15 ? "md" : "lo";
+      const rot = hhi == null ? "—" : hhi >= 0.25 ? "alta" : hhi >= 0.15 ? "moderada" : "baixa";
+      linhasR.push(`<tr>
+        <td><b>${esc(cat)}</b></td>
+        <td>${listaVars || "—"}</td>
+        <td class="num">${hhi == null ? "—" : hhi.toFixed(3).replace(".", ",")}
+          <div><span class="tag ${tag}">${rot}</span></div></td>
+        <td>${ranking.map(x => `
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="min-width:74px;">${esc(x.uf)}</span>
+            <span class="bar" style="flex:1"><i style="width:${100 * (x.valor || 0) / maior}%"></i></span>
+            <span class="num" style="min-width:96px;">${nf(x.valor)}${x.participacao_pct != null ? " (" + x.participacao_pct + "%)" : ""}</span>
+          </div>`).join("")}</td>
+      </tr>`);
+    }
+    $("#reduceRows").innerHTML = linhasR.join("") || `<tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr>`;
+    const cats = Object.keys(s.categorias || {});
+    const hh = cats.map(c => s.categorias[c].concentracao_hhi).filter(x => x != null);
+    $("#reduceinfo").textContent = cats.length
+      ? `${cats.join(", ")} — ${cats.length} categorias · ${s.registros} registros · ${s.ufs_analisadas} UFs`
+        + (hh.length ? ` · HHI médio ${(hh.reduce((a, b) => a + b, 0) / hh.length).toFixed(3).replace(".", ",")}` : "")
+      : "";
   } catch (e) {
+    $("#topo-workers").textContent = "indisponível";
     $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Sem medições disponíveis.</td></tr>`;
   }
 }
 
-medir();
-setInterval(medir, 5000);
+atualizar();
+setInterval(atualizar, 3000);
+
+/* ============================================================
+   MODO AO VIVO — anima a infraestrutura trabalhando
+   ============================================================ */
+const FLOWS = {
+  push: { color: "#fbbf24", from: "n-manager", to: "n-redis", a: "L", b: "R", dur: 0.9 },
+  pop:  { color: "#38bdf8", from: "n-redis", to: "n-workers", a: "L", b: "R", dur: 1.0 },
+  req:  { color: "#34d399", from: "n-workers", to: "n-sidra", a: "L", b: "R", dur: 1.1 },
+  cb:   { color: "#a78bfa", from: "n-workers", to: "n-manager", a: "TOP", b: "TOP", arc: true, dur: 1.2 },
+};
+const LENTIDAO = 2.2;               // partículas em movimento lento
+const stage = $("#stage"), svgWires = $("#wires"), layer = $("#particles");
+let partes = [], ultimoT = 0, live = null, anchors = {};
+
+function caixa(id, lado) {
+  const r = document.getElementById(id).getBoundingClientRect();
+  const s = stage.getBoundingClientRect();
+  if (lado === "L") return { x: r.left - s.left, y: r.top - s.top + r.height / 2 };
+  if (lado === "R") return { x: r.right - s.left, y: r.top - s.top + r.height / 2 };
+  return { x: r.left - s.left + r.width / 2, y: r.top - s.top };
+}
+function medir() {
+  anchors = {};
+  for (const f of Object.values(FLOWS)) {
+    anchors[f.from + f.a] = caixa(f.from, f.a);
+    anchors[f.to + f.b] = caixa(f.to, f.b);
+  }
+}
+function ponto(f, k) {
+  const p0 = anchors[f.from + f.a], p1 = anchors[f.to + f.b];
+  if (!p0 || !p1) return { x: 0, y: 0 };
+  if (!f.arc) return { x: p0.x + (p1.x - p0.x) * k, y: p0.y + (p1.y - p0.y) * k };
+  const cx = (p0.x + p1.x) / 2, cy = Math.max(10, Math.min(p0.y, p1.y) - 78), m = 1 - k;
+  return { x: m * m * p0.x + 2 * m * k * cx + k * k * p1.x, y: m * m * p0.y + 2 * m * k * cy + k * k * p1.y };
+}
+function desenharFios() {
+  medir();
+  svgWires.innerHTML = "";
+  svgWires.setAttribute("width", stage.clientWidth);
+  svgWires.setAttribute("height", stage.clientHeight);
+  for (const f of Object.values(FLOWS)) {
+    const p0 = anchors[f.from + f.a], p1 = anchors[f.to + f.b];
+    const d = f.arc
+      ? `M ${p0.x} ${p0.y} Q ${(p0.x + p1.x) / 2} ${Math.max(10, Math.min(p0.y, p1.y) - 78)} ${p1.x} ${p1.y}`
+      : `M ${p0.x} ${p0.y} L ${p1.x} ${p1.y}`;
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    el.setAttribute("d", d);
+    el.setAttribute("stroke", f.color);
+    el.setAttribute("stroke-width", "1.6");
+    el.setAttribute("fill", "none");
+    el.setAttribute("opacity", ".55");
+    el.setAttribute("stroke-dasharray", "6 8");
+    el.setAttribute("class", "wire");
+    svgWires.appendChild(el);
+  }
+}
+function spawn(f, atraso = 0) {
+  const el = document.createElement("i");
+  el.className = "particle";
+  el.style.background = f.color;
+  el.style.boxShadow = "0 0 8px " + f.color;
+  layer.appendChild(el);
+  partes.push({ el, f, t: -atraso, dur: f.dur * LENTIDAO });
+  rotular();
+}
+function rotular() {
+  stage.setAttribute("aria-label",
+    `Fluxo: o Manager publica as tarefas no Redis, os Workers retiram da fila, consultam o SIDRA e devolvem ao Manager. ${partes.length} pacotes em trânsito.`);
+}
+function laco(ts) {
+  const dt = ultimoT ? (ts - ultimoT) / 1000 : 0;
+  ultimoT = ts;
+  medir();
+  for (let i = partes.length - 1; i >= 0; i--) {
+    const p = partes[i];
+    p.t += dt;
+    if (p.t < 0) { p.el.style.opacity = "0"; continue; }
+    const k = Math.min(1, p.t / p.dur);
+    const pos = ponto(p.f, k);
+    p.el.style.left = pos.x + "px";
+    p.el.style.top = pos.y + "px";
+    p.el.style.opacity = k > 0.88 ? String((1 - k) / 0.12) : "1";
+    if (k >= 1) { p.el.remove(); partes.splice(i, 1); rotular(); }
+  }
+  requestAnimationFrame(laco);
+}
+function log(msg, cls = "") {
+  const box = $("#log");
+  const div = document.createElement("div");
+  div.className = "ev";
+  div.innerHTML = `<span class="t">${new Date().toLocaleTimeString("pt-BR")}</span> <span class="${cls}">${msg}</span>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 80) box.removeChild(box.firstChild);
+}
+function flash(el) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+
+async function iniciarLive() {
+  $("#btnLive").disabled = true;
+  $("#btnStop").disabled = false;
+  $("#liveState").textContent = "despachando…";
+  $("#log").innerHTML = "";
+  partes.forEach(p => p.el.remove());
+  partes = [];
+  desenharFios();
+
+  const dataset = $("#liveDataset").value || "lspa";
+  // reaproveita o período do último job da mesma pesquisa: dispensa a consulta extra ao SIDRA
+  let periodo = null;
+  try {
+    const ult = await (await fetch("/api/v1/jobs?limit=1")).json();
+    const anterior = ult.jobs[0];
+    if (anterior && anterior.dataset === dataset) periodo = anterior.period;
+  } catch (e) { /* segue sem período: o Manager busca */ }
+
+  const r = await fetch("/api/v1/jobs", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(periodo ? { dataset, period: periodo } : { dataset })
+  });
+  const job = await r.json();
+  if (!r.ok) { log("erro ao criar o job: " + esc(job.detail || r.status), "fin"); pararLive(); return; }
+
+  live = { job, total: job.total_tasks, vistos: new Set(), t0: Date.now() };
+  $("#liveState").textContent = "rodando…";
+  log(`job ${esc(job.job_id)} · ${job.total_tasks} tarefas (1 por UF) · período ${esc(job.period)}`, "w");
+  log("manager publica as tarefas na fila do Redis (RPUSH)", "w");
+  for (let i = 0; i < job.total_tasks; i++) spawn(FLOWS.push, i * 0.05);
+  $("#c-desp").textContent = job.total_tasks;
+  monitorar();
+}
+
+async function monitorar() {
+  if (!live) return;
+  const id = live.job.job_id;
+  let j, tasks;
+  try {
+    j = await (await fetch(`/api/v1/jobs/${id}`)).json();
+    tasks = (await (await fetch(`/api/v1/jobs/${id}/tasks`)).json()).tasks;
+  } catch (e) { setTimeout(monitorar, 800); return; }
+
+  for (const t of tasks) {
+    if (t.status !== "done" || live.vistos.has(t.task_id)) continue;
+    live.vistos.add(t.task_id);
+    spawn(FLOWS.cb, 0);
+    flash($("#n-manager"));
+    log(`<b>${esc(t.worker_id || "worker")}</b> concluiu ${esc(t.territory_name)} · ${t.duration_ms} ms · callback`, "");
+  }
+
+  const emVoo = Math.max(0, live.total - j.done_tasks);
+  if (emVoo > 0) {
+    const n = Math.min(4, 1 + Math.round(emVoo / 6));
+    for (let i = 0; i < n; i++) { spawn(FLOWS.pop, i * 0.12); spawn(FLOWS.req, i * 0.16); }
+  }
+
+  const h = await (await fetch("/api/v1/health")).json();
+  const secs = (Date.now() - live.t0) / 1000;
+  $("#c-desp").textContent = live.total;
+  $("#c-voo").textContent = emVoo;
+  $("#c-ok").textContent = j.done_tasks;
+  $("#c-fila").textContent = h.fila;
+  $("#c-wk").textContent = h.workers_ativos;
+  $("#c-tempo").textContent = secs.toFixed(1).replace(".", ",") + " s";
+  $("#l-fila").textContent = "fila: " + h.fila + " tarefa(s)";
+  $("#l-workers").textContent = h.workers_ativos + " ativos · 4 em voo cada";
+  $("#l-manager").textContent = j.done_tasks + "/" + j.total_tasks + " consolidadas";
+  $("#l-idle").innerHTML = Array.from({ length: Math.min(4, h.workers_ativos) }, () => "<i></i>").join("");
+
+  if (j.status === "completed" || j.status === "failed") {
+    log(j.status === "completed"
+      ? `REDUCE concluído em ${secs.toFixed(1).replace(".", ",")} s · relatório pronto`
+      : "job falhou", "fin");
+    $("#liveState").textContent = "concluído";
+    $("#btnLive").disabled = false;
+    $("#btnStop").disabled = true;
+    live = null;
+    return;
+  }
+  setTimeout(monitorar, 600);
+}
+
+function pararLive() {
+  live = null;
+  $("#btnLive").disabled = false;
+  $("#btnStop").disabled = true;
+  $("#liveState").textContent = "parado";
+  log("interrompido", "w");
+}
+
+$("#btnLive").addEventListener("click", iniciarLive);
+$("#btnStop").addEventListener("click", pararLive);
+window.addEventListener("resize", desenharFios);
+(async () => {
+  const d = await (await fetch("/api/v1/datasets")).json();
+  $("#liveDataset").innerHTML =
+    Object.values(d).map(x => `<option value="${x.key}">${esc(x.label)}</option>`).join("");
+})();
+desenharFios();
+requestAnimationFrame(laco);
 </script>
 </body>
 </html>

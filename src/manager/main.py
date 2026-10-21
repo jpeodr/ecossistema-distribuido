@@ -76,8 +76,8 @@ async def painel() -> RedirectResponse:
 
 @app.get("/painel/como-funciona", include_in_schema=False)
 async def como_funciona() -> RedirectResponse:
-    """Página que mostra o funcionamento do ecossistema por trás da interface."""
-    return RedirectResponse("/painel/como-funciona.html")
+    """O conteúdo de "Como funciona" foi incorporado à página de documentação."""
+    return RedirectResponse("/painel/arquitetura#como-funciona")
 
 
 @app.get("/painel/arquitetura", include_in_schema=False)

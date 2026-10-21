@@ -95,12 +95,11 @@ docker compose up -d                  # sobe Manager + 3 Workers + Redis
 docker compose ps                     # topologia explícita
 ```
 
-**No navegador (três páginas):**
+**No navegador (duas páginas):**
 
 ```
 http://localhost:8000/painel/                # 1) os dados do SIDRA
-http://localhost:8000/painel/arquitetura      # 2) arquitetura, UML e speedup
-http://localhost:8000/painel/como-funciona   # 3) o fluxo de trabalho
+http://localhost:8000/painel/arquitetura      # 2) arquitetura, UML, fluxo ao vivo e speedup
 ```
 
 1. em `/painel/`, clicar em **"Buscar dados"** (pesquisa LSPA, período = último publicado);
@@ -108,11 +107,11 @@ http://localhost:8000/painel/como-funciona   # 3) o fluxo de trabalho
 3. as tabelas do **relatório (REDUCE)** aparecem: agregados, ranking de UF, participação e HHI;
 4. em `/painel/arquitetura`, rolar até **"Speedup"**: as fórmulas (speedup e teto de Amdahl) e
    os valores medidos no último job — o speedup observado contra o teto teórico;
-5. em `/painel/como-funciona`, clicar em **"▶ Ver a infraestrutura trabalhando"**:
+5. na seção **"Como funciona"**, clicar em **"▶ Ver a infraestrutura trabalhando"**:
    a topologia anima o fluxo real (Manager → Redis → Workers → SIDRA → Manager), os contadores
    sobem (despachadas / em voo / concluídas / fila) e o log mostra cada UF concluída por um worker;
-6. rolar até **"Quem fez o quê"** (as 27 UFs divididas entre os workers), **"Três níveis de
-   paralelismo"** e **"Falhas"** para fechar a parte técnica.
+6. rolar até **"Quem fez o quê"** (as 27 UFs divididas entre os workers), **"Paralelismo"** e
+   **"Falhas"** para fechar a parte técnica.
 
 **Em paralelo (outra janela):** `docker compose logs -f worker` mostra cada UF sendo processada.
 

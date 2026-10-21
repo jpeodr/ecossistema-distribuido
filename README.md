@@ -46,32 +46,30 @@ participação produtiva e índice de concentração (HHI).**
 Diagramas UML completos (fonte `.puml` + PNG renderizado) em [`docs/diagrams`](docs/diagrams):
 componentes, implantação (Docker), sequência, classes e atividade.
 
-### Interface web (três páginas)
+### Interface web (duas páginas)
 
-O Manager serve três páginas (HTML + JS puro, sem CDN e sem build):
+O Manager serve duas páginas (HTML + JS puro, sem CDN e sem build):
 
 ```
 http://localhost:8000/painel/                 # a raiz "/" redireciona para cá
-http://localhost:8000/painel/arquitetura       # documentação: arquitetura, UML e speedup
-http://localhost:8000/painel/como-funciona    # fluxo de trabalho
+http://localhost:8000/painel/arquitetura       # documentação: arquitetura, UML, execução ao vivo e speedup
 ```
 
 - **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI). Mesma
-  linguagem visual da página "Como funciona": cabeçalho fixo, tema claro/escuro e tabelas
+  linguagem visual da documentação: cabeçalho fixo, tema claro/escuro e tabelas
   com borda. Mostra apenas os dados do resultado mais recente de cada pesquisa — o histórico
   completo fica na API.
 - **`/painel/arquitetura`** — documentação da solução: visão geral da topologia distribuída,
-  os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), os três
-  níveis de paralelismo e o cálculo de **speedup** (speedup observado e teto de Amdahl),
-  com os valores medidos no último job.
-- **`/painel/como-funciona`** — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
-  processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
-  do REDUCE e os arquivos do projeto. A página segue o padrão de documentação do MDN (cabeçalho
-  fixo, sumário lateral, âncoras e alternador de tema claro/escuro). Tem também o **modo ao vivo**:
-  o botão *"Ver a infraestrutura trabalhando"* dispara um job real e mostra o fluxo
-  Manager → Redis → Workers → SIDRA → Manager em movimento, com contadores e log de tarefas em
-  tempo real.
+  os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), a seção
+  **Como funciona** (topologia, execução ao vivo, as 8 etapas, quem executou cada UF, as
+  fórmulas do REDUCE, os arquivos e as falhas), os três níveis de paralelismo e o cálculo de
+  **speedup** (speedup observado e teto de Amdahl), com os valores medidos no último job.
+  A antiga `/painel/como-funciona` redireciona para cá. A página segue o padrão de documentação
+  do MDN (cabeçalho fixo, sumário lateral, âncoras e alternador de tema claro/escuro) e tem o
+  **modo ao vivo**: o botão *"Ver a infraestrutura trabalhando"* dispara um job real e mostra o
+  fluxo Manager → Redis → Workers → SIDRA → Manager em movimento, com contadores e log de
+  tarefas em tempo real.
 
 ---
 
@@ -167,19 +165,16 @@ curl http://localhost:8000/api/v1/health
 
 ```
 http://localhost:8000/painel/                # dados do SIDRA (leitura)
-http://localhost:8000/painel/arquitetura      # documentação: arquitetura, UML e speedup
-http://localhost:8000/painel/como-funciona   # fluxo de trabalho
+http://localhost:8000/painel/arquitetura      # documentação: arquitetura, UML, fluxo ao vivo e speedup
 ```
 
 A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados** e acompanha
 `X de 27 UFs · concluído` até as tabelas do relatório aparecerem.
 
-A segunda página documenta a solução: topologia distribuída, os cinco diagramas UML, os três
-níveis de paralelismo e o cálculo de speedup com os valores medidos no último job.
-
-A terceira página mostra o fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
-processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
-do REDUCE e os arquivos do projeto.
+A segunda página documenta a solução: topologia distribuída, os cinco diagramas UML, a seção
+**Como funciona** (execução ao vivo, as 8 etapas do processamento, quem executou cada UF no
+último job, as fórmulas do REDUCE, os arquivos e as falhas), os três níveis de paralelismo e o
+cálculo de speedup com os valores medidos no último job.
 
 ### Passo 6 — Execute a demonstração completa (linha de comando)
 
@@ -321,8 +316,7 @@ docker compose down -v       # remove também o volume do SQLite
 │   │   ├── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
 │   │   └── static/
 │   │       ├── index.html        # interface de leitura dos dados do SIDRA
-│   │       ├── como-funciona.html  # página de explicação (fluxo de trabalho)
-│   │       ├── arquitetura.html  # documentação (arquitetura, UML e speedup)
+│   │       ├── arquitetura.html  # documentação (arquitetura, UML, fluxo ao vivo e speedup)
 │   │       └── diagramas/        # PNG dos diagramas exibidos na documentação
 │   └── worker/
 │       ├── main.py             # consumidor da fila (BLPOP) + paralelismo interno
