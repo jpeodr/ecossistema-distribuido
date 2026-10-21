@@ -403,7 +403,7 @@ HHI       = Σ (part. % / 100)²</div>
   <h2 class="sec">8 · Falhas</h2>
   <div class="levels">
     <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
-      <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s, 2 s e 4 s, até <code>MAX_RETRIES</code>.</p></div>
+      <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s e 2 s, até <code>MAX_RETRIES</code>.</p></div>
     <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
       <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
     <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>

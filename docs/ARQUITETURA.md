@@ -38,7 +38,7 @@ Manager (1)  ──despacha──►  Redis (fila)  ──consome──►  Work
 | **Retorno do resultado por HTTP (callback)** | Worker escrever direto no banco | O Manager é dono do estado: uma única escrita (SQLite) elimina consistência fraca e permite retry do callback. O Worker não conhece o esquema do banco. |
 | **SQLite no Manager** | Postgres / MongoDB | Escrita única (o Manager), leituras simples. Zero configuração, sem mais container. O SQLite não é o gargalo: são ~27 tarefas por job. |
 | **Assíncrono (asyncio) + thread** | Somente threads / somente async | O gargalo é I/O (API do SIDRA) → asyncio resolve. A normalização (pandas) é CPU → thread dedicada via `asyncio.to_thread`. Os dois eixos de paralelismo ficam explícitos. |
-| **Consumo *pull* (BLPOP)** | *push* do Manager para cada Worker | Com push, o Manager teria que descobrir e_addressar os Workers; com pull, o balanceamento é do próprio broker. Menos acoplamento. |
+| **Consumo *pull* (BLPOP)** | *push* do Manager para cada Worker | Com push, o Manager teria que descobrir e endereçar os Workers; com pull, o balanceamento é do próprio broker. Menos acoplamento. |
 | **Tabela do SIDRA por dataset, com registro declarativo** | Código específico por pesquisa | `datasets.py` centraliza tabela, classificação, variáveis e categorias: adicionar outra pesquisa do SIDRA é adicionar um item à lista. |
 
 ---
@@ -80,7 +80,7 @@ Medido na demo: 27 tarefas / 3 Workers ≈ 9 UFs por Worker, tempo de pared ≈ 
 
 | Falha | Tratamento |
 |-------|-----------|
-| SIDRA indisponível / timeout | Retry exponencial no cliente (3 tentativas) |
+| SIDRA indisponível / timeout | Retry exponencial no cliente (3 tentativas, esperas de 1 s e 2 s) |
 | Tarefa falha depois do retry | Manager marca `failed` e o job segue com as tarefas bem-sucedidas |
 | Worker cai no meio da tarefa | A tarefa permanece na fila (a fila é o estado durável) e outro Worker a executa |
 | Manager reinicia | Jobs, tarefas e registros estão no SQLite (volume `dados`) |

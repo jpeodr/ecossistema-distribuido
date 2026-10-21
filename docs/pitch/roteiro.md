@@ -1,10 +1,10 @@
 # Roteiro do Pitch (máx. 10 minutos)
 
 **Projeto:** Ecossistema Distribuído — SIDRA/IBGE
-**Formato suggestion:** 8 slides + demonstração ao vivo (com vídeo de backup gravado).
+**Formato sugerido:** 8 slides + demonstração ao vivo (com vídeo de backup gravado).
 
-> Regra de ouro: o pitch deve mostrar a **arquitetura**, as **tecnologias** e a
-> **comunicação entre os nós** — não apenas o resultado final.
+> O pitch mostra a **arquitetura**, as **tecnologias** e a **comunicação entre os nós** —
+> não apenas o resultado final.
 
 ---
 
@@ -19,7 +19,7 @@
 | 5:00–6:00 | **Tecnologias** | 5 — Stack | Python/FastAPI, asyncio, threads, Redis, SQLite, Docker |
 | 6:00–8:30 | **Demonstração ao vivo** | — | `docker compose up -d` + demo + logs dos workers |
 | 8:30–9:30 | **Alinhamento ESG/Agro** | 6 — Resultado | O que os dados dizem (concentração, risco, produtividade) |
-| 9:30–10:00 | **Encerramento** | 7 — Conclusão | Entregas,aprendizado, próximos passos |
+| 9:30–10:00 | **Encerramento** | 7 — Conclusão | Entregas, aprendizado, próximos passos |
 
 ---
 
@@ -109,7 +109,7 @@ http://localhost:8000/painel/como-funciona   # 2) o fluxo de trabalho
    a topologia anima o fluxo real (Manager → Redis → Workers → SIDRA → Manager), os contadores
    sobem (despachadas / em voo / concluídas / fila) e o log mostra cada UF concluída por um worker;
 5. rolar até **"Quem fez o quê"** (as 27 UFs divididas entre os workers), **"Três níveis de
-   paralelismo"** e **"Quando algo falha"** para fechar a parte técnica.
+   paralelismo"** e **"Falhas"** para fechar a parte técnica.
 
 **Em paralelo (outra janela):** `docker compose logs -f worker` mostra cada UF sendo processada.
 

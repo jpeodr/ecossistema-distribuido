@@ -52,7 +52,7 @@ O Manager serve duas páginas (HTML + JS puro, sem CDN e sem build):
 
 ```
 http://localhost:8000/painel/                 # a raiz "/" redireciona para cá
-http://localhost:8000/painel/como-funciona    # página explicativa
+http://localhost:8000/painel/como-funciona    # fluxo de trabalho
 ```
 
 - **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
@@ -155,14 +155,15 @@ curl http://localhost:8000/api/v1/health
 
 ```
 http://localhost:8000/painel/                # dados do SIDRA (leitura)
-http://localhost:8000/painel/como-funciona   # como o sistema funciona por dentro
+http://localhost:8000/painel/como-funciona   # fluxo de trabalho
 ```
 
 A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados** e acompanha
 `X de 27 UFs · concluído` até as tabelas do relatório aparecerem.
 
-A segunda página é a explicativa: topologia ao vivo, o caminho de um clique, os três níveis de
-paralelismo, quem executou cada UF no último job, as fórmulas do REDUCE e o mapa do código.
+A segunda página mostra o fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
+processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
+do REDUCE e os arquivos do projeto.
 
 ### Passo 6 — Execute a demonstração completa (linha de comando)
 
@@ -247,7 +248,7 @@ docker compose down -v       # remove também o volume do SQLite
 | `port is already allocated` na porta 8000 | Outro serviço usa a porta 8000 | Altere `"8000:8000"` para `"8080:8000"` em `docker-compose.yml` |
 | `workers_ativos: 0` | Workers ainda subindo | Aguarde alguns segundos e consulte `/api/v1/health` de novo |
 | `HTTP 502` ao criar o job | Sem acesso à internet (API do SIDRA) | Verifique a rede: `docker compose exec worker python -c "import httpx;print(httpx.get('https://apisidra.ibge.gov.br').status_code)"` |
-| Job parado em `running` | Worker caiu | `docker compose logs worker` e `docker compose restart worker` |
+| Job parado em `running` | Worker caiu antes do callback | `docker compose logs worker`; a tarefa órfã não volta sozinha (o `pull` sem `ack` não devolve) |
 
 ---
 
@@ -320,7 +321,7 @@ docker compose down -v       # remove também o volume do SQLite
 
 ---
 
-## 8. Como o sistema distribui o trabalho (resumo em 5 passos)
+## 8. Como o sistema distribui o trabalho (5 passos)
 
 1. **Submissão** — o usuário pede um job (`POST /api/v1/jobs`) com o dataset e (opcionalmente) o período.
 2. **Fatiamento** — o Manager resolve o período no SIDRA e cria **uma tarefa por UF**.
