@@ -27,8 +27,7 @@ e consolidados pelo Manager (REDUCE).</p>
 
 <form id="form">
   <select id="select"></select>
-  <button id="btn" type="submit">Executar job</button>
-  <small class="muted">(sem pesquisa selecionada, executa o último resultado)</small>
+  <button id="btn" type="submit">Buscar dados</button>
   <span id="status" class="muted"></span>
 </form>
 
@@ -43,14 +42,12 @@ let timer = null;
 async function carregarDatasets() {
   const d = await (await fetch("/api/v1/datasets")).json();
   $("#select").innerHTML =
-    `<option value="">Último resultado</option>` +
     Object.values(d).map(x => `<option value="${x.key}">${esc(x.label)}</option>`).join("");
 }
 
 async function rodar(ev) {
   ev.preventDefault();
   const dataset = $("#select").value;
-  if (!dataset) { await listar(); return; }
   $("#btn").disabled = true;
   const r = await fetch("/api/v1/jobs", {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -65,9 +62,10 @@ function acompanhar(id) {
   clearInterval(timer);
   timer = setInterval(async () => {
     const j = await (await fetch(`/api/v1/jobs/${id}`)).json();
-    $("#status").textContent = `${id} · ${j.done_tasks}/${j.total_tasks} tarefas · ${j.status}`;
+    const st = { running: "coletando", completed: "concluído", failed: "falhou" }[j.status] || j.status;
+    $("#status").textContent = `${j.done_tasks} de ${j.total_tasks} UFs · ${st}`;
     if (j.status === "completed" || j.status === "failed") {
-      clearInterval(timer); $("#btn").disabled = false; $("#select").value = ""; listar();
+      clearInterval(timer); $("#btn").disabled = false; listar();
     }
   }, 800);
 }
