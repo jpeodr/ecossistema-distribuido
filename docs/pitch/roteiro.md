@@ -15,7 +15,7 @@
 | 0:00–0:45 | **Abertura** | 1 — Capa | Nome do projeto, disciplina, o problema em uma frase |
 | 0:45–2:00 | **Contexto** | 2 — O problema | Por que SIDRA/IBGE; por que agro e indústria |
 | 2:00–3:30 | **Arquitetura** | 3 — Topologia | Manager, Workers, Redis; o desenho UML de implantação |
-| 3:30–5:00 | **Fluxo e新技术** | 4 — Ciclo do job | Fatiamento → fila → consumo → callback → REDUCE (diagrama de sequência) |
+| 3:30–5:00 | **Fluxo do job** | 4 — Ciclo do job | Fatiamento → fila → consumo → callback → REDUCE (diagrama de sequência) |
 | 5:00–6:00 | **Tecnologias** | 5 — Stack | Python/FastAPI, asyncio, threads, Redis, SQLite, Docker |
 | 6:00–8:30 | **Demonstração ao vivo** | — | `docker compose up -d` + demo + logs dos workers |
 | 8:30–9:30 | **Alinhamento ESG/Agro** | 6 — Resultado | O que os dados dizem (concentração, risco, produtividade) |
@@ -93,13 +93,28 @@ Enfatizar o **MapReduce**:
 ```bash
 docker compose up -d                  # sobe Manager + 3 Workers + Redis
 docker compose ps                     # topologia explícita
-docker compose --profile demo run --rm demo
 ```
 
-**Durante a demo, narrar:**
-1. o contador de tarefas avança (é o paralelismo acontecendo);
-2. a linha `distribuicao por worker` prova que as UFs foram divididas entre os nós;
-3. em outra janela: `docker compose logs -f worker` mostra cada UF sendo processada.
+**No navegador (interface do ecossistema):**
+
+```
+http://localhost:8000/painel/
+```
+
+1. clicar em **"Executar job distribuído"** (pesquisa LSPA, período = último publicado);
+2. a barra de progresso sobe de `0/27` a `27/27` — é o paralelismo acontecendo;
+3. a linha **"distribuição: worker-xxx (9) · worker-yyy (9) · worker-zzz (9)"** prova que as
+   27 UFs foram divididas entre os nós;
+4. o **log de tarefas** mostra cada UF, quem processou e quanto tempo levou;
+5. ao final, o **relatório (REDUCE)** com ranking de UF, participação produtiva, HHI e destaques.
+
+**Em paralelo (outra janela):** `docker compose logs -f worker` mostra cada UF sendo processada.
+
+**Alternativa em linha de comando:**
+
+```bash
+docker compose --profile demo run --rm demo
+```
 
 **Plano B (demo gravada):** deixar um vídeo de 90 s gravado em `docs/pitch/demo.mp4`.
 Se o SIDRA estiver indisponível no dia, use o vídeo e mostre os diagramas.
@@ -141,10 +156,10 @@ Mostrar o relatório gerado (o mesmo da demo) e comentar **3 achados reais**:
 
 ## Slide 8 — Conclusão (9:30)
 
-- **Entregas:** código no GitHub, README com POP Docker, 5 diagramas UML, demo automatizada.
+- **Entregas:** código no GitHub, README com POP Docker, 5 diagramas UML, painel web e demo automatizada.
 - **Aprendizado:** desenho de fila com broker, callbacks idempotentes, retry, REDUCE,
   paralelismo I/O e CPU no mesmo processo.
-- **Próximos passos:** cache por período, WebSocket para progresso ao vivo,
+- **Próximos passos:** cache por período, push (WebSocket) para o progresso ao vivo,
   teste de carga com 50 Workers, PostgreSQL para o histórico.
 
 Fechamento: "A mesma infraestrutura que responde a uma consulta do IBGE em 1 segundo

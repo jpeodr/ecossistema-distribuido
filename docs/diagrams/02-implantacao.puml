@@ -11,7 +11,7 @@ skinparam rectangle {
 node "Host Docker (bridge 'ecossistema')" {
 
   node "eco-manager" {
-    artifact "Uvicorn + FastAPI\ncontainer: eco-manager\nporta 8000 (host)" as M
+    artifact "Uvicorn + FastAPI\ncontainer: eco-manager\nporta 8000 (host)\nAPI + Painel em /painel/" as M
   }
 
   node "eco-redis" {

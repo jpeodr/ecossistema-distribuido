@@ -13,13 +13,16 @@ import json
 import time
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from ..common.config import settings
-from ..common.datasets import get_dataset
+from ..common.datasets import DATASETS, get_dataset
 from ..common.logging import setup_logging
 from ..common.models import JobRequest, JobStatus, Task, TaskResult, WorkerHeartbeat
 from ..common.sidra import SidraClient
@@ -57,6 +60,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+PAINEL_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/", include_in_schema=False)
+async def raiz() -> RedirectResponse:
+    """Redireciona a raiz para o painel web do ecossistema."""
+    return RedirectResponse("/painel/")
+
+
+@app.get("/painel", include_in_schema=False)
+async def painel() -> RedirectResponse:
+    return RedirectResponse("/painel/")
+
+
+app.mount("/painel", StaticFiles(directory=PAINEL_DIR, html=True), name="painel")
+
 
 # ----------------------------------------------------------------- saúde
 @app.get("/api/v1/health")
@@ -80,6 +99,26 @@ async def _queue_depth() -> int:
         return int(await redis.llen(settings.task_queue))
     except RedisError:
         return -1
+
+
+# --------------------------------------------------------------- datasets
+@app.get("/api/v1/datasets")
+async def list_datasets() -> dict:
+    """Pesquisas do SIDRA suportadas (usado pelo painel web)."""
+    return {
+        d.key: {
+            "key": d.key,
+            "label": d.label,
+            "theme": d.theme,
+            "table": d.table,
+            "classification_id": d.classification_id,
+            "narrative": d.narrative,
+            "variables": [{"code": v.code, "name": v.name, "unit": v.unit, "agg": v.agg}
+                          for v in d.variables],
+            "categories": [{"code": c.code, "name": c.name} for c in d.categories],
+        }
+        for d in DATASETS.values()
+    }
 
 
 # ------------------------------------------------------------------ jobs

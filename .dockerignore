@@ -1,0 +1,14 @@
+# Contexto de build enxuto: fora da imagem tudo que não é runtime.
+.git/
+.github/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+data/
+*.db
+*.log
+docs/
+README.md
+LICENSE

@@ -105,6 +105,23 @@ Medido na demo: 27 tarefas / 3 Workers ≈ 9 UFs por Worker, tempo de pared ≈ 
 | Uma tarefa por UF → 27 chamadas por job | Cache por (UF, período, variável) no Manager |
 | SQLite serializa as escritas | Postgres quando o volume de jobs crescer |
 | HHI é um proxy em métricas de índice (PIM-PF) | Usar produção física em unidades, quando disponível |
+| Painel faz *polling* (≈700 ms) | Push via WebSocket/SSE para o progresso em tempo real |
+
+---
+
+## 8.1 A interface (painel web)
+
+O Manager serve também o **painel** (`src/manager/static/index.html`), em `/painel/`:
+
+- **HTML + CSS + JS puros**, sem framework, sem CDN e sem etapa de build — o arquivo é
+  copiado junto com o código-fonte para a imagem Docker;
+- o painel é **um cliente da própria API**: cria o job, acompanha o progresso e lê o relatório
+  (nenhum endpoint exclusivo, nenhuma lógica de negócio no front-end);
+- por isso, a interface e a API nunca divergem: se o painel funciona, a API funciona;
+- a "demonstração ao vivo" do pitch é feita nele (progresso, distribuição por Worker e REDUCE).
+
+> Alternativa: um `nginx`/`caddy` separado para servir o front-end. Foi descartado por
+> quebrar a regra do projeto de manter a topologia mínima (3 tipos de nó).
 
 ---
 
@@ -118,4 +135,5 @@ Medido na demo: 27 tarefas / 3 Workers ≈ 9 UFs por Worker, tempo de pared ≈ 
 | Paralelismo interno | `asyncio` (I/O) + `asyncio.to_thread` (pandas/CPU) |
 | Fonte de dados obrigatória | API do SIDRA — LSPA (6588) e PIM-PF (8888) |
 | Alinhamento ESG/Agro | HHI de concentração, participação por UF, rendimento por hectare, índice industrial por UF/setor |
+| Interface (painel web) | `src/manager/static/index.html`, servida em `/painel/` pelo Manager |
 | POP no README | Seção 4 do `README.md` |

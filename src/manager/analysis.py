@@ -21,6 +21,16 @@ def _top(items: list[dict[str, Any]], n: int = 5) -> list[dict[str, Any]]:
     return items[:n]
 
 
+def _fmt(value: float) -> str:
+    """Formata número no padrão pt-BR (milhar com ponto, decimal com vírgula)."""
+    if value is None:
+        return "—"
+    if abs(value - round(value)) < 1e-9:
+        return f"{int(round(value)):,}".replace(",", ".")
+    inteiro, _, decimal = f"{value:.2f}".partition(".")
+    return f"{int(inteiro):,}".replace(",", ".") + "," + decimal.rstrip("0")
+
+
 def reduce_results(records: list[dict[str, Any]], dataset: Dataset) -> dict[str, Any]:
     """Consolida os registros brutos em um relatório agregado."""
     # categoria -> UF -> variável -> valor
@@ -130,12 +140,12 @@ def _build_highlights(categorias: dict[str, Any], dataset: Dataset) -> list[str]
                 f"{l['uf']} ({l['participacao_pct']:.1f}%)" for l in lideres[:3]
             )
             linhas_txt = (
-                f"{cat}: liderança de {top['uf']} com {top['valor']} {unidade} "
+                f"{cat}: liderança de {top['uf']} com {_fmt(top['valor'])} {unidade} "
                 f"({top['participacao_pct']:.1f}% do total). Top-3: {linhas}."
             )
         else:
             linhas_txt = (
-                f"{cat}: maior índice em {top['uf']} ({top['valor']} {unidade}); "
+                f"{cat}: maior índice em {top['uf']} ({_fmt(top['valor'])} {unidade}); "
                 f"lideres: {', '.join(l['uf'] for l in lideres[:3])}."
             )
         lines.append(linhas_txt)

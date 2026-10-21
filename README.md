@@ -46,6 +46,19 @@ participação produtiva e índice de concentração (HHI).**
 Diagramas UML completos (fonte `.puml` + PNG renderizado) em [`docs/diagrams`](docs/diagrams):
 componentes, implantação (Docker), sequência, classes e atividade.
 
+### Interface web (painel)
+
+O Manager também serve o **painel do ecossistema** (HTML + JS puro, sem CDN e sem build):
+
+```
+http://localhost:8000/painel/        # a raiz "/" redireciona para cá
+```
+
+O painel mostra, em tempo real: **status** do Manager/Redis/Workers, **profundidade da fila**,
+formulário para **criar o job** (pesquisa, categorias e período), **progresso** (X/27 tarefas,
+distribuição por Worker, log de tarefas) e o **relatório do REDUCE** (rankings de UF,
+participação produtiva, HHI e destaques). É a interface usada na demonstração ao vivo.
+
 ---
 
 ## 2. Tecnologias
@@ -134,7 +147,21 @@ curl http://localhost:8000/api/v1/health
 {"status":"ok","redis":true,"workers_ativos":3,"fila":0}
 ```
 
-### Passo 5 — Execute a demonstração completa
+### Passo 5 — Abra o painel web (interface do ecossistema)
+
+```
+http://localhost:8000/painel/        # Windows: start http://localhost:8000/painel/
+                                      # Linux:   xdg-open http://localhost:8000/painel/
+```
+
+O painel (servido pelo próprio Manager, sem dependências externas) mostra:
+
+- **status** do Manager, do Redis, dos Workers e a profundidade da fila;
+- **formulário** para criar um job (pesquisa, categorias e período);
+- **progresso ao vivo**: `X/27 tarefas`, distribuição por Worker e log das tarefas;
+- **relatório final** (REDUCE): rankings de UF, participação produtiva, HHI e destaques.
+
+### Passo 6 — Execute a demonstração completa (linha de comando)
 
 ```bash
 docker compose --profile demo run --rm demo
@@ -155,7 +182,7 @@ docker compose --profile demo run --rm -e DATASET=pim_pf demo
 > docker compose run --rm worker python scripts/demo.py pim_pf
 > ```
 
-### Passo 6 — Explore a API interativamente
+### Passo 7 — Explore a API interativamente
 
 ```bash
 # Swagger UI
@@ -169,7 +196,7 @@ curl http://localhost:8000/api/v1/jobs/<job_id>
 curl http://localhost:8000/api/v1/jobs/<job_id>/results
 ```
 
-### Passo 7 — (Opcional) Escale o ecossistema
+### Passo 8 — (Opcional) Escale o ecossistema
 
 ```bash
 docker compose up -d --scale worker=5
@@ -177,7 +204,7 @@ docker compose ps          # 5 workers
 docker compose down        # volta ao estado original
 ```
 
-### Passo 8 — (Opcional) Teste de resiliência da fila
+### Passo 9 — (Opcional) Teste de resiliência da fila
 
 Demonstra que a fila é o estado durável do sistema: o job é criado **sem nenhum Worker
 no ar**, as tarefas ficam guardadas no Redis e o job **termina sozinho** quando os
@@ -191,7 +218,7 @@ docker compose start worker                    # os workers voltam e consomem a 
 curl http://localhost:8000/api/v1/jobs/<job_id>   # -> "status":"completed"
 ```
 
-### Passo 9 — Acompanhe os logs (prova da distribuição)
+### Passo 10 — Acompanhe os logs (prova da distribuição)
 ```bash
 docker compose logs -f worker        # todas as réplicas
 docker logs -f eco-sidra-worker-1    # um worker específico
@@ -203,7 +230,7 @@ Cada linha mostra o nó, a UF processada e a duração:
 {"ts":"...","level":"INFO","node":"worker-7f62655d","msg":"tarefa concluida","task_id":"...","uf":"Mato Grosso","registros":20,"duracao_ms":812}
 ```
 
-### Passo 10 — Encerre e limpe
+### Passo 11 — Encerre e limpe
 
 ```bash
 docker compose down          # para os containers (mantém o volume de dados)
@@ -234,6 +261,7 @@ docker compose down -v       # remove também o volume do SQLite
 | `POST` | `/api/v1/workers/heartbeat` | Registro/heartbeat dos Workers |
 | `GET` | `/api/v1/workers` | Workers ativos e profundidade da fila |
 | `GET` | `/api/v1/health` | Saúde do Manager, do Redis e dos Workers |
+| `GET` | `/api/v1/datasets` | Pesquisas suportadas (LSPA / PIM-PF) e suas categorias |
 
 ---
 
@@ -270,7 +298,8 @@ docker compose down -v       # remove também o volume do SQLite
 │   │   ├── main.py             # API FastAPI + despacho + callback + reduce
 │   │   ├── dispatcher.py       # fatiamento do job (1 tarefa por UF)
 │   │   ├── store.py            # persistência SQLite
-│   │   └── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
+│   │   ├── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
+│   │   └── static/index.html   # painel web (interface do ecossistema)
 │   └── worker/
 │       ├── main.py             # consumidor da fila (BLPOP) + paralelismo interno
 │       └── processor.py        # normalização dos dados (pandas em thread)

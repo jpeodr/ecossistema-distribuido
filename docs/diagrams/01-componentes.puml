@@ -9,6 +9,7 @@ skinparam defaultFontSize 13
 actor "Usuario / Pitch" as User
 
 component "Manager (Coordenador)\nFastAPI + Uvicorn\nsrc/manager" as Manager
+component "Painel Web\nHTML + CSS + JS (sem build)\nsrc/manager/static" as Painel
 component "Store\nSQLite (jobs, tarefas, registros)\nvolume: dados" as DB
 component "Broker\nRedis 7 - fila sidra:tasks" as Redis
 component "Worker 1..N\nPython asyncio\nsrc/worker" as Worker
@@ -16,6 +17,8 @@ component "API SIDRA (IBGE)\nHTTPS / JSON" as Sidra
 component "Demo\nscripts/demo.py" as Demo
 
 User --> Manager : POST /api/v1/jobs
+User --> Painel : abre /painel/ (navegador)
+Painel --> Manager : API REST (jobs, tasks, results)
 Demo --> Manager : POST /api/v1/jobs\nGET /jobs/{id}/results
 Manager --> Redis : RPUSH (1 tarefa por UF)
 Redis --> Worker : BLPOP (consumo pull)
@@ -30,6 +33,12 @@ note right of Manager
   Coordena: fatia o job,
   despacha, recebe e consolida
   (etapa REDUCE do MapReduce)
+end note
+
+note right of Painel
+  Interface da demonstracao:
+  status, formulario, progresso
+  ao vivo e relatorio do REDUCE
 end note
 
 note bottom of Worker
