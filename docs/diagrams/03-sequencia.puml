@@ -17,6 +17,9 @@ database "SQLite" as DB
 U -> M : POST /api/v1/jobs {dataset}
 M -> S : GET /values/t/6588/.../p/last
 S --> M : ultimo periodo (AAAAmm)
+M -> S : GET .../p/<periodo> (sondagem no nivel N3)
+S --> M : linhas de dados? (ou apenas cabecalho)
+M -> M : se nao houver linhas, retrocede um mes
 M -> M : fatia o job (1 tarefa por UF)
 M -> Q : RPUSH 27 tarefas
 M --> U : 202 Accepted {job_id, total_tasks}
@@ -31,6 +34,7 @@ note right of W1
   Processamento paralelo:
   ate 4 tarefas em voo
   normalizacao em thread
+  retry: 1 s e 2 s
 end note
 W1 -> M : POST /api/v1/internal/results (records)
 M -> DB : INSERT records + status da tarefa

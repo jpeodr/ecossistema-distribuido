@@ -14,6 +14,10 @@ else (sim)
 endif
 
 :Manager resolve o ultimo periodo\nno SIDRA (p/last);
+:Sonda o periodo no nivel N3;
+if (periodo sem linhas?) then (sim)
+  :Retrocede um mes e sonda de novo;
+endif
 :Manager fatia o job em\n1 tarefa por UF (27);
 :RPUSH das tarefas na fila Redis;
 :Job = running;

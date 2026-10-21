@@ -84,25 +84,7 @@
     color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
     border-left: 1px solid var(--border); padding-left: 10px;
   }
-  .crumb ol { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; font-size: .8125rem; color: var(--txt-soft); }
-  .crumb li + li::before { content: "/"; margin-right: 8px; color: var(--border-strong); }
-  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-  .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
-    border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
-    font-size: .75rem; color: var(--txt-soft);
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--txt-soft); }
-  .dot.on { background: var(--green); animation: pulse 2s infinite; }
-  .dot.off { background: var(--red); }
-  .dot.warn { background: var(--amber); }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(0,121,54,.45); }
-    70% { box-shadow: 0 0 0 6px rgba(0,121,54,0); }
-    100% { box-shadow: 0 0 0 0 rgba(0,121,54,0); }
-  }
+  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -328,24 +310,14 @@
     <a class="brand" href="/painel/">
       <span class="brand-logo">ED</span>
       <span class="brand-name">Ecossistema Distribuído</span>
-      <span class="brand-sub">Documentação</span>
     </a>
-    <nav class="crumb" aria-label="Trilha de navegação">
-      <ol>
-        <li><a href="/painel/">Painel</a></li>
-        <li>Como funciona</li>
-      </ol>
-    </nav>
-    <div class="topbar-right">
-      <div class="badges" id="badges">
-        <span class="badge"><i class="dot" id="d-redis"></i>Redis</span>
-        <span class="badge"><i class="dot" id="d-workers"></i>Workers</span>
-        <span class="badge"><i class="dot" id="d-fila"></i>Fila</span>
-      </div>
-      <a class="btn btn-subtle" href="/docs">API</a>
+    <nav class="topbar-nav" aria-label="Navegação principal">
+      <a class="btn btn-subtle" href="/painel/">Painel</a>
+      <a class="btn btn-subtle" href="/painel/arquitetura">Documentação</a>
       <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
+      <a class="btn btn-subtle" href="/docs">API</a>
       <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
-    </div>
+    </nav>
   </div>
 </header>
 
@@ -365,6 +337,7 @@
         <li><a href="#falhas">Falhas</a></li>
       </ol>
       <p class="toc-note">
+        <a href="/painel/arquitetura">Arquitetura</a> ·
         <a href="/painel/">Interface de leitura</a> ·
         <a href="/docs">Swagger da API</a> ·
         <a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a>
@@ -627,7 +600,6 @@ function ago(ts) {
   const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
   return s < 60 ? s + " s" : Math.round(s / 60) + " min";
 }
-function setDot(id, cls) { const el = $(id); if (el) el.className = "dot " + cls; }
 
 /* ---------- tema claro/escuro ---------- */
 const btnTema = $("#btnTema");
@@ -659,14 +631,6 @@ let ultimoJob = null;
 async function aoVivo() {
   try {
     const h = await (await fetch("/api/v1/health")).json();
-    setDot("#d-redis", h.redis ? "on" : "off");
-    setDot("#d-workers", h.workers_ativos > 0 ? "on" : "off");
-    setDot("#d-fila", h.fila > 0 ? "warn" : "on");
-    $("#badges").title = "";
-    const badges = $("#badges").children;
-    badges[0].lastChild.textContent = "Redis " + (h.redis ? "ok" : "fora");
-    badges[1].lastChild.textContent = h.workers_ativos + " workers";
-    badges[2].lastChild.textContent = "fila " + h.fila;
     $("#topo-workers").textContent = h.workers_ativos + " nós ativos";
 
     const w = await (await fetch("/api/v1/workers")).json();
@@ -682,7 +646,7 @@ async function aoVivo() {
     const cap = w.workers.reduce((a, x) => a + (x.capacity || 0), 0);
     $("#p2").innerHTML = cap + "<small> tarefas em voo</small>";
   } catch (e) {
-    setDot("#d-redis", "off");
+    $("#topo-workers").textContent = "indisponível";
   }
 }
 

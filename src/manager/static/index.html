@@ -75,20 +75,7 @@
     color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
     border-left: 1px solid var(--border); padding-left: 10px;
   }
-  .crumb ol { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; font-size: .8125rem; color: var(--txt-soft); }
-  .crumb li + li::before { content: "/"; margin-right: 8px; color: var(--border-strong); }
-  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-  .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
-    border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
-    font-size: .75rem; color: var(--txt-soft);
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--txt-soft); }
-  .dot.on { background: var(--green); }
-  .dot.off { background: var(--red); }
-  .dot.warn { background: var(--amber); }
+  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -169,24 +156,14 @@
     <a class="brand" href="/painel/">
       <span class="brand-logo">ED</span>
       <span class="brand-name">Ecossistema Distribuído</span>
-      <span class="brand-sub">Documentação</span>
     </a>
-    <nav class="crumb" aria-label="Trilha de navegação">
-      <ol>
-        <li>Painel</li>
-        <li>Dados</li>
-      </ol>
-    </nav>
-    <div class="topbar-right">
-      <div class="badges" id="badges">
-        <span class="badge"><i class="dot" id="d-redis"></i>Redis</span>
-        <span class="badge"><i class="dot" id="d-workers"></i>Workers</span>
-        <span class="badge"><i class="dot" id="d-fila"></i>Fila</span>
-      </div>
-      <a class="btn btn-subtle" href="/docs">API</a>
+    <nav class="topbar-nav" aria-label="Navegação principal">
+      <a class="btn btn-subtle" href="/painel/" aria-current="page">Painel</a>
+      <a class="btn btn-subtle" href="/painel/arquitetura">Documentação</a>
       <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
+      <a class="btn btn-subtle" href="/docs">API</a>
       <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
-    </div>
+    </nav>
   </div>
 </header>
 
@@ -203,7 +180,6 @@
       <label class="muted" for="select" style="font-size:.8125rem;">Pesquisa</label>
       <select id="select" aria-label="Pesquisa"></select>
       <button id="btn" class="btn btn-primary" type="submit">Buscar dados</button>
-      <a class="btn btn-subtle" href="/painel/como-funciona">Como funciona</a>
       <span id="status" class="muted"></span>
     </form>
 
@@ -230,21 +206,7 @@ btnTema.addEventListener("click", () => {
   localStorage.setItem("tema", escuro ? "light" : "dark");
 });
 
-/* ---------- status da infraestrutura ---------- */
-async function saude() {
-  try {
-    const h = await (await fetch("/api/v1/health")).json();
-    const badges = $("#badges").children;
-    badges[0].className = "badge";
-    badges[0].firstChild.className = "dot " + (h.redis ? "on" : "off");
-    badges[0].lastChild.textContent = "Redis " + (h.redis ? "ok" : "fora");
-    badges[1].firstChild.className = "dot " + (h.workers_ativos > 0 ? "on" : "off");
-    badges[1].lastChild.textContent = h.workers_ativos + " workers";
-    badges[2].firstChild.className = "dot " + (h.fila > 0 ? "warn" : "on");
-    badges[2].lastChild.textContent = "fila " + h.fila;
-  } catch (e) { /* sem Redis: segue com a leitura */ }
-}
-
+/* ---------- datasets ---------- */
 async function carregarDatasets() {
   const d = await (await fetch("/api/v1/datasets")).json();
   $("#select").innerHTML =
@@ -341,8 +303,6 @@ async function listar() {
 $("#form").addEventListener("submit", rodar);
 carregarDatasets();
 listar();
-saude();
-setInterval(saude, 5000);
 </script>
 </body>
 </html>

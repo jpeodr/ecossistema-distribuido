@@ -109,14 +109,15 @@ Medido na demo: 27 tarefas / 3 Workers ≈ 9 UFs por Worker, tempo de pared ≈ 
 
 ---
 
-## 8.1 A interface (duas páginas web)
+## 8.1 A interface (três páginas web)
 
-O Manager serve duas páginas estáticas, em `/painel/`:
+O Manager serve três páginas estáticas, em `/painel/`:
 
 | Página | Arquivo | Papel |
 |--------|---------|-------|
 | Leitura | `src/manager/static/index.html` | escolhe a pesquisa, dispara a coleta e mostra as tabelas do relatório |
 | Explicativa | `src/manager/static/como-funciona.html` | topologia, execução ao vivo, fluxo de trabalho em 8 etapas, paralelismo, quem fez o quê, REDUCE e arquivos |
+| Documentação | `src/manager/static/arquitetura.html` | arquitetura de solução, diagramas UML, paralelismo e cálculo de speedup |
 
 Características comuns:
 
@@ -142,5 +143,5 @@ Características comuns:
 | Paralelismo interno | `asyncio` (I/O) + `asyncio.to_thread` (pandas/CPU) |
 | Fonte de dados obrigatória | API do SIDRA — LSPA (6588) e PIM-PF (8888) |
 | Alinhamento ESG/Agro | HHI de concentração, participação por UF, rendimento por hectare, índice industrial por UF/setor |
-| Interface (web) | `src/manager/static/index.html` (leitura) e `como-funciona.html` (explicativa), servidas em `/painel/` pelo Manager |
+| Interface (web) | `src/manager/static/index.html` (leitura), `como-funciona.html` (explicativa) e `arquitetura.html` (documentação), servidas em `/painel/` pelo Manager |
 | POP no README | Seção 4 do `README.md` |

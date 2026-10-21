@@ -80,6 +80,12 @@ async def como_funciona() -> RedirectResponse:
     return RedirectResponse("/painel/como-funciona.html")
 
 
+@app.get("/painel/arquitetura", include_in_schema=False)
+async def arquitetura() -> RedirectResponse:
+    """Documentação: arquitetura de solução, diagramas UML e cálculo de speedup."""
+    return RedirectResponse("/painel/arquitetura.html")
+
+
 app.mount("/painel", StaticFiles(directory=PAINEL_DIR, html=True), name="painel")
 
 
@@ -334,13 +340,21 @@ async def _maybe_finalize(job_id: str) -> None:
 
     records = store.records_of_job(job_id)
     dataset = get_dataset(job["dataset"])
+    inicio = job["started_at"] or job["created_at"]
+    coleta_fim = time.time()
+
+    t0 = time.perf_counter()
     summary = reduce_results(records, dataset)
+    reduce_ms = int((time.perf_counter() - t0) * 1000)
+
     summary["tarefas"] = {
         "total": job["total_tasks"],
         "concluidas": job["done_tasks"],
         "falhas": job["failed_tasks"],
     }
-    summary["tempo_total_s"] = round((time.time() - (job["started_at"] or job["created_at"])), 2)
+    summary["tempo_coleta_s"] = round(coleta_fim - inicio, 2)
+    summary["reduce_ms"] = reduce_ms
+    summary["tempo_total_s"] = round(time.time() - inicio, 2)
     store.finish_job(job_id, "completed", summary)
     log.info(
         "job finalizado",

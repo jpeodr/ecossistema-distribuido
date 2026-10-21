@@ -1,16 +1,24 @@
 """Renderiza os diagramas PlantUML (.puml) para PNG.
 
 Uso:
-    python scripts/render_diagrams.py            # renderiza todos
+    python scripts/render_diagrams.py                 # renderiza todos (servidor publico)
+    python scripts/render_diagrams.py --docker        # renderiza com a imagem plantuml (offline)
     python scripts/render_diagrams.py --server https://kroki.io
 
-O render usa o servico publico PlantUML (ou Kroki). Os arquivos .puml
-permanecem no repositorio como fonte de verdade dos diagramas.
+O render usa o servico publico PlantUML (ou Kroki). Com --docker, usa a imagem
+oficial plantuml/plantuml, que resolve os fontes localmente e gera PNGs com
+resolucao maior. Os arquivos .puml permanecem no repositorio como fonte de
+verdade dos diagramas.
+
+Apos renderizar, os PNGs sao copiados para src/manager/static/diagramas/,
+que e o que a pagina de documentacao (/painel/arquitetura) exibe.
 """
 
 from __future__ import annotations
 
 import argparse
+import shutil
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -19,6 +27,8 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DIAGRAMAS = RAIZ / "docs" / "diagrams"
+STATIC_DIAGRAMAS = RAIZ / "src" / "manager" / "static" / "diagramas"
+IMAGEM_PLANTUML = "plantuml/plantuml"
 
 # Alfabeto customizado do PlantUML para codificacao de URL
 ALFABETO = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
@@ -56,9 +66,38 @@ def renderizar(arquivo: Path, servidor: str) -> bool:
     return True
 
 
+def renderizar_com_docker(arquivos: list[Path]) -> bool:
+    """Renderiza os .puml com a imagem oficial plantuml/plantuml (sem internet)."""
+    comando = [
+        "docker", "run", "--rm",
+        "-v", f"{DIAGRAMAS}:/data",
+        IMAGEM_PLANTUML,
+        "-tpng", "-charset", "UTF-8",
+    ] + [f"/data/{a.name}" for a in arquivos]
+    try:
+        subprocess.run(comando, check=True, capture_output=True)
+    except FileNotFoundError:
+        print("  [ERRO] docker nao encontrado no PATH")
+        return False
+    except subprocess.CalledProcessError as exc:
+        print(f"  [ERRO] plantuml falhou: {exc.stderr.decode('utf-8', 'ignore')[:400]}")
+        return False
+
+    faltando = [a.with_suffix(".png").name for a in arquivos if not a.with_suffix(".png").exists()]
+    if faltando:
+        print(f"  [ERRO] PNGs nao gerados: {faltando}")
+        return False
+    for a in arquivos:
+        png = a.with_suffix(".png")
+        print(f"  [OK] {png.relative_to(RAIZ)} ({png.stat().st_size // 1024} KB)")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Renderiza diagramas PlantUML em PNG")
     parser.add_argument("--server", default="https://www.plantuml.com/plantuml")
+    parser.add_argument("--docker", action="store_true",
+                        help="renderiza com a imagem plantuml/plantuml (resolucao maior, sem internet)")
     args = parser.parse_args()
 
     arquivos = sorted(DIAGRAMAS.glob("*.puml"))
@@ -66,12 +105,22 @@ def main() -> int:
         print("Nenhum .puml encontrado em docs/diagrams")
         return 1
 
-    print(f"Renderizando {len(arquivos)} diagramas via {args.server}")
-    falhas = [a for a in arquivos if not renderizar(a, args.server)]
-    if falhas:
-        print(f"\nFalha em: {[a.name for a in falhas]}")
-        return 1
-    print("\nTodos os diagramas foram renderizados.")
+    if args.docker:
+        print(f"Renderizando {len(arquivos)} diagramas via {IMAGEM_PLANTUML}")
+        if not renderizar_com_docker(arquivos):
+            return 1
+    else:
+        print(f"Renderizando {len(arquivos)} diagramas via {args.server}")
+        falhas = [a for a in arquivos if not renderizar(a, args.server)]
+        if falhas:
+            print(f"\nFalha em: {[a.name for a in falhas]}")
+            return 1
+
+    STATIC_DIAGRAMAS.mkdir(parents=True, exist_ok=True)
+    for png in sorted(DIAGRAMAS.glob("*.png")):
+        shutil.copyfile(png, STATIC_DIAGRAMAS / png.name)
+    print(f"\nCopiados para {STATIC_DIAGRAMAS.relative_to(RAIZ)}")
+    print("Todos os diagramas foram renderizados.")
     return 0
 
 

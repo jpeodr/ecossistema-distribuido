@@ -60,5 +60,7 @@ M --> S : HTTPS (periodo p/last)
 note bottom of W1
   Escala elastica:
   docker compose up -d --scale worker=5
+  3 workers x 4 slots = 12 tarefas
+  em paralelo
 end note
 @enduml

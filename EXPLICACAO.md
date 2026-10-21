@@ -49,6 +49,31 @@ O Manager não conhece os Workers. Os Workers não se conhecem. O contrato entre
 
 Ambiente padrão: 3 Workers × 4 = 12 requisições simultâneas ao SIDRA.
 
+### Speedup
+
+O speedup compara o tempo paralelo com o tempo serial equivalente:
+
+```
+S = T₁ / Tₚ
+```
+
+`T₁` é o tempo que as 27 tarefas levariam somadas (uma após outra) mais a fração sequencial
+(o REDUCE); `Tₚ` é o tempo observado do job (`finished_at − started_at`).
+
+O teto vem da lei de Amdahl:
+
+```
+S_max(N) = 1 / ((1 − P) + P / N)
+```
+
+`P` é a fração paralelizável do programa (0 a 1), `1 − P` é a fração sequencial que não pode
+ser paralelizada e `N` é o número de processadores disponíveis. Com `P = 0,8` e `N = 4`, o teto
+é `1 / (0,2 + 0,2) = 2,5`; com `N = 16`, o mesmo programa chega a no máximo `1 / (0,2 + 0,05) ≈ 4`.
+
+No sistema, `P` é medido a partir do job (`Σ durações / T₁`), `N` é o número de slots
+(Workers × `WORKER_CONCURRENCY`) e o speedup observado é comparado com o teto. A página
+`/painel/arquitetura` mostra os valores do último job.
+
 ## REDUCE
 
 Executado no Manager, depois que todas as tarefas terminam.
@@ -128,16 +153,18 @@ Documentação interativa: `http://localhost:8000/docs`
 | URL | Conteúdo |
 |-----|----------|
 | `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório (agregado, ranking de UFs, participação, HHI) e destaques |
+| `/painel/arquitetura` | documentação: arquitetura de solução, 5 diagramas UML, paralelismo e cálculo de speedup |
+| `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas |
+
+Layout no padrão de documentação do MDN: cabeçalho fixo com os botões Painel, Documentação,
+GitHub, API e o alternador de tema claro/escuro; sumário lateral com âncoras e artigo em
+coluna única.
 
 A página de leitura mostra o resultado mais recente de cada pesquisa; o histórico completo
 continua na API (`GET /api/v1/results`).
-| `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas |
 
-Layout no padrão de documentação do MDN: cabeçalho fixo com breadcrumb, sumário lateral
-com âncoras, artigo em coluna única e alternador de tema claro/escuro.
-
-O botão **"Ver a infraestrutura trabalhando"** (segunda página) dispara um job real e mostra o
-fluxo Manager → Redis → Workers → SIDRA → Manager com contadores e log de tarefas.
+O botão **"Ver a infraestrutura trabalhando"** (página "Como funciona") dispara um job real e
+mostra o fluxo Manager → Redis → Workers → SIDRA → Manager com contadores e log de tarefas.
 
 ## Arquivos
 

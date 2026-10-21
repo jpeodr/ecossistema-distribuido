@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arquitetura de solução — Ecossistema Distribuído</title>
+<style>
+  /* ===================== tokens (padrão MDN) ===================== */
+  :root {
+    --bg: #ffffff;
+    --surface: #f9f9fa;
+    --surface-2: #f0f0f4;
+    --border: #d7d7db;
+    --border-strong: #b1b1b6;
+    --txt: #1b1b1f;
+    --txt-soft: #5b5b66;
+    --link: #005cc5;
+    --link-hover: #003b8e;
+    --code-bg: #f0f0f4;
+    --green: #007936;
+    --amber: #b26a00;
+    --red: #d32f2f;
+    --violet: #7c3aed;
+    --radius: 4px;
+    --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  html[data-theme="dark"] {
+    --bg: #1b1b1f;
+    --surface: #2a2a2e;
+    --surface-2: #38383d;
+    --border: #3f3f44;
+    --border-strong: #57575e;
+    --txt: #f0f0f4;
+    --txt-soft: #c8c8cd;
+    --link: #7ab7ff;
+    --link-hover: #a9cfff;
+    --code-bg: #38383d;
+    --green: #4fd18b;
+    --amber: #ffb84d;
+    --red: #ff8a8a;
+    --violet: #c4b5fd;
+  }
+  html[data-theme="dark"] .btn-primary { color: #1b1b1f; }
+  html[data-theme="dark"] .btn-primary:hover { color: #1b1b1f; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--txt);
+    font-family: var(--font); font-size: 1rem; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  code {
+    font-family: var(--mono); font-size: .875em; background: var(--code-bg);
+    padding: .12em .32em; border-radius: 3px; color: var(--txt);
+  }
+
+  /* ===================== topbar ===================== */
+  .topbar { position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .topbar-inner {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px; min-height: 60px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--txt); font-weight: 700; }
+  .brand:hover { text-decoration: none; }
+  .brand-logo {
+    background: var(--txt); color: var(--bg); padding: 5px 9px; border-radius: var(--radius);
+    font-size: .75rem; letter-spacing: .06em;
+  }
+  .brand-name { font-size: .9375rem; }
+  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-family: inherit; font-size: .8125rem; font-weight: 600; line-height: 1.4;
+    padding: 6px 12px; border-radius: var(--radius); border: 1px solid transparent;
+    text-decoration: none;
+  }
+  .btn:hover { text-decoration: none; }
+  .btn-primary { background: var(--link); color: #fff; }
+  .btn-primary:hover { background: var(--link-hover); color: #fff; }
+  .btn-subtle { background: var(--surface); color: var(--txt); border-color: var(--border); }
+  .btn-subtle:hover { background: var(--surface-2); color: var(--txt); }
+  .btn[aria-current="page"] { background: var(--surface-2); border-color: var(--border-strong); }
+  .theme-btn {
+    width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--txt-soft); cursor: pointer; font-size: .875rem;
+  }
+  .theme-btn:hover { background: var(--surface-2); }
+
+  /* ===================== layout ===================== */
+  .layout {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px;
+    display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px;
+  }
+  .sidebar {
+    position: sticky; top: 60px; align-self: start;
+    max-height: calc(100vh - 60px); overflow-y: auto; padding: 28px 0 48px;
+  }
+  .toc-title {
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--txt-soft); margin: 0 0 10px; font-weight: 700;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+  .toc a {
+    display: block; padding: 6px 14px; margin-left: -2px; border-left: 2px solid transparent;
+    font-size: .875rem; color: var(--txt-soft);
+  }
+  .toc a:hover { color: var(--link); text-decoration: none; }
+  .toc a.active { color: var(--link); font-weight: 600; border-left-color: var(--link); background: var(--surface); }
+  .toc-note {
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: .75rem; color: var(--txt-soft);
+  }
+  .toc-note a { color: var(--link); }
+
+  .article { padding: 36px 0 96px; max-width: 47em; }
+  .article h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
+  .lead { font-size: 1.0625rem; color: var(--txt-soft); margin: 0 0 2rem; }
+  .article h2 {
+    font-size: 1.5rem; line-height: 1.25; font-weight: 700;
+    margin: 3rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+  }
+  .article h3 { font-size: 1.0625rem; font-weight: 700; margin: 2rem 0 .5rem; }
+  .article p { margin: 0 0 1rem; }
+  .anchor { color: var(--border-strong); font-weight: 400; margin-left: 8px; opacity: 0; }
+  h2:hover .anchor, h3:hover .anchor { opacity: 1; }
+  .muted { color: var(--txt-soft); }
+  .empty { color: var(--txt-soft); font-size: .875rem; }
+
+  .summary {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); padding: 16px 20px; margin-bottom: 2rem;
+  }
+  .summary h2 { font-size: 1rem; margin: 0 0 .5rem; padding: 0; border: 0; text-transform: uppercase; letter-spacing: .06em; }
+  .summary ul { margin: 0; padding-left: 20px; }
+  .summary li { margin-bottom: 4px; }
+
+  .note {
+    background: var(--surface); border-left: 4px solid var(--link);
+    padding: 12px 16px; margin: 1rem 0; border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: .9375rem; color: var(--txt-soft);
+  }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ===================== diagramas ===================== */
+  figure { margin: 1.25rem 0 2rem; }
+  .figure-box {
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+    padding: 12px; overflow-x: auto;
+  }
+  .figure-box img { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .figure-box img.tall { max-width: 100%; width: auto; }
+  figcaption { font-size: .8125rem; color: var(--txt-soft); margin-top: 8px; }
+  figcaption a { color: var(--link); }
+
+  /* ===================== blocos ===================== */
+  .formula {
+    font-family: var(--mono); font-size: .8125rem; background: var(--surface); color: var(--txt);
+    border: 1px solid var(--border); border-left: 3px solid var(--violet); border-radius: var(--radius);
+    padding: 12px 14px; margin: 12px 0; overflow-x: auto; white-space: pre;
+  }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg); }
+  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .lvl { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--bg); }
+  .lvl .k { font-size: .6875rem; letter-spacing: .07em; text-transform: uppercase; color: var(--txt-soft); }
+  .lvl h3 { margin: 4px 0 0; font-size: 1rem; }
+  .lvl p { margin: 8px 0 0; font-size: .8125rem; color: var(--txt-soft); }
+  .lvl .big { font-size: 1.75rem; font-weight: 700; color: var(--link); line-height: 1.2; margin-top: 10px; }
+  .lvl .big small { font-size: .8125rem; font-weight: 400; color: var(--txt-soft); }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: .875rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--surface); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mono { font-family: var(--mono); font-size: .8125rem; }
+
+  .seealso { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1rem; }
+  .seealso h2 { font-size: 1.125rem; margin: 0 0 .5rem; padding: 0; border: 0; }
+  .seealso ul { margin: 0; padding-left: 20px; font-size: .875rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--txt-soft); font-size: .8125rem; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; max-height: none; padding: 20px 0 0; }
+    .article { padding-top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/painel/">
+      <span class="brand-logo">ED</span>
+      <span class="brand-name">Ecossistema Distribuído</span>
+    </a>
+    <nav class="topbar-nav" aria-label="Navegação principal">
+      <a class="btn btn-subtle" href="/painel/">Painel</a>
+      <a class="btn btn-subtle" href="/painel/arquitetura" aria-current="page">Documentação</a>
+      <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
+      <a class="btn btn-subtle" href="/docs">API</a>
+      <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <nav class="toc" aria-label="Nesta página">
+      <h2 class="toc-title">Nesta página</h2>
+      <ol>
+        <li><a href="#topologia">Visão geral</a></li>
+        <li><a href="#implantacao">Implantação</a></li>
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#sequencia">Ciclo de um job</a></li>
+        <li><a href="#classes">Modelo de domínio</a></li>
+        <li><a href="#atividade">Fluxo de execução</a></li>
+        <li><a href="#paralelismo">Paralelismo</a></li>
+        <li><a href="#speedup">Speedup</a></li>
+        <li><a href="#fontes">Fontes dos diagramas</a></li>
+      </ol>
+      <p class="toc-note">
+        <a href="/painel/como-funciona">Como funciona</a> ·
+        <a href="/painel/">Interface de leitura</a> ·
+        <a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a>
+      </p>
+    </nav>
+  </aside>
+
+  <main class="article">
+
+    <h1>Arquitetura de solução</h1>
+    <p class="lead">
+      Topologia distribuída adotada no ecossistema SIDRA/IBGE, diagramas UML dos
+      componentes, da implantação, da sequência, das classes e da atividade, além do
+      cálculo de speedup medido no sistema.
+    </p>
+
+    <div class="summary">
+      <h2>Resumo</h2>
+      <ul>
+        <li><b>Três tipos de nó</b>: Manager (coordena), Workers (executam) e Redis (fila).</li>
+        <li><b>Um contêiner por nó</b>, rede bridge única, orquestração por Docker Compose.</li>
+        <li><b>27 tarefas por job</b>, uma por Unidade da Federação, consumidas por qualquer Worker.</li>
+        <li><b>Três níveis de paralelismo</b>: entre os nós, dentro do nó (I/O) e dentro da tarefa (CPU).</li>
+        <li><b>Speedup medido</b> contra o teto teórico da lei de Amdahl, com os números do último job.</li>
+      </ul>
+    </div>
+
+    <!-- ================= VISÃO GERAL ================= -->
+    <section id="topologia">
+      <h2>Visão geral <a class="anchor" href="#topologia">#</a></h2>
+      <p>
+        O sistema é um ecossistema de processos distribuídos com topologia
+        <b>mestre-escravo com broker</b> (produtor/consumidor). O Manager é o mestre: recebe o
+        pedido, fatia o job e publica as tarefas. O Redis é o broker: guarda a fila. Os Workers
+        são os escravos: retiram tarefas e devolvem resultados.
+      </p>
+      <p>
+        Nenhum Worker conhece os demais e nenhum Worker conversa com outro Worker. A única
+        interação é com o Redis (retirar tarefas) e com o Manager (devolver resultados). Isso
+        permite escalar horizontalmente com <code>docker compose up -d --scale worker=N</code>.
+      </p>
+
+      <table>
+        <thead><tr><th>Nó</th><th>Contêiner</th><th>Responsabilidade</th><th>Escala</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>Manager</b></td>
+            <td class="mono">eco-manager</td>
+            <td>API FastAPI, fatiamento, coleta dos callbacks, REDUCE, painel web</td>
+            <td>1 instância</td>
+          </tr>
+          <tr>
+            <td><b>Redis</b></td>
+            <td class="mono">eco-redis</td>
+            <td>Broker: fila <code>sidra:tasks</code>, pub/sub de eventos</td>
+            <td>1 instância</td>
+          </tr>
+          <tr>
+            <td><b>Workers</b></td>
+            <td class="mono">eco-sidra-worker-N</td>
+            <td>Consumo da fila, consulta ao SIDRA, normalização, callback, heartbeat</td>
+            <td>N instâncias</td>
+          </tr>
+          <tr>
+            <td><b>API SIDRA</b></td>
+            <td class="mono">externo (IBGE)</td>
+            <td>Fonte dos dados públicos (HTTPS/JSON)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <p>
+          A API do SIDRA fica fora do ecossistema: é um serviço público do IBGE, acessado por
+          HTTPS. O sistema não escreve no SIDRA, apenas lê.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= IMPLANTAÇÃO ================= -->
+    <section id="implantacao">
+      <h2>Diagrama de implantação <a class="anchor" href="#implantacao">#</a></h2>
+      <p>
+        Topologia física: um host Docker com a rede bridge <code>ecossistema</code>, um contêiner
+        do Manager (porta 8000 publicada), um do Redis e N de Worker. O Manager e os Workers
+        compartilham a mesma imagem Docker; o que muda é o comando de entrada.
+      </p>
+      <figure>
+        <div class="figure-box"><img src="/painel/diagramas/02-implantacao.png" alt="Diagrama de implantação: host Docker com o contêiner do Manager, o do Redis e três contêineres de Worker, todos na rede bridge ecossistema, com o Manager e os Workers acessando a API do SIDRA na internet."></div>
+        <figcaption>
+          Diagrama de implantação (UML) — fonte: <code>docs/diagrams/02-implantacao.puml</code> ·
+          <a href="/painel/diagramas/02-implantacao.png" target="_blank" rel="noopener">abrir em tamanho real</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= COMPONENTES ================= -->
+    <section id="componentes">
+      <h2>Diagrama de componentes <a class="anchor" href="#componentes">#</a></h2>
+      <p>
+        Componentes internos e as interfaces entre eles: o painel web e o script de demonstração
+        consomem a API do Manager; o Manager publica no Redis e grava no SQLite; o Worker puxa
+        da fila, lê no SIDRA e devolve ao Manager.
+      </p>
+      <figure>
+        <div class="figure-box"><img src="/painel/diagramas/01-componentes.png" alt="Diagrama de componentes: usuário, painel web, script de demonstração, Manager com store SQLite, broker Redis, Worker e API do SIDRA, com as interfaces de comunicação entre eles."></div>
+        <figcaption>
+          Diagrama de componentes (UML) — fonte: <code>docs/diagrams/01-componentes.puml</code> ·
+          <a href="/painel/diagramas/01-componentes.png" target="_blank" rel="noopener">abrir em tamanho real</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= SEQUÊNCIA ================= -->
+    <section id="sequencia">
+      <h2>Ciclo de vida de um job <a class="anchor" href="#sequencia">#</a></h2>
+      <p>
+        Sequência completa: do pedido HTTP ao relatório. Destacam-se a sondagem do período (para
+        não despachar um job para um período sem dados) e o disparo do REDUCE na chegada da
+        última tarefa.
+      </p>
+      <figure>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/03-sequencia.png" alt="Diagrama de sequência: usuário cria o job, o Manager resolve o período no SIDRA, fatia em 27 tarefas, publica no Redis, os Workers retiram tarefas com BLPOP, consultam o SIDRA, devolvem os resultados, o Manager grava no SQLite e executa o REDUCE."></div>
+        <figcaption>
+          Diagrama de sequência (UML) — fonte: <code>docs/diagrams/03-sequencia.puml</code> ·
+          <a href="/painel/diagramas/03-sequencia.png" target="_blank" rel="noopener">abrir em tamanho real</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= CLASSES ================= -->
+    <section id="classes">
+      <h2>Modelo de domínio <a class="anchor" href="#classes">#</a></h2>
+      <p>
+        Entidades que atravessam o sistema: <code>Dataset</code> (com suas variáveis e
+        categorias), <code>JobRequest</code>, <code>Task</code>, <code>Record</code> e
+        <code>TaskResult</code>, com a persistência em <code>Store</code> e a agregação em
+        <code>Reduce</code>.
+      </p>
+      <figure>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/04-classes.png" alt="Diagrama de classes: Dataset relacionado com Variable e Category, JobRequest gerando Tasks, Task executada por Worker, Worker devolvendo TaskResult com Records, TaskResult persistido em Store e agregado por Reduce."></div>
+        <figcaption>
+          Diagrama de classes (UML) — fonte: <code>docs/diagrams/04-classes.puml</code> ·
+          <a href="/painel/diagramas/04-classes.png" target="_blank" rel="noopener">abrir em tamanho real</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= ATIVIDADE ================= -->
+    <section id="atividade">
+      <h2>Fluxo de execução <a class="anchor" href="#atividade">#</a></h2>
+      <p>
+        Atividade do Manager e do Worker, incluindo o caminho de erro: falha na consulta ao
+        SIDRA gera re-enfileiramento com espera de 1 s e 2 s, até o limite de
+        <code>MAX_RETRIES</code>.
+      </p>
+      <figure>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/05-atividade.png" alt="Diagrama de atividade: validação do dataset, resolução do período, fatiamento em 27 tarefas, publicação no Redis, laço de consumo com BLPOP, consulta ao SIDRA, retry em caso de falha, normalização com pandas, callback ao Manager, REDUCE e leitura do relatório."></div>
+        <figcaption>
+          Diagrama de atividade (UML) — fonte: <code>docs/diagrams/05-atividade.puml</code> ·
+          <a href="/painel/diagramas/05-atividade.png" target="_blank" rel="noopener">abrir em tamanho real</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ================= PARALELISMO ================= -->
+    <section id="paralelismo">
+      <h2>Paralelismo <a class="anchor" href="#paralelismo">#</a></h2>
+      <p>
+        O paralelismo aparece em três níveis, com granularidades diferentes. Os três somam:
+        o job é quebrado em tarefas independentes (nível 1), cada tarefa é executada junto de
+        outras no mesmo processo (nível 2) e o trabalho de CPU de cada tarefa sai da thread de
+        event loop (nível 3).
+      </p>
+
+      <div class="levels">
+        <div class="lvl">
+          <div class="k">Nível 1 · entre os nós</div>
+          <h3>Distribuído</h3>
+          <div class="big" id="p1">—<small> tarefas</small></div>
+          <p>Uma tarefa por UF: 27 consultas independentes ao SIDRA, espalhadas pelos Workers que retiram tarefas da fila.</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Nível 2 · dentro do nó</div>
+          <h3>Assíncrono (I/O)</h3>
+          <div class="big" id="p2">—<small> tarefas em voo</small></div>
+          <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições simultâneas ao SIDRA (<code>asyncio.create_task</code>).</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Nível 3 · dentro da tarefa</div>
+          <h3>Thread (CPU)</h3>
+          <div class="big">1<small> thread dedicada</small></div>
+          <p>A normalização com pandas roda em <code>asyncio.to_thread</code> para não bloquear o event loop.</p>
+        </div>
+      </div>
+
+      <h3>Como as tarefas se distribuem</h3>
+      <p>
+        O Manager publica as 27 tarefas com um único <code>RPUSH</code> em pipeline. A fila é
+        compartilhada: qualquer Worker pode retirar qualquer tarefa, e a ordem de atendimento é
+        livre. Não há afinidade entre tarefa e Worker, nem estado compartilhado entre Workers.
+      </p>
+      <p>
+        Com 3 Workers e <code>WORKER_CONCURRENCY=4</code>, o ecossistema mantém 12 requisições
+        simultâneas ao SIDRA — 12 tarefas em voo ao mesmo tempo, cada uma em um processo
+        diferente.
+      </p>
+
+      <div class="note">
+        <p>
+          O gargalo real é externo: a latência da API do SIDRA. Por isso o paralelismo do nível 2
+          é de I/O (não de CPU) e o nível 3 existe só para tirar a normalização com pandas da
+          thread de event loop.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SPEEDUP ================= -->
+    <section id="speedup">
+      <h2>Speedup <a class="anchor" href="#speedup">#</a></h2>
+      <p>
+        O speedup mede quanto mais rápido o job roda quando o trabalho é distribuído, em relação
+        à execução serial equivalente.
+      </p>
+
+      <div class="formula">Speedup  S = T₁ / Tₚ
+
+T₁ = tempo serial de referência
+Tₚ = tempo observado com os Workers em paralelo</div>
+
+      <p>
+        A lei de Amdahl define o teto: uma fração sequencial do programa (<code>1 − P</code>) não
+        pode ser paralelizada e limita o ganho total.
+      </p>
+
+      <div class="formula">Speedup máximo  S_max(N) = 1 / ((1 − P) + P / N)
+
+P = fração paralelizável do programa (0 a 1)
+1 − P = fração sequencial, que não pode ser paralelizada
+N = número de processadores ou núcleos disponíveis</div>
+
+      <p>
+        Exemplo genérico: com 80% do programa paralelizável (<code>P = 0,8</code>) e 4
+        processadores (<code>N = 4</code>), <code>S_max = 1 / (0,2 + 0,2) = 2,5</code>. Com 16
+        processadores o mesmo programa chega a no máximo <code>1 / (0,2 + 0,05) ≈ 4</code> —
+        mais núcleos não resolvem a fração sequencial.
+      </p>
+
+      <h3>Aplicação no sistema</h3>
+      <p>
+        No ecossistema, a fração paralelizável é praticamente o job inteiro: as 27 tarefas são
+        independentes. O que sobra de sequencial é o REDUCE, executado uma única vez no Manager
+        quando a última tarefa chega.
+      </p>
+
+      <div class="formula">T₁ = Σ duração das 27 tarefas  +  t_REDUCE
+Tₚ = finished_at − started_at do job
+P  = (Σ duração das tarefas) / T₁
+N  = Workers × WORKER_CONCURRENCY  (3 × 4 = 12)
+S     = T₁ / Tₚ
+S_max = 1 / ((1 − P) + P / N)</div>
+
+      <p>
+        Os valores abaixo saem do último job executado (medições reais da API, não estimativas):
+      </p>
+
+      <table>
+        <thead><tr><th>Grandeza</th><th>Valor</th><th>Origem</th></tr></thead>
+        <tbody id="speedupRows">
+          <tr><td colspan="3" class="empty">Carregando…</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note" id="speedup-nota">
+        <p>Comparando o speedup observado com o teto de Amdahl, a diferença é o custo da
+        distribuição: tempo de espera na fila, ida e volta do callback, latência de rede até o
+        SIDRA e o ramp-up do pool de tarefas no início do job.</p>
+      </div>
+
+      <h3>Leitura do resultado</h3>
+      <ul>
+        <li>O teto teórico é calculado com <code>N</code> slots, não com a contagem de máquinas:
+          quem executa em paralelo são as requisições ao SIDRA, não os contêineres.</li>
+        <li>Com <code>P ≈ 1</code>, o teto é praticamente <code>N</code>: o speedup acompanha a
+          escala linear enquanto a fração sequencial for pequena.</li>
+        <li>Se a fração sequencial crescer (por exemplo, um REDUCE mais pesado), o teto cai
+          mesmo com mais Workers — é o caso que a lei de Amdahl descreve.</li>
+      </ul>
+    </section>
+
+    <!-- ================= FONTES ================= -->
+    <section id="fontes">
+      <h2>Fontes dos diagramas <a class="anchor" href="#fontes">#</a></h2>
+      <p>
+        Os diagramas são gerados a partir dos arquivos <code>.puml</code> versionados no
+        repositório, com PlantUML. As imagens em PNG exibidas nesta página são geradas a partir
+        dos mesmos fontes.
+      </p>
+      <table>
+        <thead><tr><th>Arquivo</th><th>Diagrama</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">docs/diagrams/01-componentes.puml</td><td>Componentes</td></tr>
+          <tr><td class="mono">docs/diagrams/02-implantacao.puml</td><td>Implantação (topologia Docker)</td></tr>
+          <tr><td class="mono">docs/diagrams/03-sequencia.puml</td><td>Sequência (ciclo de vida do job)</td></tr>
+          <tr><td class="mono">docs/diagrams/04-classes.puml</td><td>Classes (modelo de domínio)</td></tr>
+          <tr><td class="mono">docs/diagrams/05-atividade.puml</td><td>Atividade (fluxo de execução)</td></tr>
+        </tbody>
+      </table>
+      <p>Para regerar as imagens (o script também copia os PNGs para a pasta servida pelo
+      Manager):</p>
+      <div class="formula">python scripts/render_diagrams.py --docker</div>
+      <p class="muted">Sem o Docker, <code>python scripts/render_diagrams.py</code> usa o
+      servidor público do PlantUML.</p>
+    </section>
+
+    <div class="seealso">
+      <h2>Veja também</h2>
+      <ul>
+        <li><a href="/painel/como-funciona">Como funciona</a> — o mesmo fluxo em modo animado, com job real.</li>
+        <li><a href="/painel/">Interface de leitura</a> — os dados do SIDRA e as tabelas do relatório.</li>
+        <li><a href="/docs">Swagger da API</a> — endpoints, schemas e execução direta.</li>
+        <li><a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a> — código, README e diagramas.</li>
+      </ul>
+    </div>
+
+    <footer>
+      Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em Docker.
+    </footer>
+
+  </main>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nf = (v, d = 2) => typeof v === "number" ? v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }) : v;
+const ms = (v) => v >= 1000 ? (v / 1000).toFixed(2).replace(".", ",") + " s" : Math.round(v) + " ms";
+
+/* ---------- tema claro/escuro ---------- */
+const btnTema = $("#btnTema");
+const temaSalvo = localStorage.getItem("tema");
+if (temaSalvo) document.documentElement.dataset.theme = temaSalvo;
+btnTema.addEventListener("click", () => {
+  const escuro = document.documentElement.dataset.theme === "dark";
+  if (escuro) delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = "dark";
+  localStorage.setItem("tema", escuro ? "light" : "dark");
+});
+
+/* ---------- item ativo do sumário ---------- */
+const secoes = [...document.querySelectorAll("main > section")];
+const links = [...document.querySelectorAll(".toc a")];
+if ("IntersectionObserver" in window && secoes.length) {
+  const obs = new IntersectionObserver((entradas) => {
+    for (const e of entradas) {
+      if (!e.isIntersecting) continue;
+      links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+    }
+  }, { rootMargin: "-80px 0px -70% 0px" });
+  secoes.forEach(s => obs.observe(s));
+}
+
+/* ---------- paralelismo e speedup medidos ---------- */
+async function medir() {
+  try {
+    const lista = await (await fetch("/api/v1/jobs?limit=1")).json();
+    const job = lista.jobs && lista.jobs[0];
+    const w = await (await fetch("/api/v1/workers")).json();
+    const slots = w.workers.reduce((a, x) => a + (x.capacity || 0), 0);
+    $("#p2").innerHTML = slots + "<small> tarefas em voo</small>";
+
+    if (!job) {
+      $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Nenhum job executado ainda.</td></tr>`;
+      return;
+    }
+    const t = await (await fetch(`/api/v1/jobs/${job.job_id}/tasks`)).json();
+    const soma = t.tasks.reduce((a, x) => a + (x.duration_ms || 0), 0);
+    const summary = typeof job.summary === "string" ? JSON.parse(job.summary) : (job.summary || {});
+    const reduceMs = summary.reduce_ms || 0;
+
+    $("#p1").innerHTML = job.total_tasks + "<small> tarefas</small>";
+
+    const T1 = soma / 1000 + reduceMs / 1000;              // serial: tarefas + REDUCE
+    const Tp = Math.max(0.001, (job.finished_at || 0) - (job.started_at || 0));
+    const P = T1 ? (soma / 1000) / T1 : 0;
+    const S = T1 / Tp;
+    const Smax = slots ? 1 / ((1 - P) + P / slots) : null;
+
+    const linhas = [
+      ["Σ duração das tarefas (trabalho paralelo)", ms(soma), "soma de <code>duration_ms</code> das tarefas do job"],
+      ["t_REDUCE (fração sequencial)", ms(reduceMs), "tempo do REDUCE medido no Manager"],
+      ["T₁ — tempo serial equivalente", nf(T1) + " s", "Σ durações + REDUCE"],
+      ["Tₚ — tempo paralelo observado", nf(Tp) + " s", "<code>finished_at</code> − <code>started_at</code>"],
+      ["P — fração paralelizável", nf(P, 3), "Σ durações / T₁"],
+      ["N — slots de execução", slots + " slots", "Workers × WORKER_CONCURRENCY"],
+      ["S — speedup observado", nf(S) + "×", "T₁ / Tₚ"],
+      ["S_max — teto de Amdahl", Smax === null ? "—" : nf(Smax) + "×", "1 / ((1 − P) + P / N)"],
+    ];
+    $("#speedupRows").innerHTML = linhas.map(([k, v, o]) =>
+      `<tr><td>${k}</td><td class="num"><b>${v}</b></td><td class="muted">${o}</td></tr>`).join("");
+  } catch (e) {
+    $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Sem medições disponíveis.</td></tr>`;
+  }
+}
+
+medir();
+setInterval(medir, 5000);
+</script>
+</body>
+</html>

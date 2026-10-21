@@ -46,12 +46,13 @@ participação produtiva e índice de concentração (HHI).**
 Diagramas UML completos (fonte `.puml` + PNG renderizado) em [`docs/diagrams`](docs/diagrams):
 componentes, implantação (Docker), sequência, classes e atividade.
 
-### Interface web (duas páginas)
+### Interface web (três páginas)
 
-O Manager serve duas páginas (HTML + JS puro, sem CDN e sem build):
+O Manager serve três páginas (HTML + JS puro, sem CDN e sem build):
 
 ```
 http://localhost:8000/painel/                 # a raiz "/" redireciona para cá
+http://localhost:8000/painel/arquitetura       # documentação: arquitetura, UML e speedup
 http://localhost:8000/painel/como-funciona    # fluxo de trabalho
 ```
 
@@ -59,6 +60,10 @@ http://localhost:8000/painel/como-funciona    # fluxo de trabalho
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI). Mesma
   linguagem visual da página "Como funciona": cabeçalho fixo, tema claro/escuro e tabelas
   com borda. Exibe o resultado mais recente de cada pesquisa — o histórico completo fica na API.
+- **`/painel/arquitetura`** — documentação da solução: visão geral da topologia distribuída,
+  os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), os três
+  níveis de paralelismo e o cálculo de **speedup** (speedup observado e teto de Amdahl),
+  com os valores medidos no último job.
 - **`/painel/como-funciona`** — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
   processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
   do REDUCE e os arquivos do projeto. A página segue o padrão de documentação do MDN (cabeçalho
@@ -161,13 +166,17 @@ curl http://localhost:8000/api/v1/health
 
 ```
 http://localhost:8000/painel/                # dados do SIDRA (leitura)
+http://localhost:8000/painel/arquitetura      # documentação: arquitetura, UML e speedup
 http://localhost:8000/painel/como-funciona   # fluxo de trabalho
 ```
 
 A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados** e acompanha
 `X de 27 UFs · concluído` até as tabelas do relatório aparecerem.
 
-A segunda página mostra o fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
+A segunda página documenta a solução: topologia distribuída, os cinco diagramas UML, os três
+níveis de paralelismo e o cálculo de speedup com os valores medidos no último job.
+
+A terceira página mostra o fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
 processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
 do REDUCE e os arquivos do projeto.
 
@@ -311,7 +320,9 @@ docker compose down -v       # remove também o volume do SQLite
 │   │   ├── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
 │   │   └── static/
 │   │       ├── index.html        # interface de leitura dos dados do SIDRA
-│   │       └── como-funciona.html  # página de explicação (fluxo de trabalho)
+│   │       ├── como-funciona.html  # página de explicação (fluxo de trabalho)
+│   │       ├── arquitetura.html  # documentação (arquitetura, UML e speedup)
+│   │       └── diagramas/        # PNG dos diagramas exibidos na documentação
 │   └── worker/
 │       ├── main.py             # consumidor da fila (BLPOP) + paralelismo interno
 │       └── processor.py        # normalização dos dados (pandas em thread)
