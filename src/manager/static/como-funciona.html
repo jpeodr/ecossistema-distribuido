@@ -638,21 +638,29 @@ function flash(el) { el.classList.remove("flash"); void el.offsetWidth; el.class
 async function iniciarLive() {
   $("#btnLive").disabled = true;
   $("#btnStop").disabled = false;
-  $("#liveState").textContent = "rodando…";
+  $("#liveState").textContent = "despachando…";
   $("#log").innerHTML = "";
   partes.forEach(p => p.el.remove());
   partes = [];
   desenharFios();
 
   const dataset = $("#liveDataset").value || "lspa";
+  // reaproveita o período do último job: dispensa a consulta extra ao SIDRA
+  let periodo = null;
+  try {
+    const ult = await (await fetch("/api/v1/jobs?limit=1")).json();
+    periodo = ult.jobs[0] ? ult.jobs[0].period : null;
+  } catch (e) { /* segue sem período: o Manager busca */ }
+
   const r = await fetch("/api/v1/jobs", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dataset })
+    body: JSON.stringify(periodo ? { dataset, period: periodo } : { dataset })
   });
   const job = await r.json();
   if (!r.ok) { log("erro ao criar o job: " + esc(job.detail || r.status), "fin"); pararLive(); return; }
 
   live = { job, total: job.total_tasks, vistos: new Set(), t0: Date.now() };
+  $("#liveState").textContent = "rodando…";
   log(`job ${esc(job.job_id)} criado · ${job.total_tasks} tarefas (1 por UF) · período ${esc(job.period)}`, "w");
   log("manager fatia o job e publica todas as tarefas na fila do Redis (RPUSH)", "w");
   for (let i = 0; i < job.total_tasks; i++) spawn(FLOWS.push, i * 0.05);
