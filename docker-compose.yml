@@ -1,0 +1,81 @@
+name: eco-sidra
+
+services:
+  # ---------------------------------------------------------------- Broker
+  redis:
+    image: redis:7-alpine
+    container_name: eco-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [ecossistema]
+
+  # ------------------------------------------------------- Manager (coordenador)
+  manager:
+    build: .
+    container_name: eco-manager
+    command:
+      ["uvicorn", "src.manager.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      TASK_QUEUE: sidra:tasks
+      DB_PATH: /data/manager.db
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8000:8000"
+    volumes:
+      - dados:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [ecossistema]
+
+  # ------------------------------------------------------------ Workers (no escalonaveis)
+  # Sem container_name de proposito: permite `docker compose up -d --scale worker=5`
+  worker:
+    build: .
+    command: ["python", "-m", "src.worker.main"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      TASK_QUEUE: sidra:tasks
+      MANAGER_URL: http://manager:8000
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      redis:
+        condition: service_healthy
+      manager:
+        condition: service_started
+    deploy:
+      replicas: 3
+    restart: unless-stopped
+    networks: [ecossistema]
+
+  # ------------------------------------------------------------ Demo (sob demanda)
+  demo:
+    build: .
+    profiles: ["demo"]
+    command: ["python", "scripts/demo.py"]
+    environment:
+      MANAGER_URL: http://manager:8000
+      DATASET: ${DATASET:-lspa}
+    depends_on:
+      manager:
+        condition: service_healthy
+    networks: [ecossistema]
+
+volumes:
+  dados:
+
+networks:
+  ecossistema:
+    driver: bridge
