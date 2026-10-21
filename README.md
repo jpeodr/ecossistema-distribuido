@@ -97,8 +97,11 @@ cd ecossistema-distribuido
 ### Passo 2 — Construa as imagens
 
 ```bash
-docker compose build
+docker compose --profile demo build
 ```
+
+> O perfil `demo` inclui o container de demonstração; sem ele, use
+> `docker compose build` para construir apenas Manager, Workers e Redis.
 
 ### Passo 3 — Suba o ecossistema (Manager + 3 Workers + Redis)
 
@@ -145,6 +148,12 @@ Para a pesquisa **PIM-PF** (Indústria/ESG):
 ```bash
 docker compose --profile demo run --rm -e DATASET=pim_pf demo
 ```
+
+> Alternativa sem construir a imagem `demo` (usa a imagem do worker, que já
+> tem o mesmo código e a mesma variável `MANAGER_URL`):
+> ```bash
+> docker compose run --rm worker python scripts/demo.py pim_pf
+> ```
 
 ### Passo 6 — Explore a API interativamente
 
