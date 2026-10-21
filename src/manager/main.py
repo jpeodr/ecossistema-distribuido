@@ -25,7 +25,7 @@ from ..common.config import settings
 from ..common.datasets import DATASETS, get_dataset
 from ..common.logging import setup_logging
 from ..common.models import JobRequest, JobStatus, Task, TaskResult, WorkerHeartbeat
-from ..common.sidra import SidraClient
+from ..common.sidra import SidraClient, previous_period
 from .analysis import reduce_results
 from .dispatcher import build_tasks
 from .store import Store
@@ -128,6 +128,37 @@ async def list_datasets() -> dict:
 
 
 # ------------------------------------------------------------------ jobs
+async def ultimo_periodo_com_dados(dataset) -> str:
+    """Descobre o último período do SIDRA que já tem dados no recorte pedido.
+
+    O SIDRA publica o período no agregado antes de divulgar o recorte
+    territorial: `p/last` pode apontar um período sem linhas para o nível N3.
+    Nesse caso o job terminaria com relatório vazio, então o período é
+    retrocedido até um que responda com linhas.
+    """
+    period = await sidra.last_period(dataset.table, dataset.primary_variable, dataset.level)
+    for _ in range(3):
+        tem_dados = await sidra.has_data(
+            table=dataset.table,
+            level=dataset.level,
+            period=period,
+            variables=[dataset.primary_variable],
+            classification_id=dataset.classification_id,
+            categories=[dataset.categories[0].code],
+        )
+        if tem_dados:
+            break
+        anterior = previous_period(period)
+        if not anterior:
+            break
+        log.warning(
+            "período sem dados no recorte pedido, retrocedendo",
+            extra={"extra_fields": {"dataset": dataset.key, "periodo": period, "anterior": anterior}},
+        )
+        period = anterior
+    return period
+
+
 @app.post("/api/v1/jobs", status_code=202)
 async def create_job(request: JobRequest) -> dict:
     """Cria o job, fatia em tarefas e publica na fila do Redis."""
@@ -142,7 +173,7 @@ async def create_job(request: JobRequest) -> dict:
     period = request.period
     if not period:
         try:
-            period = await sidra.last_period(dataset.table, dataset.primary_variable, dataset.level)
+            period = await ultimo_periodo_com_dados(dataset)
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(status_code=502, detail=f"Falha ao consultar período no SIDRA: {exc}") from exc
 

@@ -5,45 +5,245 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SIDRA/IBGE — dados do ecossistema distribuído</title>
 <style>
-  body { font: 14px system-ui, sans-serif; margin: 24px; color: #1f2937; }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  p.sub { color: #6b7280; margin: 0 0 16px; }
-  form { margin-bottom: 20px; }
-  select, button, input { font: inherit; padding: 6px 8px; }
-  button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
-  .linkbtn {
-    display: inline-block; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px;
-    color: #374151; text-decoration: none; font-size: 13px; margin-left: 6px;
+  /* ===================== tokens (padrão MDN) ===================== */
+  :root {
+    --bg: #ffffff;
+    --surface: #f9f9fa;
+    --surface-2: #f0f0f4;
+    --border: #d7d7db;
+    --border-strong: #b1b1b6;
+    --txt: #1b1b1f;
+    --txt-soft: #5b5b66;
+    --link: #005cc5;
+    --link-hover: #003b8e;
+    --code-bg: #f0f0f4;
+    --green: #007936;
+    --amber: #b26a00;
+    --red: #d32f2f;
+    --violet: #7c3aed;
+    --radius: 4px;
+    --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   }
-  .linkbtn:hover { border-color: #2563eb; color: #2563eb; }
-  table { border-collapse: collapse; margin-bottom: 24px; }
-  th, td { border-bottom: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; }
-  th { color: #6b7280; font-size: 12px; text-transform: uppercase; }
-  td.num { text-align: right; }
-  #status { color: #6b7280; margin-left: 8px; }
-  .muted { color: #6b7280; }
+  html[data-theme="dark"] {
+    --bg: #1b1b1f;
+    --surface: #2a2a2e;
+    --surface-2: #38383d;
+    --border: #3f3f44;
+    --border-strong: #57575e;
+    --txt: #f0f0f4;
+    --txt-soft: #c8c8cd;
+    --link: #7ab7ff;
+    --link-hover: #a9cfff;
+    --code-bg: #38383d;
+    --green: #4fd18b;
+    --amber: #ffb84d;
+    --red: #ff8a8a;
+    --violet: #c4b5fd;
+  }
+  html[data-theme="dark"] .btn-primary { color: #1b1b1f; }
+  html[data-theme="dark"] .btn-primary:hover { color: #1b1b1f; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--txt);
+    font-family: var(--font); font-size: 1rem; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  code {
+    font-family: var(--mono); font-size: .875em; background: var(--code-bg);
+    padding: .12em .32em; border-radius: 3px; color: var(--txt);
+  }
+
+  /* ===================== topbar ===================== */
+  .topbar { position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .topbar-inner {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px; min-height: 60px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--txt); font-weight: 700; }
+  .brand:hover { text-decoration: none; }
+  .brand-logo {
+    background: var(--txt); color: var(--bg); padding: 5px 9px; border-radius: var(--radius);
+    font-size: .75rem; letter-spacing: .06em;
+  }
+  .brand-name { font-size: .9375rem; }
+  .brand-sub {
+    color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
+    border-left: 1px solid var(--border); padding-left: 10px;
+  }
+  .crumb ol { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; font-size: .8125rem; color: var(--txt-soft); }
+  .crumb li + li::before { content: "/"; margin-right: 8px; color: var(--border-strong); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+    font-size: .75rem; color: var(--txt-soft);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--txt-soft); }
+  .dot.on { background: var(--green); }
+  .dot.off { background: var(--red); }
+  .dot.warn { background: var(--amber); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-family: inherit; font-size: .8125rem; font-weight: 600; line-height: 1.4;
+    padding: 6px 12px; border-radius: var(--radius); border: 1px solid transparent;
+    text-decoration: none;
+  }
+  .btn:hover { text-decoration: none; }
+  .btn-primary { background: var(--link); color: #fff; }
+  .btn-primary:hover { background: var(--link-hover); color: #fff; }
+  .btn-subtle { background: var(--surface); color: var(--txt); border-color: var(--border); }
+  .btn-subtle:hover { background: var(--surface-2); color: var(--txt); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .theme-btn {
+    width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--txt-soft); cursor: pointer; font-size: .875rem;
+  }
+  .theme-btn:hover { background: var(--surface-2); }
+
+  /* ===================== artigo ===================== */
+  .page { max-width: 1000px; margin: 0 auto; padding: 36px 24px 96px; }
+  .article { max-width: 52em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
+  .lead { font-size: 1.0625rem; color: var(--txt-soft); margin: 0 0 1.5rem; }
+  h2 {
+    font-size: 1.5rem; line-height: 1.25; font-weight: 700;
+    margin: 3rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.0625rem; font-weight: 700; margin: 2rem 0 .5rem; }
+  h4 { font-size: .9375rem; font-weight: 700; margin: 1.5rem 0 .4rem; }
+  p { margin: 0 0 1rem; }
+  .muted { color: var(--txt-soft); }
+  .empty { color: var(--txt-soft); font-size: .875rem; }
+
+  .toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); margin-bottom: 1.5rem;
+  }
+  .toolbar select {
+    font: inherit; font-size: .875rem; padding: 6px 8px; border-radius: var(--radius);
+    background: var(--bg); color: var(--txt); border: 1px solid var(--border); max-width: 100%;
+  }
+  #status { font-size: .8125rem; color: var(--txt-soft); }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: .875rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--surface); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.total td { font-weight: 600; background: var(--surface); }
+  .unit { color: var(--txt-soft); font-weight: 400; }
+
+  .tag { font-size: .6875rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--txt-soft); }
+  .tag.hi { color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .tag.md { color: var(--amber); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+  .tag.lo { color: var(--green); border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+
+  .destaques { margin: .5rem 0 0; padding-left: 20px; font-size: .875rem; color: var(--txt-soft); }
+  .destaques li { margin-bottom: 4px; }
+  .job-meta { font-size: .8125rem; color: var(--txt-soft); margin: -.5rem 0 1rem; }
+
+  .seealso { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1rem; }
+  .seealso h2 { font-size: 1.125rem; margin: 0 0 .5rem; padding: 0; border: 0; }
+  .seealso ul { margin: 0; padding-left: 20px; font-size: .875rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--txt-soft); font-size: .8125rem; }
+
+  @media (max-width: 640px) {
+    .page { padding: 24px 16px 64px; }
+    .toolbar { padding: 10px 12px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>Dados do SIDRA/IBGE</h1>
-<p class="sub">Interface de leitura. Os dados abaixo foram coletados pelos Workers
-e consolidados pelo Manager (REDUCE).</p>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/painel/">
+      <span class="brand-logo">ED</span>
+      <span class="brand-name">Ecossistema Distribuído</span>
+      <span class="brand-sub">Documentação</span>
+    </a>
+    <nav class="crumb" aria-label="Trilha de navegação">
+      <ol>
+        <li>Painel</li>
+        <li>Dados</li>
+      </ol>
+    </nav>
+    <div class="topbar-right">
+      <div class="badges" id="badges">
+        <span class="badge"><i class="dot" id="d-redis"></i>Redis</span>
+        <span class="badge"><i class="dot" id="d-workers"></i>Workers</span>
+        <span class="badge"><i class="dot" id="d-fila"></i>Fila</span>
+      </div>
+      <a class="btn btn-subtle" href="/docs">API</a>
+      <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
+      <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
+    </div>
+  </div>
+</header>
 
-<form id="form">
-  <select id="select"></select>
-  <button id="btn" type="submit">Buscar dados</button>
-  <a class="linkbtn" href="/painel/como-funciona">Como funciona</a>
-  <span id="status" class="muted"></span>
-</form>
+<main class="page">
+  <article class="article">
 
-<div id="out" class="muted">Carregando…</div>
+    <h1>Dados do SIDRA/IBGE</h1>
+    <p class="lead">
+      Interface de leitura. Os dados abaixo foram coletados pelos Workers
+      e consolidados pelo Manager (REDUCE).
+    </p>
+
+    <form class="toolbar" id="form">
+      <label class="muted" for="select" style="font-size:.8125rem;">Pesquisa</label>
+      <select id="select" aria-label="Pesquisa"></select>
+      <button id="btn" class="btn btn-primary" type="submit">Buscar dados</button>
+      <a class="btn btn-subtle" href="/painel/como-funciona">Como funciona</a>
+      <span id="status" class="muted"></span>
+    </form>
+
+    <div id="out" class="empty">Carregando…</div>
+
+  </article>
+</main>
 
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const nf = (v) => typeof v === "number" ? v.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : v;
+const AGREGACAO = { sum: "soma", weighted: "média ponderada" };
 let timer = null;
+
+/* ---------- tema claro/escuro ---------- */
+const btnTema = $("#btnTema");
+const temaSalvo = localStorage.getItem("tema");
+if (temaSalvo) document.documentElement.dataset.theme = temaSalvo;
+btnTema.addEventListener("click", () => {
+  const escuro = document.documentElement.dataset.theme === "dark";
+  if (escuro) delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = "dark";
+  localStorage.setItem("tema", escuro ? "light" : "dark");
+});
+
+/* ---------- status da infraestrutura ---------- */
+async function saude() {
+  try {
+    const h = await (await fetch("/api/v1/health")).json();
+    const badges = $("#badges").children;
+    badges[0].className = "badge";
+    badges[0].firstChild.className = "dot " + (h.redis ? "on" : "off");
+    badges[0].lastChild.textContent = "Redis " + (h.redis ? "ok" : "fora");
+    badges[1].firstChild.className = "dot " + (h.workers_ativos > 0 ? "on" : "off");
+    badges[1].lastChild.textContent = h.workers_ativos + " workers";
+    badges[2].firstChild.className = "dot " + (h.fila > 0 ? "warn" : "on");
+    badges[2].lastChild.textContent = "fila " + h.fila;
+  } catch (e) { /* sem Redis: segue com a leitura */ }
+}
 
 async function carregarDatasets() {
   const d = await (await fetch("/api/v1/datasets")).json();
@@ -55,6 +255,7 @@ async function rodar(ev) {
   ev.preventDefault();
   const dataset = $("#select").value;
   $("#btn").disabled = true;
+  $("#status").textContent = "despachando…";
   const r = await fetch("/api/v1/jobs", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ dataset })
@@ -76,32 +277,63 @@ function acompanhar(id) {
   }, 800);
 }
 
+function tagHHI(hhi) {
+  if (hhi === null || hhi === undefined) return "";
+  const rot = hhi >= 0.25 ? "alta" : hhi >= 0.15 ? "moderada" : "baixa";
+  const cls = hhi >= 0.25 ? "hi" : hhi >= 0.15 ? "md" : "lo";
+  return ` <span class="tag ${cls}">HHI ${hhi.toFixed(3).replace(".", ",")} · ${rot}</span>`;
+}
+
+function tabelaVariavel(cat, nome, v) {
+  const unidade = v.unidade || "";
+  const agg = AGREGACAO[v.agregacao] || v.agregacao || "";
+  let html = `<h4>${esc(nome)} <span class="unit">(${esc(unidade)} · ${esc(agg)} · ${v.ufs_com_dados} UFs com dados)</span></h4>`;
+  html += `<table><thead><tr><th>UF</th><th class="num">Valor</th><th class="num">Participação</th></tr></thead><tbody>`;
+  html += `<tr class="total"><td>Total</td><td class="num">${nf(v.valor_agregado)}${unidade ? " " + esc(unidade) : ""}</td><td class="num">—</td></tr>`;
+  for (const uf of v.ranking_ufs || []) {
+    html += `<tr><td>${esc(uf.uf)}</td><td class="num">${nf(uf.valor)}</td>
+        <td class="num">${uf.participacao_pct !== undefined && uf.participacao_pct !== null ? nf(uf.participacao_pct) + "%" : "—"}</td></tr>`;
+  }
+  html += `</tbody></table>`;
+  return html;
+}
+
 async function listar() {
   const d = await (await fetch("/api/v1/results")).json();
-  if (!d.jobs.length) { $("#out").innerHTML = "Nenhum resultado ainda."; return; }
+  if (!d.jobs.length) { $("#out").innerHTML = '<p class="empty">Nenhum resultado ainda. Use <b>Buscar dados</b> para disparar uma coleta.</p>'; return; }
 
-  let html = "";
-  for (const job of d.jobs) {
+  // histórico completo fica na API; a página mostra o resultado mais recente de cada pesquisa
+  const vistos = new Set();
+  const recentes = d.jobs.filter(j => {
+    if (vistos.has(j.dataset)) return false;
+    vistos.add(j.dataset); return true;
+  });
+
+  let html = `<p class="muted" style="font-size:.8125rem;margin:0 0 1.5rem;">
+    ${d.jobs.length} jobs concluídos no histórico · exibindo o mais recente de cada pesquisa.</p>`;
+
+  for (const job of recentes) {
     const s = job.summary || {};
-    html += `<h2 style="font-size:15px">${esc(s.label)} — período ${esc(job.period)}
-        <span class="muted">(${s.registros} registros, ${s.ufs_analisadas} UFs)</span></h2>`;
+    const t = s.tarefas || {};
+    html += `<section class="job"><h2>${esc(s.label || job.dataset)}</h2>`;
+    html += `<p class="job-meta">período ${esc(job.period)} · ${s.registros} registros · ${s.ufs_analisadas} UFs`
+      + (t.total ? ` · ${t.total} tarefas${t.falhas ? ` (${t.falhas} falhas)` : ""}` : "")
+      + (s.tempo_total_s ? ` · ${nf(s.tempo_total_s)} s` : "")
+      + ` · job ${esc(job.job_id)}</p>`;
 
     for (const [cat, data] of Object.entries(s.categorias || {})) {
-      const hhi = data.concentracao_hhi;
-      html += `<p><b>${esc(cat)}</b>${hhi !== null ? ` <span class="muted">· HHI ${hhi}</span>` : ""}</p>`;
+      html += `<h3>${esc(cat)}${tagHHI(data.concentracao_hhi)}</h3>`;
+      if (data.medida_concentracao) html += `<p class="muted" style="font-size:.8125rem;margin:0 0 .5rem;">${esc(data.medida_concentracao)}</p>`;
       for (const [nome, v] of Object.entries(data.variaveis || {})) {
-        html += `<table><thead><tr><th>${esc(cat)} — ${esc(nome)} (${esc(v.unidade)})</th><th>UF</th><th>Valor</th><th>%</th></tr></thead><tbody>`;
-        html += `<tr><td>total/agregado</td><td class="muted">${esc(v.agregacao)}</td>
-            <td class="num">${nf(v.valor_agregado)}</td><td class="num">—</td></tr>`;
-        for (const uf of v.ranking_ufs || []) {
-          html += `<tr><td></td><td>${esc(uf.uf)}</td><td class="num">${nf(uf.valor)}</td>
-              <td class="num">${uf.participacao_pct !== undefined ? uf.participacao_pct + "%" : "—"}</td></tr>`;
-        }
-        html += `</tbody></table>`;
+        html += tabelaVariavel(cat, nome, v);
       }
     }
-    html += `<p><b>Destaques</b></p><ul>` +
-      (s.destaques || []).map(t => `<li class="muted">${esc(t)}</li>`).join("") + `</ul><hr>`;
+
+    if ((s.destaques || []).length) {
+      html += `<h4>Destaques</h4><ul class="destaques">`
+        + s.destaques.map(t => `<li>${esc(t)}</li>`).join("") + `</ul>`;
+    }
+    html += `</section>`;
   }
   $("#out").innerHTML = html;
 }
@@ -109,6 +341,8 @@ async function listar() {
 $("#form").addEventListener("submit", rodar);
 carregarDatasets();
 listar();
+saude();
+setInterval(saude, 5000);
 </script>
 </body>
 </html>

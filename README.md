@@ -56,7 +56,9 @@ http://localhost:8000/painel/como-funciona    # fluxo de trabalho
 ```
 
 - **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
-  e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI).
+  e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI). Mesma
+  linguagem visual da página "Como funciona": cabeçalho fixo, tema claro/escuro e tabelas
+  com borda. Exibe o resultado mais recente de cada pesquisa — o histórico completo fica na API.
 - **`/painel/como-funciona`** — fluxo de trabalho: topologia, execução ao vivo, as 8 etapas do
   processamento, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
   do REDUCE e os arquivos do projeto. A página segue o padrão de documentação do MDN (cabeçalho
@@ -97,7 +99,9 @@ GET https://apisidra.ibge.gov.br/values/t/6588/n3/11/v/35,109,216,36/p/202609/c4
 > `n3` = nível Unidade da Federação · `11` = código da UF (Rondônia) ·
 > `v/…` = variáveis · `p/202609` = período (AAAAMM) · `c48/39443` = classificação/categoria (Soja).
 
-O sistema **descobre sozinho o último período publicado** consultando `p/last`.
+O sistema **descobre sozinho o último período publicado** consultando `p/last`. Como o SIDRA
+divulga o agregado antes do recorte territorial, o Manager confere se o período devolve
+linhas para o nível N3 e retrocede um mês quando não devolve.
 
 ---
 

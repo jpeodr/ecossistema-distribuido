@@ -19,8 +19,10 @@ O Manager não conhece os Workers. Os Workers não se conhecem. O contrato entre
 ## Fluxo de trabalho
 
 1. **Pedido** — `POST /api/v1/jobs` recebe o dataset (`lspa` ou `pim_pf`) e o período opcional.
-2. **Fatiamento** — o Manager consulta `p/last` no SIDRA quando o período não vem no pedido e
-   gera **uma tarefa por UF** (`dispatcher.build_tasks`).
+2. **Fatiamento** — o Manager consulta `p/last` no SIDRA quando o período não vem no pedido,
+   confere se o período responde com linhas no recorte pedido (nível N3, classificação e
+   categoria) e, se não responder, retrocede um mês. Com isso o job não fecha com relatório
+   vazio. Depois gera **uma tarefa por UF** (`dispatcher.build_tasks`).
 3. **Publicação** — as 27 tarefas entram na fila do Redis com `RPUSH` em pipeline.
 4. **Consumo** — cada Worker bloqueia em `BLPOP` e retira uma tarefa.
 5. **Coleta (MAP)** — o Worker consulta a API do SIDRA, converte os números pt-BR e normaliza
@@ -125,7 +127,10 @@ Documentação interativa: `http://localhost:8000/docs`
 
 | URL | Conteúdo |
 |-----|----------|
-| `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório |
+| `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório (agregado, ranking de UFs, participação, HHI) e destaques |
+
+A página de leitura mostra o resultado mais recente de cada pesquisa; o histórico completo
+continua na API (`GET /api/v1/results`).
 | `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas |
 
 Layout no padrão de documentação do MDN: cabeçalho fixo com breadcrumb, sumário lateral

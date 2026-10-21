@@ -867,11 +867,12 @@ async function iniciarLive() {
   desenharFios();
 
   const dataset = $("#liveDataset").value || "lspa";
-  // reaproveita o período do último job: dispensa a consulta extra ao SIDRA
+  // reaproveita o período do último job da mesma pesquisa: dispensa a consulta extra ao SIDRA
   let periodo = null;
   try {
     const ult = await (await fetch("/api/v1/jobs?limit=1")).json();
-    periodo = ult.jobs[0] ? ult.jobs[0].period : null;
+    const anterior = ult.jobs[0];
+    if (anterior && anterior.dataset === dataset) periodo = anterior.period;
   } catch (e) { /* segue sem período: o Manager busca */ }
 
   const r = await fetch("/api/v1/jobs", {

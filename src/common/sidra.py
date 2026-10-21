@@ -45,6 +45,27 @@ def parse_number(raw: str) -> float | None:
         return None
 
 
+def parse_period(raw: str) -> tuple[int, int] | None:
+    """Converte "AAAAmm" em (ano, mês)."""
+    text = str(raw or "").strip()
+    if len(text) != 6 or not text.isdigit():
+        return None
+    return int(text[:4]), int(text[4:])
+
+
+def previous_period(period: str) -> str | None:
+    """Retorna o período mensal anterior ("202608" -> "202607")."""
+    parts = parse_period(period)
+    if not parts:
+        return None
+    year, month = parts
+    if month == 1:
+        year, month = year - 1, 12
+    else:
+        month -= 1
+    return f"{year:04d}{month:02d}"
+
+
 class SidraClient:
     """Encapapsula as chamadas ao SIDRA com retry e backoff exponencial."""
 
@@ -138,6 +159,35 @@ class SidraClient:
         raise SidraError(f"Não foi possível determinar o último período da tabela {table}")
 
     # ------------------------------------------------------------- Busca
+    async def has_data(
+        self,
+        table: int,
+        level: str,
+        period: str,
+        variables: list[int],
+        classification_id: int,
+        categories: list[int],
+        territory: str = "11",
+    ) -> bool:
+        """Verifica se o SIDRA devolve linhas para o período.
+
+        O SIDRA devolve apenas o cabeçalho quando o período não existe para o
+        recorte pedido (nível, classificação e categoria). Com esse teste o
+        Manager descarta um período publicado no agregado mas ainda sem dados
+        no nível desejado.
+        """
+        url = self.build_url(
+            table=table,
+            level=level,
+            territories=territory,
+            variables=",".join(str(v) for v in variables),
+            period=period,
+            classification_id=classification_id,
+            categories=",".join(str(c) for c in categories),
+        )
+        payload = await self.get_json(url)
+        return len(payload) > 1
+
     async def fetch(
         self,
         table: int,
