@@ -103,7 +103,7 @@ O sistema **descobre sozinho o último período publicado** consultando `p/last`
 ### Passo 1 — Obtenha o código
 
 ```bash
-git clone https://github.com/<grupo>/ecossistema-distribuido.git
+git clone https://github.com/jpeodr/ecossistema-distribuido.git
 cd ecossistema-distribuido
 ```
 
@@ -327,13 +327,14 @@ docker compose down -v       # remove também o volume do SQLite
 
 ## 9. Repositório
 
-- Código: `https://github.com/<grupo>/ecossistema-distribuido` *(substituir pelo link real do grupo)*
+- Código: `https://github.com/jpeodr/ecossistema-distribuido`
 - Diagramas UML: [`docs/diagrams`](docs/diagrams)
 - Decisões de arquitetura: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)
+- Explicação para apresentar: [`EXPLICACAO.md`](EXPLICACAO.md)
 - Roteiro do pitch: [`docs/pitch/roteiro.md`](docs/pitch/roteiro.md)
 
 ```
-git clone https://github.com/<grupo>/ecossistema-distribuido.git
+git clone https://github.com/jpeodr/ecossistema-distribuido.git
 docker compose up -d
 docker compose --profile demo run --rm demo
 ```
