@@ -84,7 +84,8 @@
     color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
     border-left: 1px solid var(--border); padding-left: 10px;
   }
-  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -125,11 +126,6 @@
   }
   .toc a:hover { color: var(--link); text-decoration: none; }
   .toc a.active { color: var(--link); font-weight: 600; border-left-color: var(--link); background: var(--surface); }
-  .toc-note {
-    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
-    font-size: .75rem; color: var(--txt-soft);
-  }
-  .toc-note a { color: var(--link); }
 
   .article { padding: 36px 0 96px; max-width: 47em; }
   .article h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
@@ -311,13 +307,15 @@
       <span class="brand-logo">ED</span>
       <span class="brand-name">Ecossistema Distribuído</span>
     </a>
-    <nav class="topbar-nav" aria-label="Navegação principal">
+    <nav class="topbar-nav" aria-label="Seções">
       <a class="btn btn-subtle" href="/painel/">Painel</a>
       <a class="btn btn-subtle" href="/painel/arquitetura">Documentação</a>
+    </nav>
+    <div class="topbar-right">
       <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
       <a class="btn btn-subtle" href="/docs">API</a>
       <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
-    </nav>
+    </div>
   </div>
 </header>
 
@@ -336,12 +334,6 @@
         <li><a href="#arquivos">Arquivos</a></li>
         <li><a href="#falhas">Falhas</a></li>
       </ol>
-      <p class="toc-note">
-        <a href="/painel/arquitetura">Arquitetura</a> ·
-        <a href="/painel/">Interface de leitura</a> ·
-        <a href="/docs">Swagger da API</a> ·
-        <a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a>
-      </p>
     </nav>
   </aside>
 
@@ -576,6 +568,7 @@ HHI       = Σ (part. % / 100)²</div>
     <div class="seealso">
       <h2>Veja também</h2>
       <ul>
+        <li><a href="/painel/arquitetura">Arquitetura de solução</a> — topologia distribuída, diagramas UML e cálculo de speedup.</li>
         <li><a href="/painel/">Interface de leitura</a> — os dados do SIDRA e as tabelas do relatório.</li>
         <li><a href="/docs">Swagger da API</a> — endpoints, schemas e execução direta.</li>
         <li><a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a> — código, README com POP Docker e diagramas UML.</li>

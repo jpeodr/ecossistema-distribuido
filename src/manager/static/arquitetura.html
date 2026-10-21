@@ -71,7 +71,8 @@
     font-size: .75rem; letter-spacing: .06em;
   }
   .brand-name { font-size: .9375rem; }
-  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -112,11 +113,6 @@
   }
   .toc a:hover { color: var(--link); text-decoration: none; }
   .toc a.active { color: var(--link); font-weight: 600; border-left-color: var(--link); background: var(--surface); }
-  .toc-note {
-    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
-    font-size: .75rem; color: var(--txt-soft);
-  }
-  .toc-note a { color: var(--link); }
 
   .article { padding: 36px 0 96px; max-width: 47em; }
   .article h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
@@ -199,13 +195,15 @@
       <span class="brand-logo">ED</span>
       <span class="brand-name">Ecossistema Distribuído</span>
     </a>
-    <nav class="topbar-nav" aria-label="Navegação principal">
+    <nav class="topbar-nav" aria-label="Seções">
       <a class="btn btn-subtle" href="/painel/">Painel</a>
       <a class="btn btn-subtle" href="/painel/arquitetura" aria-current="page">Documentação</a>
+    </nav>
+    <div class="topbar-right">
       <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
       <a class="btn btn-subtle" href="/docs">API</a>
       <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
-    </nav>
+    </div>
   </div>
 </header>
 
@@ -225,11 +223,6 @@
         <li><a href="#speedup">Speedup</a></li>
         <li><a href="#fontes">Fontes dos diagramas</a></li>
       </ol>
-      <p class="toc-note">
-        <a href="/painel/como-funciona">Como funciona</a> ·
-        <a href="/painel/">Interface de leitura</a> ·
-        <a href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">Repositório</a>
-      </p>
     </nav>
   </aside>
 

@@ -75,7 +75,8 @@
     color: var(--txt-soft); font-weight: 400; font-size: .8125rem;
     border-left: 1px solid var(--border); padding-left: 10px;
   }
-  .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
@@ -100,7 +101,6 @@
   .page { max-width: 1000px; margin: 0 auto; padding: 36px 24px 96px; }
   .article { max-width: 52em; }
   h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; font-weight: 800; letter-spacing: -.01em; }
-  .lead { font-size: 1.0625rem; color: var(--txt-soft); margin: 0 0 1.5rem; }
   h2 {
     font-size: 1.5rem; line-height: 1.25; font-weight: 700;
     margin: 3rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
@@ -157,13 +157,15 @@
       <span class="brand-logo">ED</span>
       <span class="brand-name">Ecossistema Distribuído</span>
     </a>
-    <nav class="topbar-nav" aria-label="Navegação principal">
+    <nav class="topbar-nav" aria-label="Seções">
       <a class="btn btn-subtle" href="/painel/" aria-current="page">Painel</a>
       <a class="btn btn-subtle" href="/painel/arquitetura">Documentação</a>
+    </nav>
+    <div class="topbar-right">
       <a class="btn btn-subtle" href="https://github.com/jpeodr/ecossistema-distribuido" rel="noopener">GitHub</a>
       <a class="btn btn-subtle" href="/docs">API</a>
       <button class="theme-btn" id="btnTema" title="Alternar tema" aria-label="Alternar tema">◐</button>
-    </nav>
+    </div>
   </div>
 </header>
 
@@ -171,10 +173,6 @@
   <article class="article">
 
     <h1>Dados do SIDRA/IBGE</h1>
-    <p class="lead">
-      Interface de leitura. Os dados abaixo foram coletados pelos Workers
-      e consolidados pelo Manager (REDUCE).
-    </p>
 
     <form class="toolbar" id="form">
       <label class="muted" for="select" style="font-size:.8125rem;">Pesquisa</label>
@@ -271,17 +269,12 @@ async function listar() {
     vistos.add(j.dataset); return true;
   });
 
-  let html = `<p class="muted" style="font-size:.8125rem;margin:0 0 1.5rem;">
-    ${d.jobs.length} jobs concluídos no histórico · exibindo o mais recente de cada pesquisa.</p>`;
+  let html = "";
 
   for (const job of recentes) {
     const s = job.summary || {};
-    const t = s.tarefas || {};
     html += `<section class="job"><h2>${esc(s.label || job.dataset)}</h2>`;
-    html += `<p class="job-meta">período ${esc(job.period)} · ${s.registros} registros · ${s.ufs_analisadas} UFs`
-      + (t.total ? ` · ${t.total} tarefas${t.falhas ? ` (${t.falhas} falhas)` : ""}` : "")
-      + (s.tempo_total_s ? ` · ${nf(s.tempo_total_s)} s` : "")
-      + ` · job ${esc(job.job_id)}</p>`;
+    html += `<p class="job-meta">período ${esc(job.period)} · ${s.registros} registros · ${s.ufs_analisadas} UFs</p>`;
 
     for (const [cat, data] of Object.entries(s.categorias || {})) {
       html += `<h3>${esc(cat)}${tagHHI(data.concentracao_hhi)}</h3>`;

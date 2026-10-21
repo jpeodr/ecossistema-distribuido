@@ -156,11 +156,13 @@ Documentação interativa: `http://localhost:8000/docs`
 | `/painel/arquitetura` | documentação: arquitetura de solução, 5 diagramas UML, paralelismo e cálculo de speedup |
 | `/painel/como-funciona` | fluxo de trabalho: topologia, execução ao vivo, 8 etapas, paralelismo, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas |
 
-Layout no padrão de documentação do MDN: cabeçalho fixo com os botões Painel, Documentação,
-GitHub, API e o alternador de tema claro/escuro; sumário lateral com âncoras e artigo em
-coluna única.
+Layout no padrão de documentação do MDN: cabeçalho fixo com **Painel** e **Documentação** à
+esquerda, ao lado do nome do projeto, e GitHub, API e o alternador de tema claro/escuro à
+direita; sumário lateral com âncoras e artigo em coluna única.
 
-A página de leitura mostra o resultado mais recente de cada pesquisa; o histórico completo
+A página de leitura mostra apenas os dados: período, registros, UFs, agregados, ranking,
+participação, HHI e destaques. Nada de Workers, Manager, REDUCE, jobs ou filas — a
+complexidade interna do sistema fica nas páginas de documentação. O histórico completo
 continua na API (`GET /api/v1/results`).
 
 O botão **"Ver a infraestrutura trabalhando"** (página "Como funciona") dispara um job real e

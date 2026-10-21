@@ -59,7 +59,8 @@ http://localhost:8000/painel/como-funciona    # fluxo de trabalho
 - **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
   e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI). Mesma
   linguagem visual da página "Como funciona": cabeçalho fixo, tema claro/escuro e tabelas
-  com borda. Exibe o resultado mais recente de cada pesquisa — o histórico completo fica na API.
+  com borda. Mostra apenas os dados do resultado mais recente de cada pesquisa — o histórico
+  completo fica na API.
 - **`/painel/arquitetura`** — documentação da solução: visão geral da topologia distribuída,
   os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), os três
   níveis de paralelismo e o cálculo de **speedup** (speedup observado e teto de Amdahl),
