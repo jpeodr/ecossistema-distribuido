@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Por trás dos panos — Ecossistema Distribuído</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg2: #111a33;
+    --card: #151f3b;
+    --line: #243357;
+    --txt: #e8edf7;
+    --muted: #93a3c4;
+    --cyan: #38bdf8;
+    --violet: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #16224a 0%, var(--bg) 55%);
+    color: var(--txt); font: 15px/1.55 "Segoe UI", system-ui, sans-serif;
+  }
+  a { color: var(--cyan); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; padding: 18px 20px; margin-bottom: 26px;
+    background: linear-gradient(120deg, #16224a, #131c38);
+    border: 1px solid var(--line); border-radius: 14px;
+  }
+  header.top h1 { margin: 0; font-size: 21px; letter-spacing: .2px; }
+  header.top p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .back {
+    display: inline-block; padding: 8px 14px; border-radius: 9px; text-decoration: none;
+    background: #1d2a4d; border: 1px solid var(--line); color: var(--txt); font-size: 13px;
+  }
+  .back:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px;
+    border: 1px solid var(--line); border-radius: 999px; background: #101a33;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.on { background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,.55); animation: pulse 2s infinite; }
+  .dot.off { background: var(--red); }
+  .dot.warn { background: var(--amber); }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5); }
+    70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+  }
+
+  h2.sec {
+    font-size: 15px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--cyan);
+    margin: 38px 0 14px; display: flex; align-items: center; gap: 10px;
+  }
+  h2.sec::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+
+  /* ---------------- topologia ---------------- */
+  .topo { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .node {
+    flex: 1 1 150px; min-width: 140px; background: var(--bg2); border: 1px solid var(--line);
+    border-radius: 11px; padding: 12px 13px; position: relative;
+  }
+  .node .t { font-size: 13.5px; font-weight: 600; }
+  .node .s { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .node.manager { border-color: #3b4f8a; box-shadow: inset 0 0 0 1px rgba(167,139,250,.18); }
+  .node.redis   { border-color: #7a3b3b; box-shadow: inset 0 0 0 1px rgba(248,113,113,.18); }
+  .node.sidra   { border-color: #2f6b57; box-shadow: inset 0 0 0 1px rgba(52,211,153,.18); }
+  .node.worker  { border-color: #2c5a7a; box-shadow: inset 0 0 0 1px rgba(56,189,248,.18); }
+  .arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 76px; color: var(--muted); font-size: 10.5px; text-align: center; gap: 3px; }
+  .arrow .g { font-size: 20px; color: var(--cyan); animation: slide 1.6s ease-in-out infinite; }
+  .arrow .lbl { font-family: Consolas, monospace; font-size: 10px; color: var(--cyan); opacity: .85; }
+  @keyframes slide { 0%,100% { transform: translateX(0); opacity:.55 } 50% { transform: translateX(4px); opacity:1 } }
+
+  /* ---------------- etapas ---------------- */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 12px; }
+  .step { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 15px 14px 52px; }
+  .step .n {
+    position: absolute; left: 14px; top: 14px; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+    background: #1d2a4d; color: var(--cyan); border: 1px solid #33477e;
+  }
+  .step h3 { margin: 0 0 5px; font-size: 14px; }
+  .step p { margin: 0; font-size: 13px; color: var(--muted); }
+  .step .who { display: inline-block; margin-top: 9px; font-size: 10.5px; font-family: Consolas, monospace;
+    color: #8fd6ff; background: #0e1830; border: 1px solid #23355f; border-radius: 6px; padding: 3px 7px; }
+  .step .who b { color: var(--violet); font-weight: 600; }
+
+  /* ---------------- niveis ---------------- */
+  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .lvl { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 15px 16px; }
+  .lvl h3 { margin: 0 0 3px; font-size: 14.5px; }
+  .lvl .k { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--violet); }
+  .lvl p { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+  .lvl .big { font-size: 30px; font-weight: 700; color: var(--cyan); line-height: 1.1; margin-top: 10px; }
+  .lvl .big small { font-size: 13px; font-weight: 400; color: var(--muted); }
+
+  /* ---------------- tabelas ---------------- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: Consolas, monospace; font-size: 12px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #16213f;
+    border: 1px solid #2b3b66; color: #b8c6e6;
+  }
+  .bar { height: 7px; border-radius: 99px; background: #1b2748; overflow: hidden; margin-top: 5px; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+
+  .grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .formula {
+    font-family: Consolas, monospace; font-size: 12px; background: #0e1830; color: #9fe0ff;
+    border: 1px solid #23355f; border-left: 3px solid var(--violet); border-radius: 8px;
+    padding: 9px 12px; margin: 10px 0; overflow-x: auto; white-space: pre;
+  }
+  .note { font-size: 12.5px; color: var(--muted); }
+  .muted { color: var(--muted); }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.hi { color: #ffdca8; border-color: #6b5326; background: #2a2110; }
+  .tag.md { color: #cfe0ff; border-color: #33507f; background: #101c33; }
+  .tag.lo { color: #b6f2d9; border-color: #2c6b52; background: #0f2a20; }
+  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+  code { font-family: Consolas, monospace; font-size: 12.5px; color: #9fe0ff; }
+  ul.tight { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  ul.tight li { margin-bottom: 4px; }
+  footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Por trás dos panos</h1>
+      <p>Como o clique na tela vira dados do SIDRA distribuídos entre Manager, Redis e Workers</p>
+    </div>
+    <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+      <div class="badges" id="badges">
+        <span class="badge"><i class="dot" id="d-redis"></i>Redis</span>
+        <span class="badge"><i class="dot" id="d-workers"></i>Workers</span>
+        <span class="badge"><i class="dot" id="d-fila"></i>Fila</span>
+      </div>
+      <a class="back" href="/painel/">← Voltar aos dados</a>
+    </div>
+  </header>
+
+  <!-- ================= TOPOLOGIA ================= -->
+  <h2 class="sec">1 · Topologia ao vivo</h2>
+  <div class="card topo">
+    <div class="row">
+      <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">POST /jobs</div></div>
+      <div class="node manager"><div class="t">Manager</div><div class="s">FastAPI · fatia e consolida</div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">RPUSH</div></div>
+      <div class="node redis"><div class="t">Redis</div><div class="s">fila <code>sidra:tasks</code></div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">BLPOP</div></div>
+      <div class="node worker"><div class="t">Workers</div><div class="s" id="topo-workers">N nós</div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">HTTPS</div></div>
+      <div class="node sidra"><div class="t">SIDRA / IBGE</div><div class="s">API pública</div></div>
+    </div>
+    <div class="row">
+      <div class="node worker"><div class="t">Workers</div><div class="s">resposta normalizada</div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">POST /internal/results</div></div>
+      <div class="node manager"><div class="t">Manager</div><div class="s">grava no SQLite</div></div>
+      <div class="arrow"><div class="g">➜</div><div class="lbl">REDUCE</div></div>
+      <div class="node"><div class="t">Relatório</div><div class="s">somas · médias · ranking · HHI</div></div>
+    </div>
+  </div>
+
+  <!-- ================= ETAPAS ================= -->
+  <h2 class="sec">2 · O caminho de um clique</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Pedido</h3>
+      <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa escolhida (LSPA ou PIM-PF).</p>
+      <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
+    <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
+      <p>O Manager descobre o período corrente no SIDRA e quebra o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
+      <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
+    <div class="step"><div class="n">3</div><h3>Publicação</h3>
+      <p>As tarefas entram na fila do Redis em um pipeline (<code>RPUSH</code>). O Redis é só o broker.</p>
+      <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
+    <div class="step"><div class="n">4</div><h3>Consumo</h3>
+      <p>Cada Worker espera a fila com <code>BLPOP</code> (bloqueante, sem polling) e pega uma tarefa por vez.</p>
+      <span class="who"><b>Worker</b> · worker/main.py</span></div>
+    <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
+      <p>O Worker consulta a API do SIDRA, converte os números do formato pt-BR e normaliza com pandas.</p>
+      <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
+    <div class="step"><div class="n">6</div><h3>Callback</h3>
+      <p>O resultado volta por HTTP ao Manager, que grava os registros no SQLite e conta a tarefa como concluída.</p>
+      <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
+    <div class="step"><div class="n">7</div><h3>REDUCE</h3>
+      <p>Quando a última tarefa fecha, o Manager consolida tudo e libera o relatório final na tela.</p>
+      <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
+    <div class="step"><div class="n">8</div><h3>Leitura</h3>
+      <p>A interface busca <code>GET /api/v1/results</code> e desenha as tabelas com o relatório já pronto.</p>
+      <span class="who"><b>Painel</b> · /painel/</span></div>
+  </div>
+
+  <!-- ================= PARALELISMO ================= -->
+  <h2 class="sec">3 · Três níveis de paralelismo</h2>
+  <div class="levels">
+    <div class="lvl">
+      <div class="k">Nível 1 · entre os nós</div>
+      <h3>Distribuído</h3>
+      <div class="big" id="p1">—<small> tarefas</small></div>
+      <p id="p1b">O volume é quebrado por UF: cada tarefa é uma consulta independente ao SIDRA, executada por um Worker diferente.</p>
+    </div>
+    <div class="lvl">
+      <div class="k">Nível 2 · dentro do nó</div>
+      <h3>Assíncrono (I/O)</h3>
+      <div class="big" id="p2">—<small> tarefas em voo</small></div>
+      <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições ao SIDRA simultâneas (<code>asyncio.create_task</code>), sem bloquear a fila.</p>
+    </div>
+    <div class="lvl">
+      <div class="k">Nível 3 · dentro da tarefa</div>
+      <h3>Thread (CPU)</h3>
+      <div class="big">1<small> thread dedicada</small></div>
+      <p>A normalização em pandas é CPU-bound: roda em <code>asyncio.to_thread</code> para não travar o event loop do Worker.</p>
+    </div>
+  </div>
+
+  <!-- ================= QUEM FEZ O QUE ================= -->
+  <h2 class="sec">4 · Quem fez o quê (último job)</h2>
+  <div class="grid2">
+    <div class="card">
+      <table>
+        <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo total</th><th>UFs coletadas</th></tr></thead>
+        <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
+      </table>
+      <p class="note" id="jobinfo"></p>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 10px; font-size:14px;">Fila e nós agora</h3>
+      <table>
+        <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
+        <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
+      </table>
+      <p class="note">O <i>heartbeat</i> a cada 10 s é o que permite ao Manager saber que um nó está vivo.</p>
+    </div>
+  </div>
+
+  <!-- ================= REDUCE ================= -->
+  <h2 class="sec">5 · O que o REDUCE calcula</h2>
+  <div class="grid2">
+    <div class="card">
+      <table>
+        <thead><tr><th>Categoria</th><th>Variáveis (agregado)</th><th class="num">HHI</th><th>Ranking (variável principal)</th></tr></thead>
+        <tbody id="reduce"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
+      </table>
+      <p class="note" id="reduceinfo"></p>
+      <p class="note">O ranking usa a variável principal da pesquisa (participação de cada UF no total); o HHI mede a concentração.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 4px; font-size:14px;">As fórmulas</h3>
+      <p class="note">Rodam no Manager, depois que todas as tarefas terminam.</p>
+      <div class="formula">soma      = Σ valor(UF)
+média     = Σ (valor(UF) × peso(UF)) / Σ peso(UF)
+part. %   = 100 × valor(UF) / Σ valor(UF)
+HHI       = Σ (part. % / 100)²</div>
+      <ul class="tight">
+        <li><b>Soma</b> — variáveis aditivas (produção, valor).</li>
+        <li><b>Média ponderada</b> — variáveis de índice (preço, área média).</li>
+        <li><b>Participação</b> — quanto cada UF responde pelo total.</li>
+        <li><b>HHI</b> — concentração: &lt;0,15 baixa · 0,15–0,25 moderada · &gt;0,25 alta.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= CODIGO ================= -->
+  <h2 class="sec">6 · Onde cada coisa acontece no código</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">src/manager/main.py</td><td>API FastAPI: cria o job, recebe callbacks, dispara o REDUCE, serve o painel</td></tr>
+        <tr><td class="mono">src/manager/dispatcher.py</td><td>Fatiamento: uma tarefa por Unidade da Federação</td></tr>
+        <tr><td class="mono">src/manager/analysis.py</td><td>REDUCE: somas, médias ponderadas, ranking de UFs e HHI</td></tr>
+        <tr><td class="mono">src/manager/store.py</td><td>Persistência SQLite: jobs, tarefas, registros e workers</td></tr>
+        <tr><td class="mono">src/worker/main.py</td><td>Ciclo do Worker: BLPOP, limite de concorrência, callback e heartbeat</td></tr>
+        <tr><td class="mono">src/worker/processor.py</td><td>MAP: parse das linhas do SIDRA e resumo com pandas</td></tr>
+        <tr><td class="mono">src/common/sidra.py</td><td>Cliente HTTP do SIDRA com retry e conversão de número pt-BR</td></tr>
+        <tr><td class="mono">src/common/datasets.py</td><td>Definição das pesquisas (LSPA 6588, PIM-PF 8888) e das 27 UFs</td></tr>
+        <tr><td class="mono">docker-compose.yml</td><td>Topologia: manager, redis, workers escaláveis e perfil de demo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= RESILIENCIA ================= -->
+  <h2 class="sec">7 · Quando algo falha</h2>
+  <div class="levels">
+    <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
+      <p>Falha no envio ao Manager ou no acesso ao SIDRA? O Worker tenta de novo com espera exponencial (1 s, 2 s, 4 s) até <code>MAX_RETRIES</code>.</p></div>
+    <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
+      <p>Tarefa com erro volta para a fila do Redis com a tentativa incrementada; só é marcada como falha definitiva depois de esgotar as tentativas.</p></div>
+    <div class="lvl"><div class="k">Nó morto</div><h3>Heartbeat</h3>
+      <p>Worker que para de responder some da lista em ~30 s (<code>WORKER_STALE_SECONDS</code>) — o Manager não depende de ninguém para continuar.</p></div>
+    <div class="lvl"><div class="k">Escala</div><h3>Mais nós, sem código</h3>
+      <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos entram na conta sozinhos.</p></div>
+  </div>
+
+  <footer>
+    Dados públicos do SIDRA/IBGE · Manager + Redis + Workers em containers Docker ·
+    <a href="/painel/">voltar à interface de leitura</a> ·
+    <a href="/docs">API (Swagger)</a>
+  </footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nf = (v) => typeof v === "number" ? v.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : v;
+const ms = (v) => v == null ? "—" : v >= 1000 ? (v / 1000).toFixed(2).replace(".", ",") + " s" : v + " ms";
+
+function ago(ts) {
+  if (!ts) return "—";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  return s < 60 ? s + " s" : Math.round(s / 60) + " min";
+}
+function setDot(id, cls) { const el = $(id); if (el) el.className = "dot " + cls; }
+
+let ultimoJob = null;
+
+async function aoVivo() {
+  try {
+    const h = await (await fetch("/api/v1/health")).json();
+    setDot("#d-redis", h.redis ? "on" : "off");
+    setDot("#d-workers", h.workers_ativos > 0 ? "on" : "off");
+    setDot("#d-fila", h.fila > 0 ? "warn" : "on");
+    $("#badges").title = "";
+    const badges = $("#badges").children;
+    badges[0].lastChild.textContent = "Redis " + (h.redis ? "ok" : "fora");
+    badges[1].lastChild.textContent = h.workers_ativos + " workers";
+    badges[2].lastChild.textContent = "fila " + h.fila;
+    $("#topo-workers").textContent = h.workers_ativos + " nós ativos";
+
+    const w = await (await fetch("/api/v1/workers")).json();
+    $("#wtable").innerHTML = w.workers.length
+      ? w.workers.map(x => `<tr>
+          <td class="mono">${esc(x.worker_id)}</td>
+          <td class="num">${x.capacity}</td>
+          <td class="num">${x.tasks_done}</td>
+          <td class="num">${x.tasks_failed}</td>
+          <td class="num">${ago(x.last_seen)}</td></tr>`).join("")
+      : `<tr><td colspan="5" class="empty">Nenhum worker ativo.</td></tr>`;
+
+    const cap = w.workers.reduce((a, x) => a + (x.capacity || 0), 0);
+    $("#p2").innerHTML = cap + "<small> tarefas em voo</small>";
+  } catch (e) {
+    setDot("#d-redis", "off");
+  }
+}
+
+async function job() {
+  const lista = await (await fetch("/api/v1/jobs?limit=1")).json();
+  const j = lista.jobs[0];
+  if (!j) return;
+  ultimoJob = j.job_id;
+
+  const t = await (await fetch(`/api/v1/jobs/${j.job_id}/tasks`)).json();
+  const porWorker = {};
+  for (const task of t.tasks) {
+    const w = task.worker_id || "sem worker";
+    porWorker[w] = porWorker[w] || { n: 0, ms: 0, ufs: [] };
+    porWorker[w].n++;
+    porWorker[w].ms += task.duration_ms || 0;
+    porWorker[w].ufs.push(task.territory_name);
+  }
+  const max = Math.max(1, ...Object.values(porWorker).map(x => x.n));
+  const linhas = Object.entries(porWorker).sort((a, b) => b[1].n - a[1].n).map(([w, d]) => `
+    <tr>
+      <td class="mono">${esc(w)}<div class="bar"><i style="width:${100 * d.n / max}%"></i></div></td>
+      <td class="num">${d.n}</td>
+      <td class="num">${ms(d.ms)}</td>
+      <td><div class="chips">${d.ufs.map(u => `<span class="chip">${esc(u)}</span>`).join("")}</div></td>
+    </tr>`).join("");
+  $("#quem").innerHTML = linhas || `<tr><td colspan="4" class="empty">Sem tarefas registradas.</td></tr>`;
+  $("#jobinfo").textContent =
+    `job ${j.job_id} · ${j.dataset} · ${j.status} · ${j.done_tasks}/${j.total_tasks} tarefas · `
+    + `distribuição: ${Object.entries(t.distribuicao_por_worker).map(([w, n]) => w + "=" + n).join(", ")}`;
+
+  $("#p1").innerHTML = j.total_tasks + "<small> tarefas</small>";
+  $("#p1b").textContent =
+    `${j.total_tasks} UFs em paralelo, repartidas entre ${Object.keys(t.distribuicao_por_worker).length} workers.`;
+
+  const r = await (await fetch(`/api/v1/jobs/${j.job_id}/results`)).json();
+  const s = r.summary;
+  if (!s) return;
+  const linhasR = [];
+  for (const [cat, data] of Object.entries(s.categorias || {})) {
+    const listaVars = Object.entries(data.variaveis || {}).map(([nome, v]) =>
+      `<b>${esc(nome)}</b>: ${nf(v.valor_agregado)} ${esc(v.unidade || "")}`
+    ).join("<br>");
+    const ranking = (data.ufs_lideres || []).slice(0, 5);
+    const maior = Math.max(1, ...ranking.map(x => x.valor || 0));
+    const hhi = data.concentracao_hhi;
+    const tag = hhi == null ? "" : hhi >= 0.25 ? "hi" : hhi >= 0.15 ? "md" : "lo";
+    const rot = hhi == null ? "—" : hhi >= 0.25 ? "alta" : hhi >= 0.15 ? "moderada" : "baixa";
+    linhasR.push(`<tr>
+      <td><b>${esc(cat)}</b></td>
+      <td>${listaVars || "—"}</td>
+      <td class="num">${hhi == null ? "—" : hhi.toFixed(3).replace(".", ",")}
+        <div><span class="tag ${tag}">${rot}</span></div></td>
+      <td>${ranking.map(x => `
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="min-width:74px;">${esc(x.uf)}</span>
+          <span class="bar" style="flex:1"><i style="width:${100 * (x.valor || 0) / maior}%"></i></span>
+          <span class="num" style="min-width:96px;">${nf(x.valor)}${x.participacao_pct != null ? " (" + x.participacao_pct + "%)" : ""}</span>
+        </div>`).join("")}</td>
+    </tr>`);
+  }
+  $("#reduce").innerHTML = linhasR.join("") || `<tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr>`;
+  const cats = Object.keys(s.categorias || {});
+  const hh = cats.map(c => s.categorias[c].concentracao_hhi).filter(x => x != null);
+  $("#reduceinfo").textContent = cats.length
+    ? `${cats.join(", ")} — ${cats.length} categorias · ${s.registros} registros · ${s.ufs_analisadas} UFs`
+      + (hh.length ? ` · HHI médio ${(hh.reduce((a, b) => a + b, 0) / hh.length).toFixed(3).replace(".", ",")}` : "")
+    : "";
+}
+
+async function ciclo() {
+  await aoVivo();
+  await job();
+}
+
+ciclo();
+setInterval(ciclo, 3000);
+</script>
+</body>
+</html>

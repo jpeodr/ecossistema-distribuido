@@ -95,18 +95,19 @@ docker compose up -d                  # sobe Manager + 3 Workers + Redis
 docker compose ps                     # topologia explícita
 ```
 
-**No navegador (interface do ecossistema):**
+**No navegador (duas páginas):**
 
 ```
-http://localhost:8000/painel/
+http://localhost:8000/painel/                # 1) os dados do SIDRA
+http://localhost:8000/painel/como-funciona   # 2) o que acontece por trás
 ```
 
-1. clicar em **"Executar job distribuído"** (pesquisa LSPA, período = último publicado);
-2. a barra de progresso sobe de `0/27` a `27/27` — é o paralelismo acontecendo;
-3. a linha **"distribuição: worker-xxx (9) · worker-yyy (9) · worker-zzz (9)"** prova que as
-   27 UFs foram divididas entre os nós;
-4. o **log de tarefas** mostra cada UF, quem processou e quanto tempo levou;
-5. ao final, o **relatório (REDUCE)** com ranking de UF, participação produtiva, HHI e destaques.
+1. em `/painel/`, clicar em **"Buscar dados"** (pesquisa LSPA, período = último publicado);
+2. o status sobe de `0 de 27 UFs` a `27 de 27 UFs · concluído` — é o paralelismo acontecendo;
+3. as tabelas do **relatório (REDUCE)** aparecem: agregados, ranking de UF, participação e HHI;
+4. em `/painel/como-funciona`, mostrar a **topologia ao vivo** (Redis, workers, fila) e a aba
+   **"Quem fez o quê"**: as 27 UFs divididas entre os workers, com o tempo de cada uma;
+5. rolar até **"Três níveis de paralelismo"** e **"Quando algo falha"** para fechar a parte técnica.
 
 **Em paralelo (outra janela):** `docker compose logs -f worker` mostra cada UF sendo processada.
 
@@ -156,7 +157,7 @@ Mostrar o relatório gerado (o mesmo da demo) e comentar **3 achados reais**:
 
 ## Slide 8 — Conclusão (9:30)
 
-- **Entregas:** código no GitHub, README com POP Docker, 5 diagramas UML, painel web e demo automatizada.
+- **Entregas:** código no GitHub, README com POP Docker, 5 diagramas UML, interface web (leitura + explicativa) e demo automatizada.
 - **Aprendizado:** desenho de fila com broker, callbacks idempotentes, retry, REDUCE,
   paralelismo I/O e CPU no mesmo processo.
 - **Próximos passos:** cache por período, push (WebSocket) para o progresso ao vivo,

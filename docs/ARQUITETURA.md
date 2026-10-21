@@ -109,16 +109,23 @@ Medido na demo: 27 tarefas / 3 Workers ≈ 9 UFs por Worker, tempo de pared ≈ 
 
 ---
 
-## 8.1 A interface (painel web)
+## 8.1 A interface (duas páginas web)
 
-O Manager serve também o **painel** (`src/manager/static/index.html`), em `/painel/`:
+O Manager serve duas páginas estáticas, em `/painel/`:
 
-- **HTML + CSS + JS puros**, sem framework, sem CDN e sem etapa de build — o arquivo é
-  copiado junto com o código-fonte para a imagem Docker;
-- o painel é **um cliente da própria API**: cria o job, acompanha o progresso e lê o relatório
-  (nenhum endpoint exclusivo, nenhuma lógica de negócio no front-end);
-- por isso, a interface e a API nunca divergem: se o painel funciona, a API funciona;
-- a "demonstração ao vivo" do pitch é feita nele (progresso, distribuição por Worker e REDUCE).
+| Página | Arquivo | Papel |
+|--------|---------|-------|
+| Leitura | `src/manager/static/index.html` | escolhe a pesquisa, dispara a coleta e mostra as tabelas do relatório |
+| Explicativa | `src/manager/static/como-funciona.html` | topologia ao vivo, caminho de um clique, paralelismo, quem fez o quê, REDUCE e mapa do código |
+
+Características comuns:
+
+- **HTML + CSS + JS puros**, sem framework, sem CDN e sem etapa de build — os arquivos são
+  copiados junto com o código-fonte para a imagem Docker;
+- as páginas são **clientes da própria API**: disparam jobs, acompanham o progresso e leem o
+  relatório (nenhum endpoint exclusivo, nenhuma lógica de negócio no front-end);
+- por isso, a interface e a API nunca divergem: se a interface funciona, a API funciona;
+- a "demonstração ao vivo" do pitch é feita nelas (progresso, distribuição por Worker e REDUCE).
 
 > Alternativa: um `nginx`/`caddy` separado para servir o front-end. Foi descartado por
 > quebrar a regra do projeto de manter a topologia mínima (3 tipos de nó).
@@ -135,5 +142,5 @@ O Manager serve também o **painel** (`src/manager/static/index.html`), em `/pai
 | Paralelismo interno | `asyncio` (I/O) + `asyncio.to_thread` (pandas/CPU) |
 | Fonte de dados obrigatória | API do SIDRA — LSPA (6588) e PIM-PF (8888) |
 | Alinhamento ESG/Agro | HHI de concentração, participação por UF, rendimento por hectare, índice industrial por UF/setor |
-| Interface (painel web) | `src/manager/static/index.html`, servida em `/painel/` pelo Manager |
+| Interface (web) | `src/manager/static/index.html` (leitura) e `como-funciona.html` (explicativa), servidas em `/painel/` pelo Manager |
 | POP no README | Seção 4 do `README.md` |

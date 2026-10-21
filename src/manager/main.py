@@ -74,6 +74,12 @@ async def painel() -> RedirectResponse:
     return RedirectResponse("/painel/")
 
 
+@app.get("/painel/como-funciona", include_in_schema=False)
+async def como_funciona() -> RedirectResponse:
+    """Página que mostra o funcionamento do ecossistema por trás da interface."""
+    return RedirectResponse("/painel/como-funciona.html")
+
+
 app.mount("/painel", StaticFiles(directory=PAINEL_DIR, html=True), name="painel")
 
 

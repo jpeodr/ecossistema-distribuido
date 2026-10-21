@@ -46,18 +46,20 @@ participação produtiva e índice de concentração (HHI).**
 Diagramas UML completos (fonte `.puml` + PNG renderizado) em [`docs/diagrams`](docs/diagrams):
 componentes, implantação (Docker), sequência, classes e atividade.
 
-### Interface web (painel)
+### Interface web (duas páginas)
 
-O Manager também serve o **painel do ecossistema** (HTML + JS puro, sem CDN e sem build):
+O Manager serve duas páginas (HTML + JS puro, sem CDN e sem build):
 
 ```
-http://localhost:8000/painel/        # a raiz "/" redireciona para cá
+http://localhost:8000/painel/                 # a raiz "/" redireciona para cá
+http://localhost:8000/painel/como-funciona    # página explicativa
 ```
 
-O painel mostra, em tempo real: **status** do Manager/Redis/Workers, **profundidade da fila**,
-formulário para **criar o job** (pesquisa, categorias e período), **progresso** (X/27 tarefas,
-distribuição por Worker, log de tarefas) e o **relatório do REDUCE** (rankings de UF,
-participação produtiva, HHI e destaques). É a interface usada na demonstração ao vivo.
+- **`/painel/`** — interface de leitura: escolhe a pesquisa (LSPA ou PIM-PF), dispara a coleta
+  e mostra as tabelas do relatório (agregados, ranking de UFs, participação e HHI).
+- **`/painel/como-funciona`** — o que acontece por trás: topologia ao vivo, o caminho de um clique
+  em 8 etapas, os três níveis de paralelismo, quem executou cada UF no último job, as fórmulas
+  do REDUCE e o mapa do código.
 
 ---
 
@@ -147,19 +149,18 @@ curl http://localhost:8000/api/v1/health
 {"status":"ok","redis":true,"workers_ativos":3,"fila":0}
 ```
 
-### Passo 5 — Abra o painel web (interface do ecossistema)
+### Passo 5 — Abra a interface web
 
 ```
-http://localhost:8000/painel/        # Windows: start http://localhost:8000/painel/
-                                      # Linux:   xdg-open http://localhost:8000/painel/
+http://localhost:8000/painel/                # dados do SIDRA (leitura)
+http://localhost:8000/painel/como-funciona   # como o sistema funciona por dentro
 ```
 
-O painel (servido pelo próprio Manager, sem dependências externas) mostra:
+A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados** e acompanha
+`X de 27 UFs · concluído` até as tabelas do relatório aparecerem.
 
-- **status** do Manager, do Redis, dos Workers e a profundidade da fila;
-- **formulário** para criar um job (pesquisa, categorias e período);
-- **progresso ao vivo**: `X/27 tarefas`, distribuição por Worker e log das tarefas;
-- **relatório final** (REDUCE): rankings de UF, participação produtiva, HHI e destaques.
+A segunda página é a explicativa: topologia ao vivo, o caminho de um clique, os três níveis de
+paralelismo, quem executou cada UF no último job, as fórmulas do REDUCE e o mapa do código.
 
 ### Passo 6 — Execute a demonstração completa (linha de comando)
 
@@ -299,7 +300,9 @@ docker compose down -v       # remove também o volume do SQLite
 │   │   ├── dispatcher.py       # fatiamento do job (1 tarefa por UF)
 │   │   ├── store.py            # persistência SQLite
 │   │   ├── analysis.py         # REDUCE: somas, médias ponderadas, ranking, HHI
-│   │   └── static/index.html   # painel web (interface do ecossistema)
+│   │   └── static/
+│   │       ├── index.html        # interface de leitura dos dados do SIDRA
+│   │       └── como-funciona.html  # página explicativa (por trás dos panos)
 │   └── worker/
 │       ├── main.py             # consumidor da fila (BLPOP) + paralelismo interno
 │       └── processor.py        # normalização dos dados (pandas em thread)

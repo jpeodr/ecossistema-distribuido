@@ -11,6 +11,11 @@
   form { margin-bottom: 20px; }
   select, button, input { font: inherit; padding: 6px 8px; }
   button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+  .linkbtn {
+    display: inline-block; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px;
+    color: #374151; text-decoration: none; font-size: 13px; margin-left: 6px;
+  }
+  .linkbtn:hover { border-color: #2563eb; color: #2563eb; }
   table { border-collapse: collapse; margin-bottom: 24px; }
   th, td { border-bottom: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; }
   th { color: #6b7280; font-size: 12px; text-transform: uppercase; }
@@ -28,6 +33,7 @@ e consolidados pelo Manager (REDUCE).</p>
 <form id="form">
   <select id="select"></select>
   <button id="btn" type="submit">Buscar dados</button>
+  <a class="linkbtn" href="/painel/como-funciona">Como funciona por trás</a>
   <span id="status" class="muted"></span>
 </form>
 
