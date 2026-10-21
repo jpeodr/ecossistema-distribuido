@@ -65,7 +65,7 @@ PAINEL_DIR = Path(__file__).parent / "static"
 
 @app.get("/", include_in_schema=False)
 async def raiz() -> RedirectResponse:
-    """Redireciona a raiz para o painel web do ecossistema."""
+    """A raiz abre a interface de visualização dos dados."""
     return RedirectResponse("/painel/")
 
 
@@ -220,6 +220,23 @@ async def get_job_results(job_id: str) -> dict:
         "period": job["period"],
         "summary": summary,
     }
+
+
+# --------------------------------------------------------- interface web
+@app.get("/api/v1/results", tags=["interface"])
+async def list_results(limit: int = 20) -> dict:
+    """Resultados prontos, já com o relatório consolidado (usado pela interface)."""
+    jobs = [
+        {
+            "job_id": job["job_id"],
+            "dataset": job["dataset"],
+            "period": job["period"],
+            "finished_at": job["finished_at"],
+            "summary": json.loads(job["summary"]) if job["summary"] else None,
+        }
+        for job in store.completed_jobs(limit)
+    ]
+    return {"jobs": jobs}
 
 
 # ------------------------------------------------------- callback do worker

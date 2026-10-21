@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SIDRA/IBGE — dados do ecossistema distribuído</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 24px; color: #1f2937; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.sub { color: #6b7280; margin: 0 0 16px; }
+  form { margin-bottom: 20px; }
+  select, button, input { font: inherit; padding: 6px 8px; }
+  button { background: #2563eb; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+  table { border-collapse: collapse; margin-bottom: 24px; }
+  th, td { border-bottom: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; }
+  th { color: #6b7280; font-size: 12px; text-transform: uppercase; }
+  td.num { text-align: right; }
+  #status { color: #6b7280; margin-left: 8px; }
+  .muted { color: #6b7280; }
+</style>
+</head>
+<body>
+
+<h1>Dados do SIDRA/IBGE</h1>
+<p class="sub">Interface de leitura. Os dados abaixo foram coletados pelos Workers
+e consolidados pelo Manager (REDUCE).</p>
+
+<form id="form">
+  <select id="select"></select>
+  <button id="btn" type="submit">Executar job</button>
+  <small class="muted">(sem pesquisa selecionada, executa o último resultado)</small>
+  <span id="status" class="muted"></span>
+</form>
+
+<div id="out" class="muted">Carregando…</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nf = (v) => typeof v === "number" ? v.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : v;
+let timer = null;
+
+async function carregarDatasets() {
+  const d = await (await fetch("/api/v1/datasets")).json();
+  $("#select").innerHTML =
+    `<option value="">Último resultado</option>` +
+    Object.values(d).map(x => `<option value="${x.key}">${esc(x.label)}</option>`).join("");
+}
+
+async function rodar(ev) {
+  ev.preventDefault();
+  const dataset = $("#select").value;
+  if (!dataset) { await listar(); return; }
+  $("#btn").disabled = true;
+  const r = await fetch("/api/v1/jobs", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataset })
+  });
+  const job = await r.json();
+  if (!r.ok) { $("#status").textContent = "erro: " + esc(job.detail || r.status); $("#btn").disabled = false; return; }
+  acompanhar(job.job_id);
+}
+
+function acompanhar(id) {
+  clearInterval(timer);
+  timer = setInterval(async () => {
+    const j = await (await fetch(`/api/v1/jobs/${id}`)).json();
+    $("#status").textContent = `${id} · ${j.done_tasks}/${j.total_tasks} tarefas · ${j.status}`;
+    if (j.status === "completed" || j.status === "failed") {
+      clearInterval(timer); $("#btn").disabled = false; $("#select").value = ""; listar();
+    }
+  }, 800);
+}
+
+async function listar() {
+  const d = await (await fetch("/api/v1/results")).json();
+  if (!d.jobs.length) { $("#out").innerHTML = "Nenhum resultado ainda."; return; }
+
+  let html = "";
+  for (const job of d.jobs) {
+    const s = job.summary || {};
+    html += `<h2 style="font-size:15px">${esc(s.label)} — período ${esc(job.period)}
+        <span class="muted">(${s.registros} registros, ${s.ufs_analisadas} UFs)</span></h2>`;
+
+    for (const [cat, data] of Object.entries(s.categorias || {})) {
+      const hhi = data.concentracao_hhi;
+      html += `<p><b>${esc(cat)}</b>${hhi !== null ? ` <span class="muted">· HHI ${hhi}</span>` : ""}</p>`;
+      for (const [nome, v] of Object.entries(data.variaveis || {})) {
+        html += `<table><thead><tr><th>${esc(cat)} — ${esc(nome)} (${esc(v.unidade)})</th><th>UF</th><th>Valor</th><th>%</th></tr></thead><tbody>`;
+        html += `<tr><td>total/agregado</td><td class="muted">${esc(v.agregacao)}</td>
+            <td class="num">${nf(v.valor_agregado)}</td><td class="num">—</td></tr>`;
+        for (const uf of v.ranking_ufs || []) {
+          html += `<tr><td></td><td>${esc(uf.uf)}</td><td class="num">${nf(uf.valor)}</td>
+              <td class="num">${uf.participacao_pct !== undefined ? uf.participacao_pct + "%" : "—"}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+      }
+    }
+    html += `<p><b>Destaques</b></p><ul>` +
+      (s.destaques || []).map(t => `<li class="muted">${esc(t)}</li>`).join("") + `</ul><hr>`;
+  }
+  $("#out").innerHTML = html;
+}
+
+$("#form").addEventListener("submit", rodar);
+carregarDatasets();
+listar();
+</script>
+</body>
+</html>

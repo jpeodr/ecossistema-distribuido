@@ -121,6 +121,15 @@ class Store:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def completed_jobs(self, limit: int = 20) -> list[dict[str, Any]]:
+        """Jobs concluídos, do mais recente para o mais antigo (usado pela interface)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM jobs WHERE status = 'completed'"
+                " ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     # --------------------------------------------------------------- tasks
     def register_tasks(self, job_id: str, tasks: Iterable[Any]) -> None:
         """Registra as tarefas do job. `tasks` são objetos Task (payload fica guardado)."""
