@@ -109,15 +109,15 @@ http://localhost:8000/painel/arquitetura      # 2) arquitetura, UML, fluxo ao vi
 1. em `/painel/`, clicar em **"Buscar dados"** (pesquisa LSPA, período = último publicado);
 2. o status sobe de `0 de 27 UFs` a `27 de 27 UFs · concluído` — é o paralelismo acontecendo;
 3. as tabelas do **relatório (REDUCE)** aparecem: agregados, ranking de UF, participação e HHI;
-4. em `/painel/arquitetura`, rolar até **"Paralelismo"**: as duas fórmulas — **Speedup**
+4. na seção **"Como funciona"**, clicar em **"▶ Ver a infraestrutura trabalhando"**:
+   a topologia anima o fluxo real (Manager → Redis → Workers → SIDRA → Manager), os contadores
+   sobem (despachadas / em voo / concluídas / fila) e o log mostra cada UF concluída por um worker;
+5. em seguida, na mesma página, rolar até **"Paralelismo"**: as duas fórmulas — **Speedup**
    (S = T₁ / Tₚ) e **Speedup Máximo** (S_max = 1 / ((1 − P) + P / N)) — com a conta preenchida
    pelos tempos do último job, a distribuição das 27 tarefas nos 12 slots (3 rodadas) e o
    speedup observado contra o teto;
-5. na seção **"Como funciona"**, clicar em **"▶ Ver a infraestrutura trabalhando"**:
-   a topologia anima o fluxo real (Manager → Redis → Workers → SIDRA → Manager), os contadores
-   sobem (despachadas / em voo / concluídas / fila) e o log mostra cada UF concluída por um worker;
-6. rolar até **"Quem fez o quê"** (as 27 UFs divididas entre os workers), **"Paralelismo"** e
-   **"Falhas"** para fechar a parte técnica.
+6. fechar a parte técnica em **"Quem fez cada UF"** — a mesma fila repartindo as 27 UFs entre os
+   workers.
 
 **Em paralelo (outra janela):** `docker compose logs -f worker` mostra cada UF sendo processada.
 

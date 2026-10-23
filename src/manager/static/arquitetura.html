@@ -132,14 +132,6 @@
   .muted { color: var(--txt-soft); }
   .empty { color: var(--txt-soft); font-size: .875rem; }
 
-  .summary {
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--surface); padding: 16px 20px; margin-bottom: 2rem;
-  }
-  .summary h2 { font-size: 1rem; margin: 0 0 .5rem; padding: 0; border: 0; text-transform: uppercase; letter-spacing: .06em; }
-  .summary ul { margin: 0; padding-left: 20px; }
-  .summary li { margin-bottom: 4px; }
-
   .note {
     background: var(--surface); border-left: 4px solid var(--link);
     padding: 12px 16px; margin: 1rem 0; border-radius: 0 var(--radius) var(--radius) 0;
@@ -168,50 +160,8 @@
   }
   .bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
   .bar > i { display: block; height: 100%; background: var(--link); }
-  .tag { font-size: .6875rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--txt-soft); }
-  .tag.hi { color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
-  .tag.md { color: var(--amber); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
-  .tag.lo { color: var(--green); border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
   ul.tight { margin: 8px 0 0; padding-left: 20px; font-size: .8125rem; color: var(--txt-soft); }
   ul.tight li { margin-bottom: 4px; }
-
-  /* ===================== topologia ===================== */
-  .topo { display: flex; flex-direction: column; gap: 12px; }
-  .row { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
-  .node {
-    flex: 1 1 140px; min-width: 132px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px;
-  }
-  .node .t { font-size: .875rem; font-weight: 700; }
-  .node .s { font-size: .75rem; color: var(--txt-soft); margin-top: 2px; }
-  .node.manager { border-left: 3px solid var(--violet); }
-  .node.redis { border-left: 3px solid var(--amber); }
-  .node.sidra { border-left: 3px solid var(--green); }
-  .node.worker { border-left: 3px solid #0369a1; }
-  .arrow {
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    min-width: 78px; color: var(--txt-soft); font-size: .6875rem; text-align: center; gap: 2px;
-  }
-  .arrow .g { font-size: 16px; color: var(--link); animation: slide 1.6s ease-in-out infinite; }
-  .arrow .lbl { font-family: var(--mono); font-size: .6875rem; }
-  @keyframes slide { 0%,100% { transform: translateX(0); opacity: .6 } 50% { transform: translateX(4px); opacity: 1 } }
-
-  /* ===================== etapas ===================== */
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 12px; }
-  .step { position: relative; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 14px 50px; background: var(--bg); }
-  .step .n {
-    position: absolute; left: 13px; top: 13px; width: 24px; height: 24px; border-radius: 50%;
-    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
-    background: var(--surface-2); color: var(--link); border: 1px solid var(--border);
-  }
-  .step h3 { margin: 0 0 4px; font-size: .9375rem; }
-  .step p { margin: 0; font-size: .8125rem; color: var(--txt-soft); }
-  .step .who {
-    display: inline-block; margin-top: 8px; font-size: .6875rem; font-family: var(--mono);
-    color: var(--txt-soft); background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 2px 6px;
-  }
-  .step .who b { color: var(--violet); font-weight: 600; }
 
   /* ===================== modo ao vivo ===================== */
   .livebar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -273,6 +223,8 @@
     padding: 12px 14px; margin: 12px 0; overflow-x: auto; white-space: pre;
   }
   .kicker { font-size: .6875rem; letter-spacing: .07em; text-transform: uppercase; color: var(--txt-soft); }
+  ol.passos { margin: 16px 0; padding-left: 22px; }
+  ol.passos li { margin-bottom: 6px; }
   .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg); }
   .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
   .lvl { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--bg); }
@@ -288,9 +240,6 @@
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .mono { font-family: var(--mono); font-size: .8125rem; }
 
-  .seealso { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1rem; }
-  .seealso h2 { font-size: 1.125rem; margin: 0 0 .5rem; padding: 0; border: 0; }
-  .seealso ul { margin: 0; padding-left: 20px; font-size: .875rem; }
   footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--txt-soft); font-size: .8125rem; }
 
   @media (max-width: 900px) {
@@ -326,35 +275,10 @@
     <nav class="toc" aria-label="Nesta página">
       <h2 class="toc-title">Nesta página</h2>
       <ol>
-        <li><a href="#topologia">Visão geral</a></li>
-        <li><a href="#implantacao">Implantação</a></li>
-        <li><a href="#componentes">Componentes</a></li>
-        <li><a href="#sequencia">Ciclo de um job</a></li>
-        <li><a href="#classes">Modelo de domínio</a></li>
-        <li><a href="#atividade">Fluxo de execução</a></li>
-        <li>
-          <a href="#como-funciona">Como funciona</a>
-          <ol class="sub">
-            <li><a href="#cf-topologia">Topologia</a></li>
-            <li><a href="#cf-ao-vivo">Execução ao vivo</a></li>
-            <li><a href="#cf-fluxo">Fluxo de trabalho</a></li>
-            <li><a href="#cf-quem">Quem fez o quê</a></li>
-            <li><a href="#cf-reduce">O que o REDUCE calcula</a></li>
-            <li><a href="#cf-arquivos">Arquivos</a></li>
-            <li><a href="#cf-falhas">Falhas</a></li>
-          </ol>
-        </li>
-        <li>
-          <a href="#paralelismo">Paralelismo</a>
-          <ol class="sub">
-            <li><a href="#pl-niveis">Onde foi aplicado</a></li>
-            <li><a href="#pl-formulas">As duas fórmulas</a></li>
-            <li><a href="#pl-distribuicao">Distribuição das tarefas</a></li>
-            <li><a href="#speedup">Cálculo do Speedup</a></li>
-            <li><a href="#pl-leitura">Leitura do resultado</a></li>
-          </ol>
-        </li>
-        <li><a href="#fontes">Fontes dos diagramas</a></li>
+        <li><a href="#visao">O básico</a></li>
+        <li><a href="#diagramas">Diagramas UML</a></li>
+        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#paralelismo">Paralelismo</a></li>
       </ol>
     </nav>
   </aside>
@@ -363,161 +287,72 @@
 
     <h1>Arquitetura de solução</h1>
     <p class="lead">
-      Topologia distribuída adotada no ecossistema SIDRA/IBGE, diagramas UML dos
-      componentes, da implantação, da sequência, das classes e da atividade, o
-      funcionamento do sistema passo a passo (com execução ao vivo) e o cálculo de
-      speedup medido no sistema.
+      Um sistema distribuído que lê dados públicos do IBGE (SIDRA): o trabalho é dividido
+      entre várias máquinas, que executam ao mesmo tempo.
     </p>
 
-    <div class="summary">
-      <h2>Resumo</h2>
-      <ul>
-        <li><b>Três tipos de nó</b>: Manager (coordena), Workers (executam) e Redis (fila).</li>
-        <li><b>Um contêiner por nó</b>, rede bridge única, orquestração por Docker Compose.</li>
-        <li><b>27 tarefas por job</b>, uma por Unidade da Federação, consumidas por qualquer Worker.</li>
-        <li><b>Três níveis de paralelismo</b>: entre os nós, dentro do nó (I/O) e dentro da tarefa (CPU).</li>
-        <li><b>Paralelismo com as fórmulas da aula</b>: <b>Speedup</b> e <b>Speedup Máximo</b>
-          aplicados às medições reais do último job.</li>
-        <li><b>Modo ao vivo</b>: <a href="#cf-ao-vivo">ver a infraestrutura trabalhando</a> com um job real.</li>
-      </ul>
-    </div>
-
-    <!-- ================= VISÃO GERAL ================= -->
-    <section id="topologia">
-      <h2>Visão geral <a class="anchor" href="#topologia">#</a></h2>
+    <!-- ================= O BÁSICO ================= -->
+    <section id="visao">
+      <h2>O básico <a class="anchor" href="#visao">#</a></h2>
       <p>
-        O sistema é um ecossistema de processos distribuídos com topologia
-        <b>mestre-escravo com broker</b> (produtor/consumidor). O Manager é o mestre: recebe o
-        pedido, fatia o job e publica as tarefas. O Redis é o broker: guarda a fila. Os Workers
-        são os escravos: retiram tarefas e devolvem resultados.
-      </p>
-      <p>
-        Nenhum Worker conhece os demais e nenhum Worker conversa com outro Worker. A única
-        interação é com o Redis (retirar tarefas) e com o Manager (devolver resultados). Isso
-        permite escalar horizontalmente com <code>docker compose up -d --scale worker=N</code>.
+        Cada pedido vira <b>27 tarefas</b>, uma por Unidade da Federação. Três processos
+        participam:
       </p>
 
-      <table>
-        <thead><tr><th>Nó</th><th>Contêiner</th><th>Responsabilidade</th><th>Escala</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><b>Manager</b></td>
-            <td class="mono">eco-manager</td>
-            <td>API FastAPI, fatiamento, coleta dos callbacks, REDUCE, painel web</td>
-            <td>1 instância</td>
-          </tr>
-          <tr>
-            <td><b>Redis</b></td>
-            <td class="mono">eco-redis</td>
-            <td>Broker: fila <code>sidra:tasks</code>, pub/sub de eventos</td>
-            <td>1 instância</td>
-          </tr>
-          <tr>
-            <td><b>Workers</b></td>
-            <td class="mono">eco-sidra-worker-N</td>
-            <td>Consumo da fila, consulta ao SIDRA, normalização, callback, heartbeat</td>
-            <td>N instâncias</td>
-          </tr>
-          <tr>
-            <td><b>API SIDRA</b></td>
-            <td class="mono">externo (IBGE)</td>
-            <td>Fonte dos dados públicos (HTTPS/JSON)</td>
-            <td>—</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="note">
-        <p>
-          A API do SIDRA fica fora do ecossistema: é um serviço público do IBGE, acessado por
-          HTTPS. O sistema não escreve no SIDRA, apenas lê.
-        </p>
+      <div class="levels">
+        <div class="lvl">
+          <div class="k">Organiza</div>
+          <h3>Manager</h3>
+          <p>Cria as tarefas, recebe os resultados e monta o relatório.</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Guarda a fila</div>
+          <h3>Redis</h3>
+          <p>Fila compartilhada: o Manager coloca tarefas, os Workers retiram.</p>
+        </div>
+        <div class="lvl">
+          <div class="k">Executa</div>
+          <h3>Workers</h3>
+          <p>Consultam o SIDRA e devolvem os dados ao Manager.</p>
+        </div>
       </div>
+
+      <p>
+        Um Worker não conhece os outros e não sabe quantos são. Para ter mais capacidade,
+        basta subir mais Workers:
+      </p>
+
+      <div class="formula">docker compose up -d --scale worker=5</div>
     </section>
 
-    <!-- ================= IMPLANTAÇÃO ================= -->
-    <section id="implantacao">
-      <h2>Diagrama de implantação <a class="anchor" href="#implantacao">#</a></h2>
-      <p>
-        Topologia física: um host Docker com a rede bridge <code>ecossistema</code>, um contêiner
-        do Manager (porta 8000 publicada), um do Redis e N de Worker. O Manager e os Workers
-        compartilham a mesma imagem Docker; o que muda é o comando de entrada.
-      </p>
+    <!-- ================= DIAGRAMAS ================= -->
+    <section id="diagramas">
+      <h2>Diagramas UML <a class="anchor" href="#diagramas">#</a></h2>
+      <p>Os cinco diagramas do projeto. Os fontes ficam em <code>docs/diagrams/</code>.</p>
+
       <figure>
-        <div class="figure-box"><img src="/painel/diagramas/02-implantacao.png" alt="Diagrama de implantação: host Docker com o contêiner do Manager, o do Redis e três contêineres de Worker, todos na rede bridge ecossistema, com o Manager e os Workers acessando a API do SIDRA na internet."></div>
-        <figcaption>
-          Diagrama de implantação (UML) — fonte: <code>docs/diagrams/02-implantacao.puml</code> ·
-          <a href="/painel/diagramas/02-implantacao.png" target="_blank" rel="noopener">abrir em tamanho real</a>
-        </figcaption>
+        <div class="figure-box"><img src="/painel/diagramas/02-implantacao.png" alt="Diagrama de implantação: host Docker com o contêiner do Manager, o do Redis e três contêineres de Worker, todos na rede bridge ecossistema, com acesso à API do SIDRA."></div>
+        <figcaption>Implantação — um contêiner para o Manager, um para o Redis e três para os Workers.</figcaption>
       </figure>
-    </section>
 
-    <!-- ================= COMPONENTES ================= -->
-    <section id="componentes">
-      <h2>Diagrama de componentes <a class="anchor" href="#componentes">#</a></h2>
-      <p>
-        Componentes internos e as interfaces entre eles: o painel web e o script de demonstração
-        consomem a API do Manager; o Manager publica no Redis e grava no SQLite; o Worker puxa
-        da fila, lê no SIDRA e devolve ao Manager.
-      </p>
       <figure>
-        <div class="figure-box"><img src="/painel/diagramas/01-componentes.png" alt="Diagrama de componentes: usuário, painel web, script de demonstração, Manager com store SQLite, broker Redis, Worker e API do SIDRA, com as interfaces de comunicação entre eles."></div>
-        <figcaption>
-          Diagrama de componentes (UML) — fonte: <code>docs/diagrams/01-componentes.puml</code> ·
-          <a href="/painel/diagramas/01-componentes.png" target="_blank" rel="noopener">abrir em tamanho real</a>
-        </figcaption>
+        <div class="figure-box"><img src="/painel/diagramas/01-componentes.png" alt="Diagrama de componentes: painel web e script de demonstração consumindo a API do Manager, que usa o Redis, o SQLite e a API do SIDRA por meio dos Workers."></div>
+        <figcaption>Componentes — quem conversa com quem.</figcaption>
       </figure>
-    </section>
 
-    <!-- ================= SEQUÊNCIA ================= -->
-    <section id="sequencia">
-      <h2>Ciclo de vida de um job <a class="anchor" href="#sequencia">#</a></h2>
-      <p>
-        Sequência completa: do pedido HTTP ao relatório. Destacam-se a sondagem do período (para
-        não despachar um job para um período sem dados) e o disparo do REDUCE na chegada da
-        última tarefa.
-      </p>
       <figure>
-        <div class="figure-box"><img class="tall" src="/painel/diagramas/03-sequencia.png" alt="Diagrama de sequência: usuário cria o job, o Manager resolve o período no SIDRA, fatia em 27 tarefas, publica no Redis, os Workers retiram tarefas com BLPOP, consultam o SIDRA, devolvem os resultados, o Manager grava no SQLite e executa o REDUCE."></div>
-        <figcaption>
-          Diagrama de sequência (UML) — fonte: <code>docs/diagrams/03-sequencia.puml</code> ·
-          <a href="/painel/diagramas/03-sequencia.png" target="_blank" rel="noopener">abrir em tamanho real</a>
-        </figcaption>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/03-sequencia.png" alt="Diagrama de sequência: o usuário cria o job, o Manager resolve o período, cria 27 tarefas, publica no Redis, os Workers consultam o SIDRA e devolvem os resultados, e o Manager executa o REDUCE."></div>
+        <figcaption>Sequência — o caminho de um job, do pedido ao relatório.</figcaption>
       </figure>
-    </section>
 
-    <!-- ================= CLASSES ================= -->
-    <section id="classes">
-      <h2>Modelo de domínio <a class="anchor" href="#classes">#</a></h2>
-      <p>
-        Entidades que atravessam o sistema: <code>Dataset</code> (com suas variáveis e
-        categorias), <code>JobRequest</code>, <code>Task</code>, <code>Record</code> e
-        <code>TaskResult</code>, com a persistência em <code>Store</code> e a agregação em
-        <code>Reduce</code>.
-      </p>
       <figure>
-        <div class="figure-box"><img class="tall" src="/painel/diagramas/04-classes.png" alt="Diagrama de classes: Dataset relacionado com Variable e Category, JobRequest gerando Tasks, Task executada por Worker, Worker devolvendo TaskResult com Records, TaskResult persistido em Store e agregado por Reduce."></div>
-        <figcaption>
-          Diagrama de classes (UML) — fonte: <code>docs/diagrams/04-classes.puml</code> ·
-          <a href="/painel/diagramas/04-classes.png" target="_blank" rel="noopener">abrir em tamanho real</a>
-        </figcaption>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/04-classes.png" alt="Diagrama de classes: Dataset, JobRequest, Task, Worker, TaskResult, Record, Store e Reduce."></div>
+        <figcaption>Classes — as entidades do sistema.</figcaption>
       </figure>
-    </section>
 
-    <!-- ================= ATIVIDADE ================= -->
-    <section id="atividade">
-      <h2>Fluxo de execução <a class="anchor" href="#atividade">#</a></h2>
-      <p>
-        Atividade do Manager e do Worker, incluindo o caminho de erro: falha na consulta ao
-        SIDRA gera re-enfileiramento com espera de 1 s e 2 s, até o limite de
-        <code>MAX_RETRIES</code>.
-      </p>
       <figure>
-        <div class="figure-box"><img class="tall" src="/painel/diagramas/05-atividade.png" alt="Diagrama de atividade: validação do dataset, resolução do período, fatiamento em 27 tarefas, publicação no Redis, laço de consumo com BLPOP, consulta ao SIDRA, retry em caso de falha, normalização com pandas, callback ao Manager, REDUCE e leitura do relatório."></div>
-        <figcaption>
-          Diagrama de atividade (UML) — fonte: <code>docs/diagrams/05-atividade.puml</code> ·
-          <a href="/painel/diagramas/05-atividade.png" target="_blank" rel="noopener">abrir em tamanho real</a>
-        </figcaption>
+        <div class="figure-box"><img class="tall" src="/painel/diagramas/05-atividade.png" alt="Diagrama de atividade: validação do dataset, período, 27 tarefas, fila no Redis, consumo pelos Workers, consulta ao SIDRA, nova tentativa em caso de falha, callback e REDUCE."></div>
+        <figcaption>Atividade — o fluxo de execução, com nova tentativa em caso de falha.</figcaption>
       </figure>
     </section>
 
@@ -525,36 +360,10 @@
     <section id="como-funciona">
       <h2>Como funciona <a class="anchor" href="#como-funciona">#</a></h2>
       <p>
-        O mesmo sistema visto por dentro: topologia em execução, job real animado, as 8 etapas
-        do processamento, a distribuição das tarefas entre os Workers, o que o REDUCE calcula,
-        os arquivos do projeto e como as falhas são tratadas.
+        O botão dispara um job real e mostra a infraestrutura trabalhando. As oito etapas
+        abaixo são o caminho completo, do clique ao relatório.
       </p>
 
-      <!-- ---------- TOPOLOGIA ---------- -->
-      <h3 id="cf-topologia">Topologia <a class="anchor" href="#cf-topologia">#</a></h3>
-      <div class="card topo">
-        <div class="row">
-          <div class="node"><div class="t">Navegador</div><div class="s">interface</div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /jobs</div></div>
-          <div class="node manager"><div class="t">Manager</div><div class="s">FastAPI · fatia e consolida</div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">RPUSH</div></div>
-          <div class="node redis"><div class="t">Redis</div><div class="s">fila <code>sidra:tasks</code></div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">BLPOP</div></div>
-          <div class="node worker"><div class="t">Workers</div><div class="s" id="topo-workers">N nós</div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">HTTPS</div></div>
-          <div class="node sidra"><div class="t">SIDRA / IBGE</div><div class="s">API pública</div></div>
-        </div>
-        <div class="row">
-          <div class="node worker"><div class="t">Workers</div><div class="s">resposta normalizada</div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">POST /internal/results</div></div>
-          <div class="node manager"><div class="t">Manager</div><div class="s">grava no SQLite</div></div>
-          <div class="arrow"><div class="g">➜</div><div class="lbl">REDUCE</div></div>
-          <div class="node"><div class="t">Relatório</div><div class="s">somas · médias · ranking · HHI</div></div>
-        </div>
-      </div>
-
-      <!-- ---------- EXECUÇÃO AO VIVO ---------- -->
-      <h3 id="cf-ao-vivo">Execução ao vivo <a class="anchor" href="#cf-ao-vivo">#</a></h3>
       <div class="card">
         <div class="livebar">
           <button id="btnLive" class="btn btn-primary">▶ Ver a infraestrutura trabalhando</button>
@@ -585,308 +394,105 @@
 
         <div class="log" id="log"><span class="ev"><span class="t">--:--:--</span> pronto</span></div>
 
-        <div class="note">
-          <p>
-            A animação é ilustrativa do fluxo. Contadores, tempos e log vêm do sistema real.
-            Legenda: <span style="color:#fbbf24">●</span> tarefa publicada ·
-            <span style="color:#38bdf8">●</span> tarefa retirada da fila ·
-            <span style="color:#34d399">●</span> consulta ao SIDRA ·
-            <span style="color:#a78bfa">●</span> callback ao Manager.
-          </p>
-        </div>
+        <p class="muted" style="margin:0;font-size:.8125rem">
+          A animação é ilustrativa; contadores, tempos e log vêm do sistema real.
+        </p>
       </div>
 
-      <!-- ---------- FLUXO DE TRABALHO ---------- -->
-      <h3 id="cf-fluxo">Fluxo de trabalho <a class="anchor" href="#cf-fluxo">#</a></h3>
-      <div class="steps">
-        <div class="step"><div class="n">1</div><h3>Pedido</h3>
-          <p>O navegador envia <code>POST /api/v1/jobs</code> com a pesquisa (LSPA ou PIM-PF).</p>
-          <span class="who"><b>Manager</b> · src/manager/main.py</span></div>
-        <div class="step"><div class="n">2</div><h3>Fatiamento</h3>
-          <p>O Manager obtém o período no SIDRA e divide o pedido em <b>uma tarefa por UF</b> (27 tarefas).</p>
-          <span class="who"><b>dispatcher</b> · build_tasks()</span></div>
-        <div class="step"><div class="n">3</div><h3>Publicação</h3>
-          <p>As tarefas são publicadas na fila do Redis (<code>RPUSH</code> em pipeline).</p>
-          <span class="who"><b>Manager</b> · redis.pipeline()</span></div>
-        <div class="step"><div class="n">4</div><h3>Consumo</h3>
-          <p>Cada Worker espera a fila com <code>BLPOP</code> e retira uma tarefa por vez.</p>
-          <span class="who"><b>Worker</b> · worker/main.py</span></div>
-        <div class="step"><div class="n">5</div><h3>Coleta (MAP)</h3>
-          <p>O Worker consulta a API do SIDRA, converte os números pt-BR e normaliza com pandas.</p>
-          <span class="who"><b>Worker</b> · processor.py · sidra.py</span></div>
-        <div class="step"><div class="n">6</div><h3>Callback</h3>
-          <p>O Worker devolve os registros ao Manager, que grava no SQLite e conta a tarefa como concluída.</p>
-          <span class="who"><b>Manager</b> · /api/v1/internal/results</span></div>
-        <div class="step"><div class="n">7</div><h3>REDUCE</h3>
-          <p>Quando todas as tarefas terminam, o Manager consolida os registros e gera o relatório.</p>
-          <span class="who"><b>Manager</b> · analysis.py · reduce_results()</span></div>
-        <div class="step"><div class="n">8</div><h3>Leitura</h3>
-          <p>A interface busca <code>GET /api/v1/results</code> e mostra as tabelas do relatório.</p>
-          <span class="who"><b>Painel</b> · /painel/</span></div>
-      </div>
+      <ol class="passos">
+        <li><b>Pedido</b> — o navegador pede um job para a pesquisa escolhida.</li>
+        <li><b>Divisão</b> — o Manager cria 27 tarefas, uma por UF.</li>
+        <li><b>Fila</b> — as tarefas entram no Redis.</li>
+        <li><b>Consumo</b> — cada Worker retira uma tarefa da fila.</li>
+        <li><b>Coleta</b> — o Worker consulta o SIDRA e organiza os dados.</li>
+        <li><b>Devolução</b> — o Worker manda o resultado ao Manager.</li>
+        <li><b>Relatório</b> — quando todas chegam, o Manager soma e monta as tabelas.</li>
+        <li><b>Leitura</b> — o painel mostra o relatório.</li>
+      </ol>
 
-      <!-- ---------- QUEM FEZ O QUÊ ---------- -->
-      <h3 id="cf-quem">Quem fez o quê <a class="anchor" href="#cf-quem">#</a></h3>
-      <p class="muted">Distribuição das tarefas do último job entre os Workers.</p>
-      <div class="grid2">
-        <div class="card">
-          <table>
-            <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo total</th><th>UFs coletadas</th></tr></thead>
-            <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
-          </table>
-          <p class="note" id="jobinfo" style="margin-bottom:0"></p>
-        </div>
-        <div class="card">
-          <h3 style="margin:0 0 10px; font-size:.9375rem;">Fila e nós agora</h3>
-          <table>
-            <thead><tr><th>Worker</th><th class="num">Capacidade</th><th class="num">Feitas</th><th class="num">Falhas</th><th class="num">Visto há</th></tr></thead>
-            <tbody id="wtable"><tr><td colspan="5" class="empty">Carregando…</td></tr></tbody>
-          </table>
-          <p class="note" style="margin-bottom:0">Heartbeat a cada 10 s: é o que o Manager usa para saber quais nós estão ativos.</p>
-        </div>
-      </div>
-
-      <!-- ---------- REDUCE ---------- -->
-      <h3 id="cf-reduce">O que o REDUCE calcula <a class="anchor" href="#cf-reduce">#</a></h3>
-      <div class="grid2">
-        <div class="card">
-          <table>
-            <thead><tr><th>Categoria</th><th>Variáveis (agregado)</th><th class="num">HHI</th><th>Ranking (variável principal)</th></tr></thead>
-            <tbody id="reduceRows"><tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr></tbody>
-          </table>
-          <p class="note" id="reduceinfo" style="margin-bottom:0"></p>
-        </div>
-        <div class="card">
-          <h3 style="margin:0 0 4px; font-size:.9375rem;">As fórmulas</h3>
-          <p class="muted" style="font-size:.8125rem;">Executadas no Manager, depois que todas as tarefas terminam.</p>
-          <div class="formula">soma      = Σ valor(UF)
-média     = Σ (valor(UF) × peso(UF)) / Σ peso(UF)
-part. %   = 100 × valor(UF) / Σ valor(UF)
-HHI       = Σ (part. % / 100)²</div>
-          <ul class="tight">
-            <li><b>Soma</b> — variáveis aditivas (produção, valor).</li>
-            <li><b>Média ponderada</b> — variáveis de índice (preço, área média).</li>
-            <li><b>Participação</b> — quanto cada UF responde pelo total.</li>
-            <li><b>HHI</b> — concentração: &lt;0,15 baixa · 0,15–0,25 moderada · &gt;0,25 alta.</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- ---------- ARQUIVOS ---------- -->
-      <h3 id="cf-arquivos">Arquivos <a class="anchor" href="#cf-arquivos">#</a></h3>
-      <div class="card">
-        <table>
-          <thead><tr><th>Arquivo</th><th>Papel</th></tr></thead>
-          <tbody>
-            <tr><td class="mono">src/manager/main.py</td><td>API FastAPI: cria o job, recebe callbacks, dispara o REDUCE, serve o painel</td></tr>
-            <tr><td class="mono">src/manager/dispatcher.py</td><td>Fatiamento: uma tarefa por Unidade da Federação</td></tr>
-            <tr><td class="mono">src/manager/analysis.py</td><td>REDUCE: somas, médias ponderadas, ranking de UFs e HHI</td></tr>
-            <tr><td class="mono">src/manager/store.py</td><td>Persistência SQLite: jobs, tarefas, registros e workers</td></tr>
-            <tr><td class="mono">src/worker/main.py</td><td>Ciclo do Worker: BLPOP, limite de concorrência, callback e heartbeat</td></tr>
-            <tr><td class="mono">src/worker/processor.py</td><td>MAP: parse das linhas do SIDRA e resumo com pandas</td></tr>
-            <tr><td class="mono">src/common/sidra.py</td><td>Cliente HTTP do SIDRA com retry e conversão de número pt-BR</td></tr>
-            <tr><td class="mono">src/common/datasets.py</td><td>Definição das pesquisas (LSPA 6588, PIM-PF 8888) e das 27 UFs</td></tr>
-            <tr><td class="mono">docker-compose.yml</td><td>Topologia: manager, redis, workers escaláveis e perfil de demo</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- ---------- FALHAS ---------- -->
-      <h3 id="cf-falhas">Falhas <a class="anchor" href="#cf-falhas">#</a></h3>
-      <div class="levels">
-        <div class="lvl"><div class="k">Rede</div><h3>Retry com backoff</h3>
-          <p>Falha no envio ao Manager ou no acesso ao SIDRA: o Worker repete a tentativa com espera de 1 s e 2 s, até <code>MAX_RETRIES</code>.</p></div>
-        <div class="lvl"><div class="k">Tarefa</div><h3>Reenfileiramento</h3>
-          <p>A tarefa volta para a fila do Redis com a tentativa incrementada e vira falha definitiva depois de <code>MAX_RETRIES</code>.</p></div>
-        <div class="lvl"><div class="k">Nó parado</div><h3>Heartbeat</h3>
-          <p>Worker sem heartbeat há 30 s (<code>WORKER_STALE_SECONDS</code>) sai da lista de ativos.</p></div>
-        <div class="lvl"><div class="k">Escala</div><h3>Mais nós</h3>
-          <p><code>docker compose up -d --scale worker=5</code>: a fila é compartilhada e os Workers novos consomem as mesmas tarefas.</p></div>
-      </div>
+      <h3 id="cf-quem">Quem fez cada UF <a class="anchor" href="#cf-quem">#</a></h3>
+      <p class="muted">A mesma fila distribui as tarefas entre os Workers do job mais recente.</p>
+      <table>
+        <thead><tr><th>Worker</th><th class="num">Tarefas</th><th class="num">Tempo</th><th>UFs</th></tr></thead>
+        <tbody id="quem"><tr><td colspan="4" class="empty">Carregando…</td></tr></tbody>
+      </table>
+      <p class="muted" id="jobinfo" style="font-size:.8125rem"></p>
     </section>
 
     <!-- ================= PARALELISMO ================= -->
     <section id="paralelismo">
       <h2>Paralelismo <a class="anchor" href="#paralelismo">#</a></h2>
       <p>
-        O objetivo do projeto é aplicar paralelismo em um sistema distribuído real: o job é
-        quebrado em <b>27 tarefas independentes</b> e executado por vários Workers ao mesmo tempo.
-        A avaliação usa as duas fórmulas da aula de Sistemas Distribuídos do professor
-        <b>Vitório</b> — <b>Speedup</b> e <b>Speedup Máximo</b> — com os tempos medidos pelo
-        próprio sistema.
+        Paralelismo é fazer várias partes do trabalho ao mesmo tempo. Ele aparece em três
+        lugares:
       </p>
 
-      <h3 id="pl-niveis">Onde o paralelismo foi aplicado <a class="anchor" href="#pl-niveis">#</a></h3>
-      <p>
-        O paralelismo aparece em três níveis, com granularidades diferentes. Os três somam:
-        o job é quebrado em tarefas independentes (nível 1), cada tarefa é executada junto de
-        outras no mesmo processo (nível 2) e o trabalho de CPU de cada tarefa sai da thread de
-        event loop (nível 3).
-      </p>
-
-      <div class="levels">
-        <div class="lvl">
-          <div class="k">Nível 1 · entre os nós</div>
-          <h3>Distribuído</h3>
-          <div class="big" id="p1">—<small> tarefas</small></div>
-          <p id="p1b">Uma tarefa por UF: 27 consultas independentes ao SIDRA, espalhadas pelos Workers que retiram tarefas da fila.</p>
-        </div>
-        <div class="lvl">
-          <div class="k">Nível 2 · dentro do nó</div>
-          <h3>Assíncrono (I/O)</h3>
-          <div class="big" id="p2">—<small> tarefas em voo</small></div>
-          <p>Cada Worker mantém até <code>WORKER_CONCURRENCY</code> requisições simultâneas ao SIDRA (<code>asyncio.create_task</code>).</p>
-        </div>
-        <div class="lvl">
-          <div class="k">Nível 3 · dentro da tarefa</div>
-          <h3>Thread (CPU)</h3>
-          <div class="big">1<small> thread dedicada</small></div>
-          <p>A normalização com pandas roda em <code>asyncio.to_thread</code> para não bloquear o event loop.</p>
-        </div>
-      </div>
+      <ul>
+        <li><b>Entre as máquinas</b> — as 27 tarefas são divididas entre os Workers.</li>
+        <li><b>Dentro de cada Worker</b> — até 4 consultas ao SIDRA ao mesmo tempo.</li>
+        <li><b>Dentro de cada tarefa</b> — a organização dos dados roda em outra thread.</li>
+      </ul>
 
       <p>
-        A fila é compartilhada e não há afinidade entre tarefa e Worker: qualquer nó pode retirar
-        qualquer tarefa. Com 3 Workers e <code>WORKER_CONCURRENCY=4</code>, o ecossistema mantém
-        <b>12 tarefas em voo ao mesmo tempo</b>, cada uma em um processo diferente.
+        Com 3 Workers e 4 consultas cada, o sistema faz <b id="p2">12</b> consultas ao SIDRA ao
+        mesmo tempo.
       </p>
-
-      <div class="note">
-        <p>
-          O gargalo real é externo: a latência da API do SIDRA. Por isso o paralelismo do nível 2
-          é de I/O (não de CPU) e o nível 3 existe só para tirar a normalização com pandas da
-          thread de event loop.
-        </p>
-      </div>
 
       <h3 id="pl-formulas">As duas fórmulas da aula <a class="anchor" href="#pl-formulas">#</a></h3>
       <p>
-        As duas respondem a perguntas diferentes: o <b>Speedup</b> mede o ganho obtido; o
-        <b>Speedup Máximo</b> mede o ganho possível com <b>N</b> unidades de processamento.
+        Como aprendemos em aula com o professor <b>Vitório</b>, o <b>Speedup</b> mostra quanto
+        o sistema ganhou e o <b>Speedup Máximo</b> mostra o quanto ele pode ganhar.
       </p>
 
       <div class="grid2">
         <div class="card">
-          <div class="kicker">Fórmula 1 · ganho obtido</div>
+          <div class="kicker">Fórmula 1</div>
           <h3 style="margin-top:2px">Speedup</h3>
           <div class="formula">S = T₁ / Tₚ</div>
           <ul class="tight">
-            <li><b>T₁</b> — tempo de execução serial, sem paralelismo.</li>
-            <li><b>Tₚ</b> — tempo de execução com N unidades em paralelo.</li>
-            <li><b>S</b> — quantas vezes o sistema ficou mais rápido.</li>
+            <li><b>T₁</b> — tempo em série, uma tarefa por vez.</li>
+            <li><b>Tₚ</b> — tempo em paralelo.</li>
+            <li><b>S</b> — quantas vezes ficou mais rápido.</li>
           </ul>
-          <p class="muted" style="font-size:.8125rem;margin:.75rem 0 0">
-            Leitura: <b>S = 4</b> significa que o job terminou em um quarto do tempo serial.
-          </p>
         </div>
         <div class="card">
-          <div class="kicker">Fórmula 2 · ganho máximo</div>
+          <div class="kicker">Fórmula 2</div>
           <h3 style="margin-top:2px">Speedup Máximo</h3>
-          <div class="formula">S_max(N) = 1 / ((1 − P) + P / N)</div>
+          <div class="formula">S_max = 1 / ((1 − P) + P / N)</div>
           <ul class="tight">
-            <li><b>P</b> — fração paralelizável do programa (0 a 1).</li>
-            <li><b>1 − P</b> — fração sequencial, que nenhum nó acelera.</li>
-            <li><b>N</b> — número de unidades de processamento em paralelo.</li>
+            <li><b>P</b> — parte do trabalho que dá para paralelizar.</li>
+            <li><b>1 − P</b> — parte que só uma máquina pode fazer.</li>
+            <li><b>N</b> — quantas tarefas rodam ao mesmo tempo.</li>
           </ul>
-          <p class="muted" style="font-size:.8125rem;margin:.75rem 0 0">
-            Leitura: com <b>P = 0,8</b> e <b>N = 4</b>, S_max = 1 / (0,2 + 0,2) = <b>2,5</b>.
-          </p>
         </div>
       </div>
 
       <p>
-        O comportamento da segunda fórmula, com <code>P = 0,8</code> — o mesmo exemplo resolvido
-        em aula:
+        Exemplo da aula, com 80% do trabalho paralelizável: 4 máquinas dão no máximo 2,5×,
+        16 dão 4×, e nem infinitas máquinas passam de 5×.
       </p>
 
-      <div class="formula">N = 4     S_max = 1 / ((1 − 0,8) + 0,8 / 4)  = 1 / 0,40 = 2,5×
-N = 16    S_max = 1 / ((1 − 0,8) + 0,8 / 16) = 1 / 0,25 = 4,0×
-N → ∞     S_max = 1 / (1 − 0,8)              = 1 / 0,20 = 5,0×</div>
-
+      <h3 id="speedup">Como aplicamos no sistema <a class="anchor" href="#speedup">#</a></h3>
       <p>
-        O último caso é o teto da fração sequencial: por mais nós que sejam adicionados, o ganho
-        não passa de <b>5×</b> enquanto <code>1 − P = 0,2</code>.
-      </p>
-
-      <div class="note">
-        <p>
-          <b>Da aula para o sistema.</b> Como aprendemos em aula com o professor Vitório, o
-          caminho é: medir <b>T₁</b>, medir <b>Tₚ</b>, calcular <b>S</b>, identificar <b>P</b> e
-          <b>N</b> e comparar <b>S</b> com <b>S_max</b>. Neste projeto T₁ e Tₚ não são estimados:
-          saem das durações das 27 tarefas e do tempo do job registrados no SQLite.
-        </p>
-      </div>
-
-      <h3 id="pl-distribuicao">Distribuição das tarefas <a class="anchor" href="#pl-distribuicao">#</a></h3>
-      <p>
-        O Manager publica as 27 tarefas com um único <code>RPUSH</code> em pipeline. Cada Worker
-        retira até <code>WORKER_CONCURRENCY</code> tarefas e o restante fica na fila. O
-        paralelismo efetivo é a divisão entre tarefas e slots:
+        O sistema executa <b>12 tarefas ao mesmo tempo</b>. As 27 tarefas ocupam esses 12
+        lugares em 3 rodadas (12 + 12 + 3). As contas, com os tempos do último job:
       </p>
 
       <div class="formula" id="distConta">Carregando…</div>
-
-      <p>
-        Com 27 tarefas e 12 slots, a fila é drenada em <b>⌈27 / 12⌉ = 3 rodadas</b> — 12 + 12 + 3.
-        Como as tarefas têm durações diferentes e cada slot retira a próxima assim que fica livre,
-        o Tₚ real é o tempo do <b>slot mais ocupado</b>, não exatamente 3 × a duração média. A
-        estimativa serve de referência; a medição é o que entra nas fórmulas.
-      </p>
-
-      <h3 id="speedup">Cálculo do Speedup <a class="anchor" href="#speedup">#</a></h3>
-      <p>
-        As duas fórmulas aplicadas na ordem da aula, com os valores do último job concluído:
-      </p>
-
       <div class="formula" id="speedupConta">Carregando…</div>
 
-      <div class="note">
-        <p id="speedupResumo">Calculando…</p>
-      </div>
+      <p><b id="speedupResumo">Calculando…</b></p>
 
       <table>
-        <thead><tr><th>Grandeza</th><th>Valor</th><th>Origem</th></tr></thead>
+        <thead><tr><th>Valor</th><th>Resultado</th><th>De onde vem</th></tr></thead>
         <tbody id="speedupRows">
           <tr><td colspan="3" class="empty">Carregando…</td></tr>
         </tbody>
       </table>
 
-      <h3 id="pl-leitura">Leitura do resultado <a class="anchor" href="#pl-leitura">#</a></h3>
-      <ul>
-        <li>O teto usa <b>N = slots</b>, não a contagem de máquinas: quem executa em paralelo são
-          as requisições ao SIDRA, não os contêineres.</li>
-        <li>Com <b>P ≈ 1</b>, o teto é praticamente <b>N</b>: o speedup acompanha a escala linear
-          enquanto a fração sequencial for pequena.</li>
-        <li>A diferença entre <b>S</b> e <b>S_max</b> é o custo da distribuição: espera na fila,
-          ida e volta do callback, latência de rede e ramp-up do pool no início do job.</li>
-        <li>Se a fração sequencial crescer (por exemplo, um REDUCE mais pesado), o teto cai mesmo
-          com mais Workers — é o caso que a lei de Amdahl descreve.</li>
-      </ul>
-    </section>
-
-    <!-- ================= FONTES ================= -->
-    <section id="fontes">
-      <h2>Fontes dos diagramas <a class="anchor" href="#fontes">#</a></h2>
-      <p>
-        Os diagramas são gerados a partir dos arquivos <code>.puml</code> versionados no
-        repositório, com PlantUML. As imagens em PNG exibidas nesta página são geradas a partir
-        dos mesmos fontes.
+      <p class="muted" style="font-size:.8125rem">
+        Os números se atualizam a cada job: a página lê as medições do último job concluído.
       </p>
-      <table>
-        <thead><tr><th>Arquivo</th><th>Diagrama</th></tr></thead>
-        <tbody>
-          <tr><td class="mono">docs/diagrams/01-componentes.puml</td><td>Componentes</td></tr>
-          <tr><td class="mono">docs/diagrams/02-implantacao.puml</td><td>Implantação (topologia Docker)</td></tr>
-          <tr><td class="mono">docs/diagrams/03-sequencia.puml</td><td>Sequência (ciclo de vida do job)</td></tr>
-          <tr><td class="mono">docs/diagrams/04-classes.puml</td><td>Classes (modelo de domínio)</td></tr>
-          <tr><td class="mono">docs/diagrams/05-atividade.puml</td><td>Atividade (fluxo de execução)</td></tr>
-        </tbody>
-      </table>
-      <p>Para regerar as imagens (o script também copia os PNGs para a pasta servida pelo
-      Manager):</p>
-      <div class="formula">python scripts/render_diagrams.py --docker</div>
-      <p class="muted">Sem o Docker, <code>python scripts/render_diagrams.py</code> usa o
-      servidor público do PlantUML.</p>
     </section>
 
     <footer>
@@ -945,20 +551,9 @@ marcarAtivo();
 /* ---------- medições: nós, workers, distribuição, REDUCE e speedup ---------- */
 async function atualizar() {
   try {
-    const h = await (await fetch("/api/v1/health")).json();
-    $("#topo-workers").textContent = h.workers_ativos + " nós ativos";
-
     const wl = await (await fetch("/api/v1/workers")).json();
-    $("#wtable").innerHTML = wl.workers.length
-      ? wl.workers.map(x => `<tr>
-          <td class="mono">${esc(x.worker_id)}</td>
-          <td class="num">${x.capacity}</td>
-          <td class="num">${x.tasks_done}</td>
-          <td class="num">${x.tasks_failed}</td>
-          <td class="num">${ago(x.last_seen)}</td></tr>`).join("")
-      : `<tr><td colspan="5" class="empty">Nenhum worker ativo.</td></tr>`;
     const slots = wl.workers.reduce((a, x) => a + (x.capacity || 0), 0);
-    $("#p2").innerHTML = slots + "<small> tarefas em voo</small>";
+    $("#p2").textContent = slots;
 
     const lista = await (await fetch("/api/v1/jobs?limit=20")).json();
     const jobs = lista.jobs || [];
@@ -995,10 +590,6 @@ async function atualizar() {
     $("#jobinfo").textContent =
       `job ${j.job_id} · ${j.dataset} · ${j.status} · ${j.done_tasks}/${j.total_tasks} tarefas · `
       + `distribuição: ${Object.entries(dist).map(([w, n]) => w + "=" + n).join(", ")}`;
-
-    $("#p1").innerHTML = j.total_tasks + "<small> tarefas</small>";
-    $("#p1b").textContent =
-      `${j.total_tasks} UFs em paralelo, repartidas entre ${Object.keys(dist).length} workers.`;
 
     /* speedup */
     const soma = t.tasks.reduce((a, x) => a + (x.duration_ms || 0), 0);
@@ -1051,43 +642,7 @@ async function atualizar() {
     ];
     $("#speedupRows").innerHTML = linhasSp.map(([k, v, o]) =>
       `<tr><td>${k}</td><td class="num"><b>${v}</b></td><td class="muted">${o}</td></tr>`).join("");
-
-    /* o que o REDUCE calculou */
-    const r = await (await fetch(`/api/v1/jobs/${j.job_id}/results`)).json();
-    const s = r.summary;
-    if (!s) return;
-    const linhasR = [];
-    for (const [cat, data] of Object.entries(s.categorias || {})) {
-      const listaVars = Object.entries(data.variaveis || {}).map(([nome, v]) =>
-        `<b>${esc(nome)}</b>: ${nf(v.valor_agregado)} ${esc(v.unidade || "")}`
-      ).join("<br>");
-      const ranking = (data.ufs_lideres || []).slice(0, 5);
-      const maior = Math.max(1, ...ranking.map(x => x.valor || 0));
-      const hhi = data.concentracao_hhi;
-      const tag = hhi == null ? "" : hhi >= 0.25 ? "hi" : hhi >= 0.15 ? "md" : "lo";
-      const rot = hhi == null ? "—" : hhi >= 0.25 ? "alta" : hhi >= 0.15 ? "moderada" : "baixa";
-      linhasR.push(`<tr>
-        <td><b>${esc(cat)}</b></td>
-        <td>${listaVars || "—"}</td>
-        <td class="num">${hhi == null ? "—" : hhi.toFixed(3).replace(".", ",")}
-          <div><span class="tag ${tag}">${rot}</span></div></td>
-        <td>${ranking.map(x => `
-          <div style="display:flex;gap:8px;align-items:center;">
-            <span style="min-width:74px;">${esc(x.uf)}</span>
-            <span class="bar" style="flex:1"><i style="width:${100 * (x.valor || 0) / maior}%"></i></span>
-            <span class="num" style="min-width:96px;">${nf(x.valor)}${x.participacao_pct != null ? " (" + x.participacao_pct + "%)" : ""}</span>
-          </div>`).join("")}</td>
-      </tr>`);
-    }
-    $("#reduceRows").innerHTML = linhasR.join("") || `<tr><td colspan="4" class="empty">Sem job concluído ainda.</td></tr>`;
-    const cats = Object.keys(s.categorias || {});
-    const hh = cats.map(c => s.categorias[c].concentracao_hhi).filter(x => x != null);
-    $("#reduceinfo").textContent = cats.length
-      ? `${cats.join(", ")} — ${cats.length} categorias · ${s.registros} registros · ${s.ufs_analisadas} UFs`
-        + (hh.length ? ` · HHI médio ${(hh.reduce((a, b) => a + b, 0) / hh.length).toFixed(3).replace(".", ",")}` : "")
-      : "";
   } catch (e) {
-    $("#topo-workers").textContent = "indisponível";
     $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Sem medições disponíveis.</td></tr>`;
     $("#distConta").textContent = "Sem medições disponíveis.";
     $("#speedupConta").textContent = "Sem medições disponíveis.";

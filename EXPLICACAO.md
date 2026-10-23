@@ -1,181 +1,85 @@
-# Explicação do projeto
+# Ecossistema Distribuído
 
-## Objetivo
+Sistema que lê dados públicos do IBGE (SIDRA) e monta um relatório por Unidade da Federação.
+O trabalho é dividido entre várias máquinas, que executam ao mesmo tempo.
 
-Coletar os dados do **SIDRA (IBGE)** de forma **distribuída** e consolidar um relatório por
-Unidade da Federação: agregados, ranking, participação produtiva e concentração (HHI).
+## O básico
 
-## Componentes
+Cada pedido vira **27 tarefas**, uma por UF. Três processos participam:
 
-| Nó | Papel | Tecnologia | Arquivo |
-|----|-------|------------|---------|
-| **Manager** (1) | Fatia o job, publica tarefas, recebe resultados, roda o REDUCE | FastAPI, Uvicorn, SQLite | `src/manager/main.py` |
-| **Worker** (N) | Busca a UF no SIDRA, normaliza, devolve o resultado | asyncio, httpx, pandas | `src/worker/main.py` |
-| **Redis** (1) | Fila de trabalho (`RPUSH` / `BLPOP`), chave `sidra:tasks` | Redis 7 | `docker-compose.yml` |
-| **SIDRA/IBGE** | Fonte dos dados | API Geral (HTTPS/JSON) | — |
+| Processo | Papel |
+|----------|-------|
+| **Manager** | Cria as tarefas, recebe os resultados e monta o relatório |
+| **Redis** | Guarda a fila de tarefas |
+| **Workers** | Consultam o SIDRA e devolvem os dados ao Manager |
 
-O Manager não conhece os Workers. Os Workers não se conhecem. O contrato entre eles é a fila.
-
-## Fluxo de trabalho
-
-1. **Pedido** — `POST /api/v1/jobs` recebe o dataset (`lspa` ou `pim_pf`) e o período opcional.
-2. **Fatiamento** — o Manager consulta `p/last` no SIDRA quando o período não vem no pedido,
-   confere se o período responde com linhas no recorte pedido (nível N3, classificação e
-   categoria) e, se não responder, retrocede um mês. Com isso o job não fecha com relatório
-   vazio. Depois gera **uma tarefa por UF** (`dispatcher.build_tasks`).
-3. **Publicação** — as 27 tarefas entram na fila do Redis com `RPUSH` em pipeline.
-4. **Consumo** — cada Worker bloqueia em `BLPOP` e retira uma tarefa.
-5. **Coleta (MAP)** — o Worker consulta a API do SIDRA, converte os números pt-BR e normaliza
-   os registros com pandas.
-6. **Callback** — o Worker devolve os registros ao Manager (`POST /api/v1/internal/results`),
-   que grava no SQLite e conta a tarefa como concluída.
-7. **REDUCE** — com todas as tarefas concluídas, o Manager consolida os registros
-   (`analysis.reduce_results`).
-8. **Leitura** — a interface busca `GET /api/v1/results` e desenha as tabelas do relatório.
-
-## Paralelismo
-
-### Entre os nós
-
-- 27 tarefas independentes, uma por UF;
-- a fila reparte as tarefas entre os Workers, sem coordenação explícita;
-- `--scale worker=N` amplia o paralelismo sem alterar código.
-
-### Dentro do nó
-
-- **I/O (async)** — até `WORKER_CONCURRENCY` (4) requisições ao SIDRA em voo por Worker;
-- **CPU (thread)** — a normalização com pandas roda em `asyncio.to_thread` e não bloqueia o
-  event loop.
-
-Ambiente padrão: 3 Workers × 4 = 12 requisições simultâneas ao SIDRA.
-
-### Speedup
-
-As duas fórmulas são as da aula de Sistemas Distribuídos (professor Vitório). A primeira mede
-o ganho obtido; a segunda, o ganho possível:
+O Manager não chama os Workers diretamente: ele coloca as tarefas na fila e cada Worker
+retira uma quando fica livre. Um Worker não conhece os outros e não sabe quantos são.
 
 ```
-S        = T₁ / Tₚ
-S_max(N) = 1 / ((1 − P) + P / N)
+Manager ──► fila (Redis) ──► Workers ──► Manager
 ```
 
-`T₁` é o tempo que as 27 tarefas levariam somadas (uma após outra) mais a fração sequencial
-(o REDUCE); `Tₚ` é o tempo observado do job (`finished_at − started_at`). `P` é a fração
-paralelizável (0 a 1), `1 − P` é a fração sequencial e `N` é o número de unidades em paralelo.
-
-Com `P = 0,8` e `N = 4`, o teto é `1 / (0,2 + 0,2) = 2,5`; com `N = 16`, o mesmo programa chega
-a no máximo `1 / (0,2 + 0,05) ≈ 4`; com `N → ∞`, o limite é `1 / 0,2 = 5`.
-
-No sistema, `P` é medido a partir do job (`Σ durações / T₁`), `N` é o número de slots
-(Workers × `WORKER_CONCURRENCY` = 3 × 4 = 12) e o speedup observado é comparado com o teto.
-A distribuição segue a mesma conta: `⌈27 / 12⌉ = 3 rodadas` (12 + 12 + 3). A página
-`/painel/arquitetura` mostra as duas fórmulas preenchidas com os valores do último job
-concluído.
-
-## REDUCE
-
-Executado no Manager, depois que todas as tarefas terminam.
-
-| Indicador | Fórmula | Uso |
-|-----------|---------|-----|
-| **Soma** | `Σ valor(UF)` | variáveis aditivas (produção, área) |
-| **Média ponderada** | `Σ (valor × peso) / Σ peso` | variáveis de índice (preço, rendimento) |
-| **Participação** | `100 × valor(UF) / Σ valor(UF)` | quanto cada UF responde pelo total |
-| **HHI** | `Σ (participação / 100)²` | concentração: <0,15 baixa · 0,15–0,25 moderada · >0,25 alta |
-
-## Resiliência
-
-| Falha | Tratamento |
-|-------|------------|
-| SIDRA indisponível | retry exponencial no cliente: até `MAX_RETRIES` tentativas (3 por padrão), com esperas de 1 s e 2 s |
-| Callback falha | o Worker repete o envio com o mesmo backoff |
-| Tarefa falha | o Manager devolve a tarefa à fila com a tentativa incrementada (`_requeue`) |
-| Worker cai no meio da tarefa | a tarefa já saiu da fila e fica pendurada — limite conhecido do modelo *pull* sem *ack* |
-| Manager reinicia | jobs, tarefas e registros persistem no SQLite (volume `dados`) |
-
-Heartbeat a cada `HEARTBEAT_SECONDS` (10 s). Worker sem heartbeat há `WORKER_STALE_SECONDS`
-(30 s) sai da lista de ativos.
-
-## Dados
-
-| Chave | Pesquisa | Tabela | Classe | Variáveis |
-|-------|----------|--------|--------|-----------|
-| `lspa` | LSPA — Levantamento Sistemático da Produção Agrícola | 6588 | 48 | 35, 109, 216, 36 |
-| `pim_pf` | PIM-PF — Pesquisa Industrial Mensal (Produção Física) | 8888 | 544 | 12606, 11602 |
-
-Endpoint usado:
-
-```
-GET https://apisidra.ibge.gov.br/values/t/6588/n3/11/v/35,109,216,36/p/202609/c48/39443
-```
-
-- `n3/11` — nível Unidade da Federação, código 11 (Rondônia);
-- `v/…` — variáveis consultadas;
-- `p/202609` — período (AAAAMM); `p/last` devolve o último publicado;
-- `c48/39443` — classificação e categoria.
-
-## Execução
-
-```bash
-docker compose --profile demo build
-docker compose up -d
-docker compose --profile demo run --rm demo
-```
-
-Escala e limpeza:
+Isso permite aumentar a capacidade só subindo mais Workers:
 
 ```bash
 docker compose up -d --scale worker=5
-docker compose down -v
 ```
 
-## API
+## Paralelismo
 
-| Método | Rota | Função |
-|--------|------|--------|
-| `POST` | `/api/v1/jobs` | cria o job, fatia e despacha |
-| `GET` | `/api/v1/jobs` | lista os jobs |
-| `GET` | `/api/v1/jobs/{id}` | status e progresso |
-| `GET` | `/api/v1/jobs/{id}/tasks` | tarefas e distribuição por Worker |
-| `GET` | `/api/v1/jobs/{id}/results` | relatório do REDUCE |
-| `POST` | `/api/v1/internal/results` | callback do Worker |
-| `POST` | `/api/v1/workers/heartbeat` | heartbeat dos Workers |
-| `GET` | `/api/v1/workers` | Workers ativos e profundidade da fila |
-| `GET` | `/api/v1/health` | saúde do Manager, do Redis e dos Workers |
-| `GET` | `/api/v1/datasets` | pesquisas e categorias |
+Paralelismo é fazer várias partes do trabalho ao mesmo tempo. Aqui ele aparece em três lugares:
 
-Documentação interativa: `http://localhost:8000/docs`
+- **entre as máquinas** — as 27 tarefas são divididas entre os Workers;
+- **dentro de cada Worker** — até 4 consultas ao SIDRA ao mesmo tempo;
+- **dentro de cada tarefa** — a organização dos dados (pandas) roda em outra thread e não
+  trava as consultas.
 
-## Interface
+Com 3 Workers e 4 consultas cada, o sistema faz **12 consultas ao mesmo tempo**.
 
-| URL | Conteúdo |
-|-----|----------|
-| `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório (agregado, ranking de UFs, participação, HHI) e destaques |
-| `/painel/arquitetura` | documentação: arquitetura de solução, 5 diagramas UML, seção **Como funciona** (topologia, execução ao vivo, 8 etapas, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas) e seção **Paralelismo** com as duas fórmulas da aula (Speedup e Speedup Máximo) aplicadas aos valores do último job |
+### As duas fórmulas da aula
 
-Layout no padrão de documentação do MDN: cabeçalho fixo com **Painel** e **Documentação** à
-esquerda, ao lado do nome do projeto, e GitHub, API e o alternador de tema claro/escuro à
-direita; sumário lateral com âncoras e artigo em coluna única.
+Como aprendemos em aula com o professor **Vitório**:
 
-A página de leitura mostra apenas os dados: período, registros, UFs, agregados, ranking,
-participação, HHI e destaques. Nada de Workers, Manager, REDUCE, jobs ou filas — a
-complexidade interna do sistema fica na página de documentação. O histórico completo
-continua na API (`GET /api/v1/results`).
+```
+S        = T₁ / Tₚ                  Speedup: quanto ganhamos
+S_max(N) = 1 / ((1 − P) + P / N)    Speedup Máximo: quanto dá para ganhar
+```
 
-O botão **"Ver a infraestrutura trabalhando"** (seção "Como funciona" da documentação) dispara
-um job real e mostra o fluxo Manager → Redis → Workers → SIDRA → Manager com contadores e log
-de tarefas.
+- **T₁** — tempo em série, uma tarefa por vez;
+- **Tₚ** — tempo em paralelo;
+- **P** — parte do trabalho que dá para paralelizar (0 a 1);
+- **1 − P** — parte que só uma máquina pode fazer;
+- **N** — quantas tarefas rodam ao mesmo tempo.
 
-## Arquivos
+Exemplo da aula, com 80% do trabalho paralelizável (`P = 0,8`): 4 máquinas dão no máximo `2,5×`,
+16 dão `4×`, e nem infinitas máquinas passam de `5×`.
 
-| Caminho | Conteúdo |
-|---------|----------|
-| `src/common/datasets.py` | pesquisas do SIDRA, UFs, categorias |
-| `src/common/sidra.py` | cliente HTTP, retry, números pt-BR |
-| `src/common/models.py` | contratos (`JobRequest`, `Task`, `Record`) |
-| `src/manager/main.py` | API, despacho, callback, REDUCE |
-| `src/manager/dispatcher.py` | fatiamento por UF |
-| `src/manager/store.py` | persistência SQLite |
-| `src/manager/analysis.py` | REDUCE: somas, média ponderada, ranking, HHI |
-| `src/worker/main.py` | consumo da fila, paralelismo interno, heartbeat |
-| `src/worker/processor.py` | normalização dos registros |
+### Como aplicamos no sistema
+
+O sistema executa 12 tarefas ao mesmo tempo, então as 27 tarefas ocupam esses lugares em
+`⌈27 / 12⌉ = 3` rodadas (12 + 12 + 3).
+
+```
+T₁ = Σ durações das tarefas + REDUCE
+Tₚ = finished_at − started_at do job
+N  = Workers × WORKER_CONCURRENCY = 3 × 4 = 12
+S  = T₁ / Tₚ
+```
+
+`P` sai das próprias medições (`P = Σ durações / T₁`). Nada é estimado: a página
+`/painel/arquitetura` mostra as duas contas preenchidas com os tempos do último job concluído.
+
+## Como rodar
+
+```bash
+docker compose up -d --build      # Manager + 3 Workers + Redis
+```
+
+| Endereço | O que é |
+|----------|---------|
+| `http://localhost:8000/painel/` | painel com os dados |
+| `http://localhost:8000/painel/arquitetura` | documentação, incluindo o paralelismo |
+| `http://localhost:8000/docs` | API (Swagger) |
+
+Para parar: `docker compose down -v`.

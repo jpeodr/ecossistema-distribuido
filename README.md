@@ -60,12 +60,12 @@ http://localhost:8000/painel/arquitetura       # documentação: arquitetura, UM
   linguagem visual da documentação: cabeçalho fixo, tema claro/escuro e tabelas
   com borda. Mostra apenas os dados do resultado mais recente de cada pesquisa — o histórico
   completo fica na API.
-- **`/painel/arquitetura`** — documentação da solução: visão geral da topologia distribuída,
-  os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), a seção
-  **Como funciona** (topologia, execução ao vivo, as 8 etapas, quem executou cada UF, as
-  fórmulas do REDUCE, os arquivos e as falhas) e a seção **Paralelismo** — os três níveis de
-  aplicação, a distribuição das 27 tarefas nos 12 slots e as duas fórmulas da aula
-  (**Speedup** e **Speedup Máximo**) preenchidas com os valores do último job concluído.
+- **`/painel/arquitetura`** — documentação da solução, resumida: o básico do sistema
+  distribuído (Manager, Redis e Workers), os cinco diagramas UML (implantação, componentes,
+  sequência, classes e atividade), a seção **Como funciona** (execução ao vivo, as 8 etapas e
+  quem fez cada UF) e a seção **Paralelismo** — os três níveis, a distribuição das 27 tarefas
+  nos 12 slots e as duas fórmulas da aula (**Speedup** e **Speedup Máximo**) preenchidas com os
+  valores do último job concluído.
   A antiga `/painel/como-funciona` redireciona para cá. A página segue o padrão de documentação
   do MDN (cabeçalho fixo, sumário lateral, âncoras e alternador de tema claro/escuro) e tem o
   **modo ao vivo**: o botão *"Ver a infraestrutura trabalhando"* dispara um job real e mostra o
@@ -172,11 +172,10 @@ http://localhost:8000/painel/arquitetura      # documentação: arquitetura, UML
 A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados** e acompanha
 `X de 27 UFs · concluído` até as tabelas do relatório aparecerem.
 
-A segunda página documenta a solução: topologia distribuída, os cinco diagramas UML, a seção
-**Como funciona** (execução ao vivo, as 8 etapas do processamento, quem executou cada UF no
-último job, as fórmulas do REDUCE, os arquivos e as falhas) e a seção **Paralelismo** — os
-três níveis de aplicação, a distribuição das tarefas e as duas fórmulas da aula com os valores
-do último job concluído.
+A segunda página documenta a solução, sem excesso de detalhe: o básico (Manager, Redis e
+Workers), os cinco diagramas UML, a seção **Como funciona** (execução ao vivo, as 8 etapas do
+processamento e quem executou cada UF no último job) e a seção **Paralelismo** — os três níveis,
+a distribuição das tarefas e as duas fórmulas da aula com os valores do último job concluído.
 
 ### Passo 6 — Execute a demonstração completa (linha de comando)
 
