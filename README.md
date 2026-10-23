@@ -63,8 +63,9 @@ http://localhost:8000/painel/arquitetura       # documentação: arquitetura, UM
 - **`/painel/arquitetura`** — documentação da solução: visão geral da topologia distribuída,
   os cinco diagramas UML (implantação, componentes, sequência, classes e atividade), a seção
   **Como funciona** (topologia, execução ao vivo, as 8 etapas, quem executou cada UF, as
-  fórmulas do REDUCE, os arquivos e as falhas), os três níveis de paralelismo e o cálculo de
-  **speedup** (speedup observado e teto de Amdahl), com os valores medidos no último job.
+  fórmulas do REDUCE, os arquivos e as falhas) e a seção **Paralelismo** — os três níveis de
+  aplicação, a distribuição das 27 tarefas nos 12 slots e as duas fórmulas da aula
+  (**Speedup** e **Speedup Máximo**) preenchidas com os valores do último job concluído.
   A antiga `/painel/como-funciona` redireciona para cá. A página segue o padrão de documentação
   do MDN (cabeçalho fixo, sumário lateral, âncoras e alternador de tema claro/escuro) e tem o
   **modo ao vivo**: o botão *"Ver a infraestrutura trabalhando"* dispara um job real e mostra o
@@ -173,8 +174,9 @@ A primeira página mostra os dados: escolhe a pesquisa, clica em **Buscar dados*
 
 A segunda página documenta a solução: topologia distribuída, os cinco diagramas UML, a seção
 **Como funciona** (execução ao vivo, as 8 etapas do processamento, quem executou cada UF no
-último job, as fórmulas do REDUCE, os arquivos e as falhas), os três níveis de paralelismo e o
-cálculo de speedup com os valores medidos no último job.
+último job, as fórmulas do REDUCE, os arquivos e as falhas) e a seção **Paralelismo** — os
+três níveis de aplicação, a distribuição das tarefas e as duas fórmulas da aula com os valores
+do último job concluído.
 
 ### Passo 6 — Execute a demonstração completa (linha de comando)
 

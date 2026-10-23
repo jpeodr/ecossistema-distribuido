@@ -125,6 +125,7 @@
     margin: 3rem 0 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border);
   }
   .article h3 { font-size: 1.0625rem; font-weight: 700; margin: 2rem 0 .5rem; }
+  main section, main h2, main h3 { scroll-margin-top: 80px; }
   .article p { margin: 0 0 1rem; }
   .anchor { color: var(--border-strong); font-weight: 400; margin-left: 8px; opacity: 0; }
   h2:hover .anchor, h3:hover .anchor { opacity: 1; }
@@ -271,6 +272,7 @@
     border: 1px solid var(--border); border-left: 3px solid var(--violet); border-radius: var(--radius);
     padding: 12px 14px; margin: 12px 0; overflow-x: auto; white-space: pre;
   }
+  .kicker { font-size: .6875rem; letter-spacing: .07em; text-transform: uppercase; color: var(--txt-soft); }
   .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg); }
   .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
   .lvl { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--bg); }
@@ -342,8 +344,16 @@
             <li><a href="#cf-falhas">Falhas</a></li>
           </ol>
         </li>
-        <li><a href="#paralelismo">Paralelismo</a></li>
-        <li><a href="#speedup">Speedup</a></li>
+        <li>
+          <a href="#paralelismo">Paralelismo</a>
+          <ol class="sub">
+            <li><a href="#pl-niveis">Onde foi aplicado</a></li>
+            <li><a href="#pl-formulas">As duas fórmulas</a></li>
+            <li><a href="#pl-distribuicao">Distribuição das tarefas</a></li>
+            <li><a href="#speedup">Cálculo do Speedup</a></li>
+            <li><a href="#pl-leitura">Leitura do resultado</a></li>
+          </ol>
+        </li>
         <li><a href="#fontes">Fontes dos diagramas</a></li>
       </ol>
     </nav>
@@ -366,7 +376,8 @@
         <li><b>Um contêiner por nó</b>, rede bridge única, orquestração por Docker Compose.</li>
         <li><b>27 tarefas por job</b>, uma por Unidade da Federação, consumidas por qualquer Worker.</li>
         <li><b>Três níveis de paralelismo</b>: entre os nós, dentro do nó (I/O) e dentro da tarefa (CPU).</li>
-        <li><b>Speedup medido</b> contra o teto teórico da lei de Amdahl, com os números do último job.</li>
+        <li><b>Paralelismo com as fórmulas da aula</b>: <b>Speedup</b> e <b>Speedup Máximo</b>
+          aplicados às medições reais do último job.</li>
         <li><b>Modo ao vivo</b>: <a href="#cf-ao-vivo">ver a infraestrutura trabalhando</a> com um job real.</li>
       </ul>
     </div>
@@ -698,6 +709,15 @@ HHI       = Σ (part. % / 100)²</div>
     <section id="paralelismo">
       <h2>Paralelismo <a class="anchor" href="#paralelismo">#</a></h2>
       <p>
+        O objetivo do projeto é aplicar paralelismo em um sistema distribuído real: o job é
+        quebrado em <b>27 tarefas independentes</b> e executado por vários Workers ao mesmo tempo.
+        A avaliação usa as duas fórmulas da aula de Sistemas Distribuídos do professor
+        <b>Vitório</b> — <b>Speedup</b> e <b>Speedup Máximo</b> — com os tempos medidos pelo
+        próprio sistema.
+      </p>
+
+      <h3 id="pl-niveis">Onde o paralelismo foi aplicado <a class="anchor" href="#pl-niveis">#</a></h3>
+      <p>
         O paralelismo aparece em três níveis, com granularidades diferentes. Os três somam:
         o job é quebrado em tarefas independentes (nível 1), cada tarefa é executada junto de
         outras no mesmo processo (nível 2) e o trabalho de CPU de cada tarefa sai da thread de
@@ -725,16 +745,10 @@ HHI       = Σ (part. % / 100)²</div>
         </div>
       </div>
 
-      <h3>Como as tarefas se distribuem</h3>
       <p>
-        O Manager publica as 27 tarefas com um único <code>RPUSH</code> em pipeline. A fila é
-        compartilhada: qualquer Worker pode retirar qualquer tarefa, e a ordem de atendimento é
-        livre. Não há afinidade entre tarefa e Worker, nem estado compartilhado entre Workers.
-      </p>
-      <p>
-        Com 3 Workers e <code>WORKER_CONCURRENCY=4</code>, o ecossistema mantém 12 requisições
-        simultâneas ao SIDRA — 12 tarefas em voo ao mesmo tempo, cada uma em um processo
-        diferente.
+        A fila é compartilhada e não há afinidade entre tarefa e Worker: qualquer nó pode retirar
+        qualquer tarefa. Com 3 Workers e <code>WORKER_CONCURRENCY=4</code>, o ecossistema mantém
+        <b>12 tarefas em voo ao mesmo tempo</b>, cada uma em um processo diferente.
       </p>
 
       <div class="note">
@@ -744,56 +758,91 @@ HHI       = Σ (part. % / 100)²</div>
           thread de event loop.
         </p>
       </div>
-    </section>
 
-    <!-- ================= SPEEDUP ================= -->
-    <section id="speedup">
-      <h2>Speedup <a class="anchor" href="#speedup">#</a></h2>
+      <h3 id="pl-formulas">As duas fórmulas da aula <a class="anchor" href="#pl-formulas">#</a></h3>
       <p>
-        O speedup mede quanto mais rápido o job roda quando o trabalho é distribuído, em relação
-        à execução serial equivalente.
+        As duas respondem a perguntas diferentes: o <b>Speedup</b> mede o ganho obtido; o
+        <b>Speedup Máximo</b> mede o ganho possível com <b>N</b> unidades de processamento.
       </p>
 
-      <div class="formula">Speedup  S = T₁ / Tₚ
-
-T₁ = tempo serial de referência
-Tₚ = tempo observado com os Workers em paralelo</div>
-
-      <p>
-        A lei de Amdahl define o teto: uma fração sequencial do programa (<code>1 − P</code>) não
-        pode ser paralelizada e limita o ganho total.
-      </p>
-
-      <div class="formula">Speedup máximo  S_max(N) = 1 / ((1 − P) + P / N)
-
-P = fração paralelizável do programa (0 a 1)
-1 − P = fração sequencial, que não pode ser paralelizada
-N = número de processadores ou núcleos disponíveis</div>
-
-      <p>
-        Exemplo genérico: com 80% do programa paralelizável (<code>P = 0,8</code>) e 4
-        processadores (<code>N = 4</code>), <code>S_max = 1 / (0,2 + 0,2) = 2,5</code>. Com 16
-        processadores o mesmo programa chega a no máximo <code>1 / (0,2 + 0,05) ≈ 4</code> —
-        mais núcleos não resolvem a fração sequencial.
-      </p>
-
-      <h3>Aplicação no sistema</h3>
-      <p>
-        No ecossistema, a fração paralelizável é praticamente o job inteiro: as 27 tarefas são
-        independentes. O que sobra de sequencial é o REDUCE, executado uma única vez no Manager
-        quando a última tarefa chega.
-      </p>
-
-      <div class="formula">T₁ = Σ duração das 27 tarefas  +  t_REDUCE
-Tₚ = finished_at − started_at do job
-P  = (Σ duração das tarefas) / T₁
-N  = Workers × WORKER_CONCURRENCY  (3 × 4 = 12)
-S     = T₁ / Tₚ
-S_max = 1 / ((1 − P) + P / N)</div>
+      <div class="grid2">
+        <div class="card">
+          <div class="kicker">Fórmula 1 · ganho obtido</div>
+          <h3 style="margin-top:2px">Speedup</h3>
+          <div class="formula">S = T₁ / Tₚ</div>
+          <ul class="tight">
+            <li><b>T₁</b> — tempo de execução serial, sem paralelismo.</li>
+            <li><b>Tₚ</b> — tempo de execução com N unidades em paralelo.</li>
+            <li><b>S</b> — quantas vezes o sistema ficou mais rápido.</li>
+          </ul>
+          <p class="muted" style="font-size:.8125rem;margin:.75rem 0 0">
+            Leitura: <b>S = 4</b> significa que o job terminou em um quarto do tempo serial.
+          </p>
+        </div>
+        <div class="card">
+          <div class="kicker">Fórmula 2 · ganho máximo</div>
+          <h3 style="margin-top:2px">Speedup Máximo</h3>
+          <div class="formula">S_max(N) = 1 / ((1 − P) + P / N)</div>
+          <ul class="tight">
+            <li><b>P</b> — fração paralelizável do programa (0 a 1).</li>
+            <li><b>1 − P</b> — fração sequencial, que nenhum nó acelera.</li>
+            <li><b>N</b> — número de unidades de processamento em paralelo.</li>
+          </ul>
+          <p class="muted" style="font-size:.8125rem;margin:.75rem 0 0">
+            Leitura: com <b>P = 0,8</b> e <b>N = 4</b>, S_max = 1 / (0,2 + 0,2) = <b>2,5</b>.
+          </p>
+        </div>
+      </div>
 
       <p>
-        Os valores abaixo saem do último job executado (medições reais da API, não estimativas):
+        O comportamento da segunda fórmula, com <code>P = 0,8</code> — o mesmo exemplo resolvido
+        em aula:
       </p>
+
+      <div class="formula">N = 4     S_max = 1 / ((1 − 0,8) + 0,8 / 4)  = 1 / 0,40 = 2,5×
+N = 16    S_max = 1 / ((1 − 0,8) + 0,8 / 16) = 1 / 0,25 = 4,0×
+N → ∞     S_max = 1 / (1 − 0,8)              = 1 / 0,20 = 5,0×</div>
+
+      <p>
+        O último caso é o teto da fração sequencial: por mais nós que sejam adicionados, o ganho
+        não passa de <b>5×</b> enquanto <code>1 − P = 0,2</code>.
+      </p>
+
+      <div class="note">
+        <p>
+          <b>Da aula para o sistema.</b> Como aprendemos em aula com o professor Vitório, o
+          caminho é: medir <b>T₁</b>, medir <b>Tₚ</b>, calcular <b>S</b>, identificar <b>P</b> e
+          <b>N</b> e comparar <b>S</b> com <b>S_max</b>. Neste projeto T₁ e Tₚ não são estimados:
+          saem das durações das 27 tarefas e do tempo do job registrados no SQLite.
+        </p>
+      </div>
+
+      <h3 id="pl-distribuicao">Distribuição das tarefas <a class="anchor" href="#pl-distribuicao">#</a></h3>
+      <p>
+        O Manager publica as 27 tarefas com um único <code>RPUSH</code> em pipeline. Cada Worker
+        retira até <code>WORKER_CONCURRENCY</code> tarefas e o restante fica na fila. O
+        paralelismo efetivo é a divisão entre tarefas e slots:
+      </p>
+
+      <div class="formula" id="distConta">Carregando…</div>
+
+      <p>
+        Com 27 tarefas e 12 slots, a fila é drenada em <b>⌈27 / 12⌉ = 3 rodadas</b> — 12 + 12 + 3.
+        Como as tarefas têm durações diferentes e cada slot retira a próxima assim que fica livre,
+        o Tₚ real é o tempo do <b>slot mais ocupado</b>, não exatamente 3 × a duração média. A
+        estimativa serve de referência; a medição é o que entra nas fórmulas.
+      </p>
+
+      <h3 id="speedup">Cálculo do Speedup <a class="anchor" href="#speedup">#</a></h3>
+      <p>
+        As duas fórmulas aplicadas na ordem da aula, com os valores do último job concluído:
+      </p>
+
+      <div class="formula" id="speedupConta">Carregando…</div>
+
+      <div class="note">
+        <p id="speedupResumo">Calculando…</p>
+      </div>
 
       <table>
         <thead><tr><th>Grandeza</th><th>Valor</th><th>Origem</th></tr></thead>
@@ -802,20 +851,16 @@ S_max = 1 / ((1 − P) + P / N)</div>
         </tbody>
       </table>
 
-      <div class="note" id="speedup-nota">
-        <p>Comparando o speedup observado com o teto de Amdahl, a diferença é o custo da
-        distribuição: tempo de espera na fila, ida e volta do callback, latência de rede até o
-        SIDRA e o ramp-up do pool de tarefas no início do job.</p>
-      </div>
-
-      <h3>Leitura do resultado</h3>
+      <h3 id="pl-leitura">Leitura do resultado <a class="anchor" href="#pl-leitura">#</a></h3>
       <ul>
-        <li>O teto teórico é calculado com <code>N</code> slots, não com a contagem de máquinas:
-          quem executa em paralelo são as requisições ao SIDRA, não os contêineres.</li>
-        <li>Com <code>P ≈ 1</code>, o teto é praticamente <code>N</code>: o speedup acompanha a
-          escala linear enquanto a fração sequencial for pequena.</li>
-        <li>Se a fração sequencial crescer (por exemplo, um REDUCE mais pesado), o teto cai
-          mesmo com mais Workers — é o caso que a lei de Amdahl descreve.</li>
+        <li>O teto usa <b>N = slots</b>, não a contagem de máquinas: quem executa em paralelo são
+          as requisições ao SIDRA, não os contêineres.</li>
+        <li>Com <b>P ≈ 1</b>, o teto é praticamente <b>N</b>: o speedup acompanha a escala linear
+          enquanto a fração sequencial for pequena.</li>
+        <li>A diferença entre <b>S</b> e <b>S_max</b> é o custo da distribuição: espera na fila,
+          ida e volta do callback, latência de rede e ramp-up do pool no início do job.</li>
+        <li>Se a fração sequencial crescer (por exemplo, um REDUCE mais pesado), o teto cai mesmo
+          com mais Workers — é o caso que a lei de Amdahl descreve.</li>
       </ul>
     </section>
 
@@ -915,10 +960,14 @@ async function atualizar() {
     const slots = wl.workers.reduce((a, x) => a + (x.capacity || 0), 0);
     $("#p2").innerHTML = slots + "<small> tarefas em voo</small>";
 
-    const lista = await (await fetch("/api/v1/jobs?limit=1")).json();
-    const j = lista.jobs && lista.jobs[0];
+    const lista = await (await fetch("/api/v1/jobs?limit=20")).json();
+    const jobs = lista.jobs || [];
+    const j = jobs.find(x => x.status === "completed") || jobs[0];   // medições de um job fechado
     if (!j) {
       $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Nenhum job executado ainda.</td></tr>`;
+      $("#distConta").textContent = "Nenhum job executado ainda.";
+      $("#speedupConta").textContent = "Nenhum job executado ainda.";
+      $("#speedupResumo").textContent = "Execute um job no painel para ver o cálculo com os tempos reais.";
       return;
     }
 
@@ -960,6 +1009,35 @@ async function atualizar() {
     const P = T1 ? (soma / 1000) / T1 : 0;
     const S = T1 / Tp;
     const Smax = slots ? 1 / ((1 - P) + P / slots) : null;
+
+    /* distribuição: tarefas × slots */
+    const duracoes = t.tasks.map(x => x.duration_ms || 0).filter(x => x > 0);
+    const media = duracoes.reduce((a, b) => a + b, 0) / (duracoes.length || 1);
+    const nWorkers = wl.workers.length || Object.keys(dist).length || 1;
+    const porSlot = Math.round(slots / nWorkers) || 1;
+    const rodadas = slots ? Math.ceil(j.total_tasks / slots) : 0;
+    const ideal = rodadas * media;
+
+    $("#distConta").textContent =
+      `tarefas           = ${j.total_tasks}        (uma por UF)\n`
+      + `slots em paralelo = ${nWorkers} Workers × ${porSlot} = ${slots}\n`
+      + `rodadas           = ⌈${j.total_tasks} / ${slots}⌉ = ${rodadas}\n`
+      + `duração média     = ${ms(media)}\n`
+      + `estimativa        = ${rodadas} × ${ms(media)} = ${ms(ideal)}   (rodadas × média)\n`
+      + `tempo observado   = ${ms(Tp * 1000)}        (Tₚ)`;
+
+    /* as duas fórmulas, com os números do job */
+    $("#speedupConta").textContent =
+      `T₁    = Σ durações + t_REDUCE     = ${ms(soma)} + ${ms(reduceMs)} = ${nf(T1)} s\n`
+      + `Tₚ    = finished_at − started_at = ${nf(Tp)} s\n`
+      + `S     = T₁ / Tₚ                  = ${nf(T1)} / ${nf(Tp)} = ${nf(S)}×\n`
+      + `P     = Σ durações / T₁          = ${nf(soma / 1000)} / ${nf(T1)} = ${nf(P, 3)}\n`
+      + `S_max = 1 / ((1 − P) + P / N)    = 1 / (${nf(1 - P, 3)} + ${nf(P, 3)} / ${slots}) = ${Smax === null ? "—" : nf(Smax) + "×"}`;
+
+    $("#speedupResumo").textContent = Smax === null
+      ? `T₁ = ${nf(T1)} s em série; Tₚ = ${nf(Tp)} s em paralelo.`
+      : `O job terminou em ${nf(Tp)} s contra ${nf(T1)} s em série: speedup de ${nf(S)}×, `
+        + `${nf(100 * S / Smax, 1)}% do teto de ${nf(Smax)}× calculado para ${slots} slots.`;
 
     const linhasSp = [
       ["Σ duração das tarefas (trabalho paralelo)", ms(soma), "soma de <code>duration_ms</code> das tarefas do job"],
@@ -1011,6 +1089,9 @@ async function atualizar() {
   } catch (e) {
     $("#topo-workers").textContent = "indisponível";
     $("#speedupRows").innerHTML = `<tr><td colspan="3" class="empty">Sem medições disponíveis.</td></tr>`;
+    $("#distConta").textContent = "Sem medições disponíveis.";
+    $("#speedupConta").textContent = "Sem medições disponíveis.";
+    $("#speedupResumo").textContent = "Sem medições disponíveis.";
   }
 }
 

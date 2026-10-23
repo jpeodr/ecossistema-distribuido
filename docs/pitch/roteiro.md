@@ -83,8 +83,12 @@ Enfatizar o **MapReduce**:
 | Estado | SQLite (volume) | Fonte da verdade do Manager |
 | Orquestração | Docker Compose | Topologia explícita: manager / worker ×3 / redis |
 
-> "O paralelismo aparece em dois níveis: **entre nós** (a fila reparte 27 tarefas entre os
-> Workers) e **dentro do nó** (assíncrono para I/O, thread para CPU)."
+> "O paralelismo aparece em três níveis: **entre nós** (a fila reparte as 27 tarefas entre os
+> Workers), **dentro do nó** (assíncrono para I/O) e **dentro da tarefa** (thread para CPU)."
+
+> "A avaliação usa as duas fórmulas da aula: **Speedup** S = T₁ / Tₚ e **Speedup Máximo**
+> S_max = 1 / ((1 − P) + P / N). As duas aparecem preenchidas com os tempos do último job na
+> seção **Paralelismo** da documentação."
 
 ---
 
@@ -105,8 +109,10 @@ http://localhost:8000/painel/arquitetura      # 2) arquitetura, UML, fluxo ao vi
 1. em `/painel/`, clicar em **"Buscar dados"** (pesquisa LSPA, período = último publicado);
 2. o status sobe de `0 de 27 UFs` a `27 de 27 UFs · concluído` — é o paralelismo acontecendo;
 3. as tabelas do **relatório (REDUCE)** aparecem: agregados, ranking de UF, participação e HHI;
-4. em `/painel/arquitetura`, rolar até **"Speedup"**: as fórmulas (speedup e teto de Amdahl) e
-   os valores medidos no último job — o speedup observado contra o teto teórico;
+4. em `/painel/arquitetura`, rolar até **"Paralelismo"**: as duas fórmulas — **Speedup**
+   (S = T₁ / Tₚ) e **Speedup Máximo** (S_max = 1 / ((1 − P) + P / N)) — com a conta preenchida
+   pelos tempos do último job, a distribuição das 27 tarefas nos 12 slots (3 rodadas) e o
+   speedup observado contra o teto;
 5. na seção **"Como funciona"**, clicar em **"▶ Ver a infraestrutura trabalhando"**:
    a topologia anima o fluxo real (Manager → Redis → Workers → SIDRA → Manager), os contadores
    sobem (despachadas / em voo / concluídas / fila) e o log mostra cada UF concluída por um worker;

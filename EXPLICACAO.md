@@ -51,28 +51,26 @@ Ambiente padrão: 3 Workers × 4 = 12 requisições simultâneas ao SIDRA.
 
 ### Speedup
 
-O speedup compara o tempo paralelo com o tempo serial equivalente:
+As duas fórmulas são as da aula de Sistemas Distribuídos (professor Vitório). A primeira mede
+o ganho obtido; a segunda, o ganho possível:
 
 ```
-S = T₁ / Tₚ
-```
-
-`T₁` é o tempo que as 27 tarefas levariam somadas (uma após outra) mais a fração sequencial
-(o REDUCE); `Tₚ` é o tempo observado do job (`finished_at − started_at`).
-
-O teto vem da lei de Amdahl:
-
-```
+S        = T₁ / Tₚ
 S_max(N) = 1 / ((1 − P) + P / N)
 ```
 
-`P` é a fração paralelizável do programa (0 a 1), `1 − P` é a fração sequencial que não pode
-ser paralelizada e `N` é o número de processadores disponíveis. Com `P = 0,8` e `N = 4`, o teto
-é `1 / (0,2 + 0,2) = 2,5`; com `N = 16`, o mesmo programa chega a no máximo `1 / (0,2 + 0,05) ≈ 4`.
+`T₁` é o tempo que as 27 tarefas levariam somadas (uma após outra) mais a fração sequencial
+(o REDUCE); `Tₚ` é o tempo observado do job (`finished_at − started_at`). `P` é a fração
+paralelizável (0 a 1), `1 − P` é a fração sequencial e `N` é o número de unidades em paralelo.
+
+Com `P = 0,8` e `N = 4`, o teto é `1 / (0,2 + 0,2) = 2,5`; com `N = 16`, o mesmo programa chega
+a no máximo `1 / (0,2 + 0,05) ≈ 4`; com `N → ∞`, o limite é `1 / 0,2 = 5`.
 
 No sistema, `P` é medido a partir do job (`Σ durações / T₁`), `N` é o número de slots
-(Workers × `WORKER_CONCURRENCY`) e o speedup observado é comparado com o teto. A página
-`/painel/arquitetura` mostra os valores do último job.
+(Workers × `WORKER_CONCURRENCY` = 3 × 4 = 12) e o speedup observado é comparado com o teto.
+A distribuição segue a mesma conta: `⌈27 / 12⌉ = 3 rodadas` (12 + 12 + 3). A página
+`/painel/arquitetura` mostra as duas fórmulas preenchidas com os valores do último job
+concluído.
 
 ## REDUCE
 
@@ -153,7 +151,7 @@ Documentação interativa: `http://localhost:8000/docs`
 | URL | Conteúdo |
 |-----|----------|
 | `/painel/` | leitura: pesquisa, botão **Buscar dados**, tabelas do relatório (agregado, ranking de UFs, participação, HHI) e destaques |
-| `/painel/arquitetura` | documentação: arquitetura de solução, 5 diagramas UML, seção **Como funciona** (topologia, execução ao vivo, 8 etapas, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas), paralelismo e cálculo de speedup |
+| `/painel/arquitetura` | documentação: arquitetura de solução, 5 diagramas UML, seção **Como funciona** (topologia, execução ao vivo, 8 etapas, quem executou cada UF, fórmulas do REDUCE, arquivos, falhas) e seção **Paralelismo** com as duas fórmulas da aula (Speedup e Speedup Máximo) aplicadas aos valores do último job |
 
 Layout no padrão de documentação do MDN: cabeçalho fixo com **Painel** e **Documentação** à
 esquerda, ao lado do nome do projeto, e GitHub, API e o alternador de tema claro/escuro à

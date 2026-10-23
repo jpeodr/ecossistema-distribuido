@@ -116,7 +116,7 @@ O Manager serve duas páginas estáticas, em `/painel/`:
 | Página | Arquivo | Papel |
 |--------|---------|-------|
 | Leitura | `src/manager/static/index.html` | escolhe a pesquisa, dispara a coleta e mostra as tabelas do relatório |
-| Documentação | `src/manager/static/arquitetura.html` | arquitetura de solução, diagramas UML, seção **Como funciona** (topologia, execução ao vivo, fluxo de trabalho em 8 etapas, quem fez o quê, REDUCE, arquivos e falhas), paralelismo e cálculo de speedup |
+| Documentação | `src/manager/static/arquitetura.html` | arquitetura de solução, diagramas UML, seção **Como funciona** (topologia, execução ao vivo, fluxo de trabalho em 8 etapas, quem fez o quê, REDUCE, arquivos e falhas) e seção **Paralelismo** (as duas fórmulas da aula — Speedup e Speedup Máximo — aplicadas ao último job) |
 
 Características comuns:
 
