@@ -1,0 +1,124 @@
+# =============================================================================
+# AgroData Distribuído — topologia base (Etapa 1)
+#
+# Nesta etapa os serviços estão "vazios": apenas imagem, portas e rede.
+# As aplicações (manager/worker) ainda não têm Dockerfile, por isso sobem com
+# uma imagem Python genérica em modo ocioso (sleep infinity) só para validar
+# que todos os containers sobem. As etapas seguintes substituem isso por
+# build: ./manager e build: ./worker.
+# =============================================================================
+
+name: agrodata
+
+services:
+  # ---------------------------------------------------------------------------
+  # Mensageria
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: agrodata-rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"        # AMQP
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672" # painel de administração
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    networks:
+      - agrodata_net
+
+  # ---------------------------------------------------------------------------
+  # Cluster MySQL — 1 master (escrita) + 3 slaves (leitura)
+  # Porta interna sempre 3306; no host o master é exposto em 3310 e os
+  # slaves em 3307, 3308 e 3309.
+  # ---------------------------------------------------------------------------
+  mysql_master:
+    image: mysql:8.0
+    container_name: agrodata-mysql-master
+    ports:
+      - "${MYSQL_MASTER_PORT:-3310}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
+      MYSQL_USER: ${MYSQL_USER:-agro}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+    networks:
+      - agrodata_net
+
+  mysql_slave1:
+    image: mysql:8.0
+    container_name: agrodata-mysql-slave1
+    ports:
+      - "${MYSQL_SLAVE1_PORT:-3307}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+    networks:
+      - agrodata_net
+
+  mysql_slave2:
+    image: mysql:8.0
+    container_name: agrodata-mysql-slave2
+    ports:
+      - "${MYSQL_SLAVE2_PORT:-3308}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+    networks:
+      - agrodata_net
+
+  mysql_slave3:
+    image: mysql:8.0
+    container_name: agrodata-mysql-slave3
+    ports:
+      - "${MYSQL_SLAVE3_PORT:-3309}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+    networks:
+      - agrodata_net
+
+  # ---------------------------------------------------------------------------
+  # Nó coordenador (FastAPI) — placeholder
+  # ---------------------------------------------------------------------------
+  manager:
+    image: python:3.12-slim
+    container_name: agrodata-manager
+    command: ["sleep", "infinity"]
+    ports:
+      - "${MANAGER_PORT:-8000}:8000"
+    networks:
+      - agrodata_net
+
+  # ---------------------------------------------------------------------------
+  # Nós de processamento — placeholders
+  # ---------------------------------------------------------------------------
+  worker1:
+    image: python:3.12-slim
+    container_name: agrodata-worker1
+    command: ["sleep", "infinity"]
+    environment:
+      WORKER_ID: worker1
+      WORKER_THREADS: ${WORKER_THREADS:-4}
+    networks:
+      - agrodata_net
+
+  worker2:
+    image: python:3.12-slim
+    container_name: agrodata-worker2
+    command: ["sleep", "infinity"]
+    environment:
+      WORKER_ID: worker2
+      WORKER_THREADS: ${WORKER_THREADS:-4}
+    networks:
+      - agrodata_net
+
+  worker3:
+    image: python:3.12-slim
+    container_name: agrodata-worker3
+    command: ["sleep", "infinity"]
+    environment:
+      WORKER_ID: worker3
+      WORKER_THREADS: ${WORKER_THREADS:-4}
+    networks:
+      - agrodata_net
+
+networks:
+  agrodata_net:
+    driver: bridge
