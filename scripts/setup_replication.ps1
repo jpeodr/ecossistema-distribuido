@@ -8,7 +8,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Carrega variáveis do .env se existir
 if (Test-Path ".env") {
     Get-Content ".env" | ForEach-Object {
         $line = $_.Trim()
@@ -34,7 +33,7 @@ function Wait-MySqlReady {
     param([string]$Container)
     Write-Host -NoNewline "Aguardando $Container ficar pronto"
     for ($i = 0; $i -lt 60; $i++) {
-        $null = docker exec $Container mysqladmin ping -uroot -p"$RootPass" --silent 2>$null
+        $null = docker exec -e MYSQL_PWD="$RootPass" $Container mysqladmin ping -uroot --silent 2>$null
         if ($LASTEXITCODE -eq 0) {
             Write-Host " [OK]" -ForegroundColor Green
             return
@@ -46,21 +45,19 @@ function Wait-MySqlReady {
     exit 1
 }
 
-# 1. Aguarda o Master e os 3 Slaves subirem
+# 1. Aguarda Master e Slaves ficarem operacionais
 Wait-MySqlReady -Container $MasterContainer
 foreach ($slave in $Slaves) {
     Wait-MySqlReady -Container $slave
 }
 
-# 2. Garante que o schema e usuários existam no Master
+# 2. Garante schema e usuário de replicação no Master
 Write-Host "`n-> Garantindo schema e usuário de replicação no Master ($MasterContainer)..." -ForegroundColor Yellow
-Get-Content -Raw "scripts/init_master.sql" | docker exec -i $MasterContainer mysql -uroot -p"$RootPass"
+Get-Content -Raw "scripts/init_master.sql" | docker exec -e MYSQL_PWD="$RootPass" -i $MasterContainer mysql -uroot
 
-# 3. Configura cada Slave para replicar do Master via GTID
+# 3. Aponta cada Slave para o Master via GTID
 foreach ($slave in $Slaves) {
     Write-Host "`n-> Configurando replicação em $slave..." -ForegroundColor Yellow
-
-    Get-Content -Raw "scripts/init_master.sql" | docker exec -i $slave mysql -uroot -p"$RootPass"
 
     $sql = @"
 STOP REPLICA;
@@ -76,18 +73,19 @@ CHANGE REPLICATION SOURCE TO
 START REPLICA;
 SET GLOBAL read_only = ON;
 "@
-    docker exec $slave mysql -uroot -p"$RootPass" -e $sql
+    docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -e $sql
 }
 
-# 4. Aguarda sincronização inicial e exibe o status dos Slaves
-Start-Sleep -Seconds 2
+# 4. Aguarda sincronização inicial dos dados
+Start-Sleep -Seconds 3
+
 Write-Host "`n========================================================================" -ForegroundColor Cyan
 Write-Host " Status da Replicação nos Slaves" -ForegroundColor Cyan
 Write-Host "========================================================================" -ForegroundColor Cyan
 
 foreach ($slave in $Slaves) {
     Write-Host "--- $slave ---" -ForegroundColor Green
-    $status = docker exec $slave mysql -uroot -p"$RootPass" -e "SHOW REPLICA STATUS\G" 2>$null
+    $status = docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -e "SHOW REPLICA STATUS\G" 2>$null
     $status | Select-String -Pattern "Replica_IO_State:|Source_Host:|Replica_IO_Running:|Replica_SQL_Running:|Seconds_Behind_Source:|Last_Error:" | ForEach-Object {
         Write-Host $_.Line
     }
@@ -96,7 +94,7 @@ foreach ($slave in $Slaves) {
 
 Write-Host "Replicação configurada com sucesso!" -ForegroundColor Green
 
-# 5. Teste opcional de replicação (-Test)
+# 5. Executa teste de gravação no Master e leitura nos Slaves
 if ($Test) {
     Write-Host "`n========================================================================" -ForegroundColor Cyan
     Write-Host " Testando Replicação: Inserindo registro no Master e lendo nos Slaves" -ForegroundColor Cyan
@@ -112,12 +110,11 @@ ON DUPLICATE KEY UPDATE
   area_colhida = VALUES(area_colhida),
   worker_id = VALUES(worker_id);
 "@
-    docker exec $MasterContainer mysql -uroot -p"$RootPass" -D agrodata -e $insertSql
+    docker exec -e MYSQL_PWD="$RootPass" $MasterContainer mysql -uroot -D agrodata -e $insertSql
     Start-Sleep -Seconds 1
 
     foreach ($slave in $Slaves) {
         Write-Host "--- Dados replicados em $slave ---" -ForegroundColor Green
-        docker exec $slave mysql -uroot -p"$RootPass" -D agrodata -e "SELECT id, uf, produto, periodo, producao, rendimento, worker_id, coletado_em FROM producao_agricola WHERE worker_id = 'test-replication';"
+        docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -D agrodata -e "SELECT id, uf, produto, periodo, producao, rendimento, worker_id, coletado_em FROM producao_agricola WHERE worker_id = 'test-replication';"
     }
 }
-
