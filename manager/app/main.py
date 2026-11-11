@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import pika
+import mysql.connector
 from app import config, producer, db_router
 
 app = FastAPI(
@@ -8,6 +9,93 @@ app = FastAPI(
     description="Nó coordenador do sistema distribuído IBGE/SIDRA",
     version="1.0.0"
 )
+
+# ---------------------------------------------------------------------------
+# Helpers internos
+# ---------------------------------------------------------------------------
+
+def _get_queue_info() -> dict:
+    """Retorna status e contagem de mensagens da fila RabbitMQ."""
+    try:
+        creds = pika.PlainCredentials(config.RABBITMQ_USER, config.RABBITMQ_PASS)
+        conn = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host=config.RABBITMQ_HOST,
+                port=config.RABBITMQ_PORT,
+                credentials=creds,
+                connection_attempts=2,
+                retry_delay=1,
+            )
+        )
+        ch = conn.channel()
+        q = ch.queue_declare(queue=config.RABBITMQ_QUEUE, durable=True, passive=True)
+        dlq = ch.queue_declare(queue=config.RABBITMQ_DLQ, durable=True, passive=True)
+        conn.close()
+        return {
+            "status": "ONLINE",
+            "fila_principal": config.RABBITMQ_QUEUE,
+            "mensagens_pendentes": q.method.message_count,
+            "dlq": config.RABBITMQ_DLQ,
+            "mensagens_dlq": dlq.method.message_count,
+        }
+    except Exception as e:
+        return {"status": "OFFLINE", "mensagens_pendentes": 0, "mensagens_dlq": 0, "erro": str(e)}
+
+
+def _get_replication_status() -> list[dict]:
+    """Verifica SHOW REPLICA STATUS em cada slave."""
+    resultados = []
+    for slave_host in config.SLAVES:
+        info = {"host": slave_host, "online": False}
+        try:
+            conn = mysql.connector.connect(
+                host=slave_host,
+                port=config.MYSQL_PORT,
+                user="root",
+                password=config.MYSQL_ROOT_PASSWORD,
+                database=config.MYSQL_DB,
+                connect_timeout=3,
+            )
+            cur = conn.cursor(dictionary=True)
+            cur.execute("SHOW REPLICA STATUS")
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            if row:
+                info.update({
+                    "online": True,
+                    "io_running": row.get("Replica_IO_Running") or row.get("Slave_IO_Running", "?"),
+                    "sql_running": row.get("Replica_SQL_Running") or row.get("Slave_SQL_Running", "?"),
+                    "seconds_behind": row.get("Seconds_Behind_Source") or row.get("Seconds_Behind_Master", "?"),
+                    "last_error": row.get("Last_Error") or row.get("Last_SQL_Error", ""),
+                })
+            else:
+                info.update({"online": True, "io_running": "N/A", "sql_running": "N/A", "seconds_behind": "N/A"})
+        except Exception as e:
+            info["erro"] = str(e)
+        resultados.append(info)
+    return resultados
+
+
+# ---------------------------------------------------------------------------
+# Endpoints JSON (usados pelo painel e por integrações externas)
+# ---------------------------------------------------------------------------
+
+@app.get("/health", summary="Healthcheck do container")
+def health():
+    """Responde 200 OK se o processo está rodando — usado pelo Docker healthcheck."""
+    return {"status": "ok"}
+
+
+@app.get("/api/queue", response_class=JSONResponse, summary="Status da fila RabbitMQ (JSON)")
+def api_queue():
+    return _get_queue_info()
+
+
+@app.get("/api/replication", response_class=JSONResponse, summary="Status de replicação MySQL (JSON)")
+def api_replication():
+    return {"slaves": _get_replication_status()}
+
 
 BASE_CSS = """
 <style>
@@ -109,43 +197,125 @@ def home():
         <title>AgroData Distribuído — Manager</title>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
         {BASE_CSS}
+        <style>
+            .stats-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }}
+            .stat-card {{
+                background: #0d1626;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 1rem 1.25rem;
+            }}
+            .stat-label {{ font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 0.4rem; }}
+            .stat-value {{ font-size: 1.6rem; font-weight: 700; font-family: var(--font-mono); color: #fff; }}
+            .stat-sub {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }}
+            .dot {{ display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }}
+            .dot-green {{ background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }}
+            .dot-red {{ background: var(--accent-red); }}
+            .dot-yellow {{ background: #f59e0b; }}
+        </style>
     </head>
     <body>
         <div class="container">
             <header>
                 <div>
                     <h1 class="brand-title">AgroData Distribuído</h1>
-                    <p class="brand-subtitle">Nó Coordenador (Manager)</p>
+                    <p class="brand-subtitle">Nó Coordenador (Manager) — Painel ao Vivo</p>
                 </div>
-                <span class="badge badge-green">Manager Ativo</span>
+                <span class="badge badge-green"><span class="dot dot-green"></span>Manager Ativo</span>
             </header>
+
+            <!-- Cards de status ao vivo -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Fila RabbitMQ</div>
+                    <div class="stat-value" id="rmq-status">...</div>
+                    <div class="stat-sub" id="rmq-msgs">carregando</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mensagens Pendentes</div>
+                    <div class="stat-value" id="rmq-pending">-</div>
+                    <div class="stat-sub">na fila principal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">DLQ (Erros)</div>
+                    <div class="stat-value" id="rmq-dlq" style="color: var(--accent-red);">-</div>
+                    <div class="stat-sub">mensagens na DLQ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Replicação MySQL</div>
+                    <div class="stat-value" id="rep-status">...</div>
+                    <div class="stat-sub" id="rep-sub">verificando slaves</div>
+                </div>
+            </div>
 
             <div class="card">
                 <h2 class="card-title">Orquestração de Coleta</h2>
                 <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 1.5rem;">
-                    Divida a carga de processamento nacional do IBGE/SIDRA em 27 tarefas independentes (uma por UF) e distribua na fila do RabbitMQ.
+                    Divide a coleta nacional do IBGE/SIDRA em <strong style="color:#fff;">27 tarefas</strong> independentes (uma por UF)
+                    e distribui na fila do RabbitMQ para processamento paralelo pelos workers.
                 </p>
                 <form action="/coletar" method="post">
-                    <button type="submit" class="btn">Disparar Coleta Distribuída (27 UFs)</button>
+                    <button type="submit" class="btn">&#9654; Disparar Coleta Distribuída (27 UFs)</button>
                 </form>
             </div>
 
             <div class="card">
                 <h2 class="card-title">Painéis de Monitoramento</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                    <a href="/status" class="btn btn-secondary">Status da Infra</a>
-                    <a href="/dados/resumo" class="btn btn-secondary">Dados Coletados</a>
-                    <a href="/coletas" class="btn btn-secondary">Logs dos Workers</a>
-                    <a href="/docs" class="btn btn-secondary">Swagger API</a>
+                    <a href="/status" class="btn btn-secondary">&#128202; Status da Infra</a>
+                    <a href="/dados/resumo" class="btn btn-secondary">&#128200; Dados Coletados</a>
+                    <a href="/coletas" class="btn btn-secondary">&#128203; Logs dos Workers</a>
+                    <a href="http://localhost:15672" target="_blank" class="btn btn-secondary">&#128030; RabbitMQ UI</a>
+                    <a href="/docs" class="btn btn-secondary">&#128214; Swagger API</a>
                 </div>
             </div>
 
-            <footer>Ecossistema Distribuído — Coleta IBGE/SIDRA</footer>
+            <footer>Ecossistema Distribuído — Coleta IBGE/SIDRA &nbsp;|&nbsp; <span id="last-update"></span></footer>
         </div>
+
+        <script>
+            async function atualizarStatus() {{
+                // Fila RabbitMQ
+                try {{
+                    const q = await fetch('/api/queue').then(r => r.json());
+                    const online = q.status === 'ONLINE';
+                    document.getElementById('rmq-status').textContent = online ? '✔ ONLINE' : '✖ OFFLINE';
+                    document.getElementById('rmq-status').style.color = online ? 'var(--accent-green)' : 'var(--accent-red)';
+                    document.getElementById('rmq-pending').textContent = q.mensagens_pendentes ?? '-';
+                    document.getElementById('rmq-dlq').textContent = q.mensagens_dlq ?? '-';
+                    document.getElementById('rmq-msgs').textContent = online ? 'conexão OK' : (q.erro || 'offline');
+                }} catch(e) {{
+                    document.getElementById('rmq-status').textContent = '✖ ERRO';
+                    document.getElementById('rmq-status').style.color = 'var(--accent-red)';
+                }}
+
+                // Replicação MySQL
+                try {{
+                    const r = await fetch('/api/replication').then(r => r.json());
+                    const slaves = r.slaves || [];
+                    const okCount = slaves.filter(s => s.online && String(s.io_running).toUpperCase() === 'YES' && String(s.sql_running).toUpperCase() === 'YES').length;
+                    document.getElementById('rep-status').textContent = okCount + '/' + slaves.length;
+                    document.getElementById('rep-status').style.color = okCount === slaves.length ? 'var(--accent-green)' : 'var(--accent-red)';
+                    document.getElementById('rep-sub').textContent = 'slaves replicando OK';
+                }} catch(e) {{
+                    document.getElementById('rep-status').textContent = '?';
+                    document.getElementById('rep-sub').textContent = 'erro ao verificar';
+                }}
+
+                document.getElementById('last-update').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+            }}
+
+            atualizarStatus();
+            setInterval(atualizarStatus, 8000);  // atualiza a cada 8s
+        </script>
     </body>
     </html>
     """
-
 
 @app.post("/coletar", response_class=HTMLResponse, summary="Disparar a coleta distribuída")
 def coletar():
@@ -186,33 +356,51 @@ def coletar():
 
 @app.get("/status", response_class=HTMLResponse, summary="Status das filas e do banco")
 def status():
-    queue_info = {"status": "OFFLINE", "mensagens_pendentes": 0}
-    try:
-        creds = pika.PlainCredentials(config.RABBITMQ_USER, config.RABBITMQ_PASS)
-        conn = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=config.RABBITMQ_HOST,
-                port=config.RABBITMQ_PORT,
-                credentials=creds,
-                connection_attempts=2,
-                retry_delay=1
-            )
-        )
-        ch = conn.channel()
-        q = ch.queue_declare(queue=config.RABBITMQ_QUEUE, durable=True, passive=True)
-        queue_info = {"status": "ONLINE", "mensagens_pendentes": q.method.message_count}
-        conn.close()
-    except Exception as e:
-        queue_info["erro"] = str(e)
+    queue_info = _get_queue_info()
+    replication = _get_replication_status()
 
     badge_rmq = '<span class="badge badge-green">ONLINE</span>' if queue_info["status"] == "ONLINE" else '<span class="badge badge-red">OFFLINE</span>'
-    slaves_list = "".join([f"<li><code>{s}</code></li>" for s in config.SLAVES])
+
+    # --- RabbitMQ rows ---
+    rmq_rows = f"""
+    <tr>
+        <td><code>{queue_info.get('fila_principal', config.RABBITMQ_QUEUE)}</code></td>
+        <td><strong style="color:#fff;">{queue_info.get('mensagens_pendentes', 0)}</strong></td>
+        <td>Fila principal</td>
+    </tr>
+    <tr>
+        <td><code>{queue_info.get('dlq', config.RABBITMQ_DLQ)}</code></td>
+        <td><strong style="color:#ef4444;">{queue_info.get('mensagens_dlq', 0)}</strong></td>
+        <td>Dead-Letter Queue (erros)</td>
+    </tr>
+    """
+
+    # --- Replication rows ---
+    rep_rows = ""
+    for s in replication:
+        io = s.get("io_running", "?")
+        sql_r = s.get("sql_running", "?")
+        lag = s.get("seconds_behind", "?")
+        err = s.get("erro", s.get("last_error", ""))
+        ok = s.get("online") and str(io).upper() == "YES" and str(sql_r).upper() == "YES"
+        badge = '<span class="badge badge-green">OK</span>' if ok else '<span class="badge badge-red">FALHA</span>'
+        rep_rows += f"""
+        <tr>
+            <td><code>{s['host']}</code></td>
+            <td>{badge}</td>
+            <td style="font-family:var(--font-mono);">{io}</td>
+            <td style="font-family:var(--font-mono);">{sql_r}</td>
+            <td style="font-family:var(--font-mono);">{lag}s</td>
+            <td style="color:var(--accent-red); font-size:0.8rem;">{err}</td>
+        </tr>
+        """
 
     return f"""
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="10">
         <title>Status da Infraestrutura — AgroData</title>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
         {BASE_CSS}
@@ -221,7 +409,10 @@ def status():
         <div class="container">
             <a href="/" class="back-link">&larr; Voltar ao Painel</a>
             <header>
-                <h1 class="brand-title">Status do Cluster</h1>
+                <div>
+                    <h1 class="brand-title">Status do Cluster</h1>
+                    <p class="brand-subtitle">Atualiza automaticamente a cada 10s</p>
+                </div>
             </header>
 
             <div class="card">
@@ -229,22 +420,50 @@ def status():
                     <h2 class="card-title" style="margin:0;">Mensageria RabbitMQ</h2>
                     {badge_rmq}
                 </div>
-                <p style="color: var(--text-secondary);">Mensagens Pendentes na Fila: <strong style="color: #fff; font-family: var(--font-mono);">{queue_info.get('mensagens_pendentes', 0)}</strong></p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Mensagens</th>
+                                <th>Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>{rmq_rows}</tbody>
+                    </table>
+                </div>
+                <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-secondary);">
+                    Painel completo: <a href="http://localhost:15672" target="_blank" style="color: var(--accent-blue);">RabbitMQ Management UI</a>
+                </p>
             </div>
 
             <div class="card">
-                <h2 class="card-title">Cluster MySQL (Master / Slaves)</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Escrita (Master): <code>{config.MASTER}</code></p>
-                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Leitura (Slaves Configurados):</p>
-                <ul style="color: var(--text-primary); padding-left: 1.2rem;">
-                    {slaves_list}
-                </ul>
+                <h2 class="card-title">Replicação MySQL (Master → Slaves)</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    Escrita (Master): <code>{config.MASTER}</code>
+                </p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Slave</th>
+                                <th>Status</th>
+                                <th>IO Thread</th>
+                                <th>SQL Thread</th>
+                                <th>Lag</th>
+                                <th>Último Erro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rep_rows if rep_rows else '<tr><td colspan="6" style="text-align:center;padding:1.5rem;">Nenhum slave encontrado.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </body>
     </html>
     """
-
 
 @app.get("/dados/resumo", response_class=HTMLResponse, summary="Consultar dados coletados (Leitura via Slaves)")
 def dados_resumo():
@@ -319,7 +538,6 @@ def dados_resumo():
     </body>
     </html>
     """
-
 
 @app.get("/coletas", response_class=HTMLResponse, summary="Consultar logs das coletas dos Workers")
 def logs_coletas():

@@ -6,9 +6,11 @@ RABBITMQ_USER = os.getenv("RABBITMQ_DEFAULT_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_DEFAULT_PASS", "guest")
 RABBITMQ_QUEUE = "sidra_tasks"
 RABBITMQ_DLQ = "sidra_tasks_dlq"
+RABBITMQ_DLX = "dlx"
 
 MYSQL_USER = os.getenv("MYSQL_USER", "agro")
 MYSQL_PASS = os.getenv("MYSQL_PASSWORD", "agropass")
+MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD", "rootpass")
 MYSQL_DB = os.getenv("MYSQL_DATABASE", "agrodata")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 

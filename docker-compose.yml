@@ -135,6 +135,13 @@ services:
       context: ./manager
       dockerfile: Dockerfile
     container_name: agrodata-manager
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     ports:
       - "${MANAGER_PORT:-8000}:8000"
     environment:
@@ -173,6 +180,13 @@ services:
       context: ./worker
       dockerfile: Dockerfile
     container_name: agrodata-worker1
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     environment:
       WORKER_ID: worker1
       WORKER_THREADS: ${WORKER_THREADS:-4}
@@ -201,6 +215,13 @@ services:
       context: ./worker
       dockerfile: Dockerfile
     container_name: agrodata-worker2
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     environment:
       WORKER_ID: worker2
       WORKER_THREADS: ${WORKER_THREADS:-4}
@@ -229,6 +250,13 @@ services:
       context: ./worker
       dockerfile: Dockerfile
     container_name: agrodata-worker3
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     environment:
       WORKER_ID: worker3
       WORKER_THREADS: ${WORKER_THREADS:-4}
