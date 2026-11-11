@@ -48,8 +48,8 @@ SIDRA API (IBGE)
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/jpeodr/ecossistema-distribuido.git
-cd ecossistema-distribuido
+git clone https://github.com/KanagawaZz/Atividade-Sistema-distribu-do-apiIBGE.git
+cd Atividade-Sistema-distribu-do-apiIBGE
 ```
 
 ### 2. Subir todo o ecossistema

@@ -1,120 +1,39 @@
-﻿# =============================================================================
-# AgroData Distribuído — Configuração da Replicação MySQL Master -> Slaves
-# Script para Windows PowerShell
-# =============================================================================
-param(
-    [switch]$Test
-)
+# ============================================================
+# Versao PowerShell do setup de replicacao (Windows).
+# Uso:  powershell -ExecutionPolicy Bypass -File scripts/setup_replication.ps1
+# ============================================================
+$Master = "mysql_master"
+$Slaves = @("mysql_slave1", "mysql_slave2", "mysql_slave3")
+$RootPass = if ($env:MYSQL_ROOT_PASSWORD) { $env:MYSQL_ROOT_PASSWORD } else { "rootpassword" }
 
-$ErrorActionPreference = "Stop"
+Write-Host ">>> Aguardando o Master responder..."
+do {
+  docker exec -e MYSQL_PWD="$RootPass" $Master mysqladmin ping -h localhost --silent 2>$null
+  if ($LASTEXITCODE -ne 0) { Start-Sleep -Seconds 2 }
+} while ($LASTEXITCODE -ne 0)
 
-if (Test-Path ".env") {
-    Get-Content ".env" | ForEach-Object {
-        $line = $_.Trim()
-        if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
-            $parts = $line.Split("=", 2)
-            [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), "Process")
-        }
-    }
+# Garante o plugin de autenticacao compativel para o usuario de replicacao
+docker exec -e MYSQL_PWD="$RootPass" $Master mysql -uroot -e "ALTER USER IF EXISTS 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpassword'; FLUSH PRIVILEGES;" 2>$null
+Write-Host ">>> Master OK."
+
+foreach ($Slave in $Slaves) {
+  Write-Host ">>> Configurando replicacao em $Slave ..."
+  do {
+    docker exec -e MYSQL_PWD="$RootPass" $Slave mysqladmin ping -h localhost --silent 2>$null
+    if ($LASTEXITCODE -ne 0) { Start-Sleep -Seconds 2 }
+  } while ($LASTEXITCODE -ne 0)
+
+  # Remove appuser local para evitar conflito com a replicacao do binlog do Master
+  $sql = "STOP REPLICA; DROP USER IF EXISTS 'appuser'@'%'; CHANGE REPLICATION SOURCE TO SOURCE_HOST='$Master', SOURCE_USER='repl', SOURCE_PASSWORD='replpassword', SOURCE_AUTO_POSITION=1; START REPLICA;"
+  docker exec -e MYSQL_PWD="$RootPass" $Slave mysql -uroot -e $sql 2>$null
+  Write-Host ">>> $Slave configurado."
 }
 
-$RootPass = if ($env:MYSQL_ROOT_PASSWORD) { $env:MYSQL_ROOT_PASSWORD } else { "rootpass" }
-$ReplUser = if ($env:MYSQL_REPL_USER) { $env:MYSQL_REPL_USER } else { "repl" }
-$ReplPass = if ($env:MYSQL_REPL_PASSWORD) { $env:MYSQL_REPL_PASSWORD } else { "replpass" }
-$MasterContainer = "agrodata-mysql-master"
-$MasterHost = "mysql_master"
-$Slaves = @("agrodata-mysql-slave1", "agrodata-mysql-slave2", "agrodata-mysql-slave3")
-
-Write-Host "========================================================================" -ForegroundColor Cyan
-Write-Host " AgroData Distribuído — Configurando Replicação MySQL (GTID)" -ForegroundColor Cyan
-Write-Host "========================================================================" -ForegroundColor Cyan
-
-function Wait-MySqlReady {
-    param([string]$Container)
-    Write-Host -NoNewline "Aguardando $Container ficar pronto"
-    for ($i = 0; $i -lt 60; $i++) {
-        $null = docker exec -e MYSQL_PWD="$RootPass" $Container mysqladmin ping -uroot --silent 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host " [OK]" -ForegroundColor Green
-            return
-        }
-        Write-Host -NoNewline "."
-        Start-Sleep -Seconds 2
-    }
-    Write-Host " [ERRO: timeout aguardando $Container]" -ForegroundColor Red
-    exit 1
+Write-Host ""
+Write-Host ">>> Status da replicacao:"
+foreach ($Slave in $Slaves) {
+  Write-Host "--- $Slave ---"
+  docker exec -e MYSQL_PWD="$RootPass" $Slave mysql -uroot -e "SHOW REPLICA STATUS\G" 2>$null | Select-String "Replica_IO_Running|Replica_SQL_Running|Seconds_Behind_Source"
 }
-
-# 1. Aguarda Master e Slaves ficarem operacionais
-Wait-MySqlReady -Container $MasterContainer
-foreach ($slave in $Slaves) {
-    Wait-MySqlReady -Container $slave
-}
-
-# 2. Garante schema e usuário de replicação no Master
-Write-Host "`n-> Garantindo schema e usuário de replicação no Master ($MasterContainer)..." -ForegroundColor Yellow
-Get-Content -Raw "scripts/init_master.sql" | docker exec -e MYSQL_PWD="$RootPass" -i $MasterContainer mysql -uroot
-
-# 3. Aponta cada Slave para o Master via GTID
-foreach ($slave in $Slaves) {
-    Write-Host "`n-> Configurando replicação em $slave..." -ForegroundColor Yellow
-
-    $sql = @"
-STOP REPLICA;
-RESET REPLICA ALL;
-RESET MASTER;
-CHANGE REPLICATION SOURCE TO
-  SOURCE_HOST='$MasterHost',
-  SOURCE_PORT=3306,
-  SOURCE_USER='$ReplUser',
-  SOURCE_PASSWORD='$ReplPass',
-  SOURCE_AUTO_POSITION=1,
-  GET_SOURCE_PUBLIC_KEY=1;
-START REPLICA;
-SET GLOBAL read_only = ON;
-"@
-    docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -e $sql
-}
-
-# 4. Aguarda sincronização inicial dos dados
-Start-Sleep -Seconds 3
-
-Write-Host "`n========================================================================" -ForegroundColor Cyan
-Write-Host " Status da Replicação nos Slaves" -ForegroundColor Cyan
-Write-Host "========================================================================" -ForegroundColor Cyan
-
-foreach ($slave in $Slaves) {
-    Write-Host "--- $slave ---" -ForegroundColor Green
-    $status = docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -e "SHOW REPLICA STATUS\G" 2>$null
-    $status | Select-String -Pattern "Replica_IO_State:|Source_Host:|Replica_IO_Running:|Replica_SQL_Running:|Seconds_Behind_Source:|Last_Error:" | ForEach-Object {
-        Write-Host $_.Line
-    }
-    Write-Host ""
-}
-
-Write-Host "Replicação configurada com sucesso!" -ForegroundColor Green
-
-# 5. Executa teste de gravação no Master e leitura nos Slaves
-if ($Test) {
-    Write-Host "`n========================================================================" -ForegroundColor Cyan
-    Write-Host " Testando Replicação: Inserindo registro no Master e lendo nos Slaves" -ForegroundColor Cyan
-    Write-Host "========================================================================" -ForegroundColor Cyan
-
-    $insertSql = @"
-INSERT INTO producao_agricola (uf, produto, periodo, producao, rendimento, area_plantada, area_colhida, worker_id)
-VALUES ('MT', 'soja', '2025', 45000000.00, 3600.00, 12500000.00, 12500000.00, 'test-replication')
-ON DUPLICATE KEY UPDATE
-  producao = VALUES(producao),
-  rendimento = VALUES(rendimento),
-  area_plantada = VALUES(area_plantada),
-  area_colhida = VALUES(area_colhida),
-  worker_id = VALUES(worker_id);
-"@
-    docker exec -e MYSQL_PWD="$RootPass" $MasterContainer mysql -uroot -D agrodata -e $insertSql
-    Start-Sleep -Seconds 1
-
-    foreach ($slave in $Slaves) {
-        Write-Host "--- Dados replicados em $slave ---" -ForegroundColor Green
-        docker exec -e MYSQL_PWD="$RootPass" $slave mysql -uroot -D agrodata -e "SELECT id, uf, produto, periodo, producao, rendimento, worker_id, coletado_em FROM producao_agricola WHERE worker_id = 'test-replication';"
-    }
-}
+Write-Host ""
+Write-Host ">>> Replicacao ativa! IO e SQL threads devem estar em 'Yes'."

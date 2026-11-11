@@ -1,285 +1,196 @@
-name: agrodata
-
 services:
+  # ============================================================
+  # MENSAGERIA - RabbitMQ (espinha dorsal da comunicacao)
+  # ============================================================
   rabbitmq:
     image: rabbitmq:3.13-management
-    container_name: agrodata-rabbitmq
+    container_name: rabbitmq
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Painel de gerenciamento
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    networks:
+      - app_network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 5s
-      timeout: 5s
+      interval: 15s
+      timeout: 10s
       retries: 5
-    networks:
-      - agrodata_net
 
+  # ============================================================
+  # BANCO DE DADOS - 1 Master (escrita) + 3 Slaves (leitura)
+  # ============================================================
   mysql_master:
     image: mysql:8.0
-    container_name: agrodata-mysql-master
-    command:
-      - --server-id=1
-      - --log-bin=mysql-bin
-      - --binlog-format=ROW
-      - --gtid-mode=ON
-      - --enforce-gtid-consistency=ON
-      - --log-replica-updates=ON
-      - --default-authentication-plugin=mysql_native_password
+    container_name: mysql_master
     ports:
-      - "${MYSQL_MASTER_PORT:-3310}:3306"
+      - "${MYSQL_MASTER_HOST_PORT:-3310}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
-      MYSQL_USER: ${MYSQL_USER:-agro}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: agrodb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    command: >
+      --server-id=1
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
     volumes:
-      - ./scripts/init_master.sql:/docker-entrypoint-initdb.d/init_master.sql:ro
+      - master_data:/var/lib/mysql
+      - ./scripts/init_master.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - agrodata_net
 
   mysql_slave1:
     image: mysql:8.0
-    container_name: agrodata-mysql-slave1
-    command:
-      - --server-id=2
-      - --log-bin=mysql-bin
-      - --binlog-format=ROW
-      - --relay-log=relay-bin
-      - --gtid-mode=ON
-      - --enforce-gtid-consistency=ON
-      - --log-replica-updates=ON
-      - --read-only=ON
-      - --default-authentication-plugin=mysql_native_password
+    container_name: mysql_slave1
     ports:
-      - "${MYSQL_SLAVE1_PORT:-3307}:3306"
+      - "3307:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: agrodb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    command: >
+      --server-id=2
+      --read-only=1
+      --log-bin=mysql-bin
+      --relay-log=mysql-relay-bin
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --skip-replica-start
+    volumes:
+      - slave1_data:/var/lib/mysql
+    networks:
+      - app_network
     depends_on:
       mysql_master:
         condition: service_healthy
-    networks:
-      - agrodata_net
 
   mysql_slave2:
     image: mysql:8.0
-    container_name: agrodata-mysql-slave2
-    command:
-      - --server-id=3
-      - --log-bin=mysql-bin
-      - --binlog-format=ROW
-      - --relay-log=relay-bin
-      - --gtid-mode=ON
-      - --enforce-gtid-consistency=ON
-      - --log-replica-updates=ON
-      - --read-only=ON
-      - --default-authentication-plugin=mysql_native_password
+    container_name: mysql_slave2
     ports:
-      - "${MYSQL_SLAVE2_PORT:-3308}:3306"
+      - "3308:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: agrodb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    command: >
+      --server-id=3
+      --read-only=1
+      --log-bin=mysql-bin
+      --relay-log=mysql-relay-bin
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --skip-replica-start
+    volumes:
+      - slave2_data:/var/lib/mysql
+    networks:
+      - app_network
     depends_on:
       mysql_master:
         condition: service_healthy
-    networks:
-      - agrodata_net
 
   mysql_slave3:
     image: mysql:8.0
-    container_name: agrodata-mysql-slave3
-    command:
-      - --server-id=4
-      - --log-bin=mysql-bin
-      - --binlog-format=ROW
-      - --relay-log=relay-bin
-      - --gtid-mode=ON
-      - --enforce-gtid-consistency=ON
-      - --log-replica-updates=ON
-      - --read-only=ON
-      - --default-authentication-plugin=mysql_native_password
+    container_name: mysql_slave3
     ports:
-      - "${MYSQL_SLAVE3_PORT:-3309}:3306"
+      - "3309:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: agrodb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    command: >
+      --server-id=4
+      --read-only=1
+      --log-bin=mysql-bin
+      --relay-log=mysql-relay-bin
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --skip-replica-start
+    volumes:
+      - slave3_data:/var/lib/mysql
+    networks:
+      - app_network
     depends_on:
       mysql_master:
         condition: service_healthy
-    networks:
-      - agrodata_net
 
+  # ============================================================
+  # NO MANAGER - coordena a coleta, fatia o trabalho e enfileira
+  # ============================================================
   manager:
-    build:
-      context: ./manager
-      dockerfile: Dockerfile
-    container_name: agrodata-manager
-    restart: on-failure
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+    build: ./manager
+    container_name: manager
     ports:
-      - "${MANAGER_PORT:-8000}:8000"
+      - "8000:8000"
     environment:
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
       MYSQL_MASTER_HOST: mysql_master
-      MYSQL_SLAVE1_HOST: mysql_slave1
-      MYSQL_SLAVE2_HOST: mysql_slave2
-      MYSQL_SLAVE3_HOST: mysql_slave3
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
-      MYSQL_USER: ${MYSQL_USER:-agro}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_SLAVE_HOSTS: mysql_slave1,mysql_slave2,mysql_slave3
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: agrodb
       SIDRA_TABELA: ${SIDRA_TABELA:-6588}
-      SIDRA_PRODUTOS: ${SIDRA_PRODUTOS:-soja,milho,arroz,feijao,trigo,cafe}
-      SIDRA_PERIODOS: ${SIDRA_PERIODOS:-2023,2024,2025}
+      SIDRA_PERIODOS: ${SIDRA_PERIODOS:-last 12}
+      SIDRA_VARIAVEIS: ${SIDRA_VARIAVEIS:-35,36,109,216}
+      SIDRA_PRODUTOS: ${SIDRA_PRODUTOS:-39443,39441,39442,39456,39432,39454,39436,39445,39467,39429}
+    networks:
+      - app_network
     depends_on:
       rabbitmq:
         condition: service_healthy
       mysql_master:
         condition: service_healthy
-      mysql_slave1:
-        condition: service_healthy
-      mysql_slave2:
-        condition: service_healthy
-      mysql_slave3:
-        condition: service_healthy
-    networks:
-      - agrodata_net
 
-  worker1:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
-    container_name: agrodata-worker1
-    restart: on-failure
-    healthcheck:
-      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+  # ============================================================
+  # NOS WORKERS - processamento distribuido (3 replicas)
+  # Cada worker consome tarefas da fila e processa em threads
+  # ============================================================
+  worker:
+    build: ./worker
     environment:
-      WORKER_ID: worker1
-      WORKER_THREADS: ${WORKER_THREADS:-4}
-      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
-      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
       MYSQL_MASTER_HOST: mysql_master
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
-      MYSQL_USER: ${MYSQL_USER:-agro}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+      MYSQL_DATABASE: agrodb
       SIDRA_TABELA: ${SIDRA_TABELA:-6588}
+      SIDRA_PERIODOS: ${SIDRA_PERIODOS:-last 12}
+      SIDRA_VARIAVEIS: ${SIDRA_VARIAVEIS:-35,36,109,216}
+      WORKER_THREADS: ${WORKER_THREADS:-4}
+    networks:
+      - app_network
     depends_on:
       rabbitmq:
         condition: service_healthy
       mysql_master:
         condition: service_healthy
-    networks:
-      - agrodata_net
-
-  worker2:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
-    container_name: agrodata-worker2
-    restart: on-failure
-    healthcheck:
-      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    environment:
-      WORKER_ID: worker2
-      WORKER_THREADS: ${WORKER_THREADS:-4}
-      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
-      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
-      MYSQL_MASTER_HOST: mysql_master
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
-      MYSQL_USER: ${MYSQL_USER:-agro}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
-      SIDRA_TABELA: ${SIDRA_TABELA:-6588}
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mysql_master:
-        condition: service_healthy
-    networks:
-      - agrodata_net
-
-  worker3:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
-    container_name: agrodata-worker3
-    restart: on-failure
-    healthcheck:
-      test: ["CMD", "python", "-c", "import pika, os; pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST','rabbitmq'), port=int(os.getenv('RABBITMQ_PORT','5672')), credentials=pika.PlainCredentials(os.getenv('RABBITMQ_DEFAULT_USER','guest'), os.getenv('RABBITMQ_DEFAULT_PASS','guest')), connection_attempts=1)).close()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    environment:
-      WORKER_ID: worker3
-      WORKER_THREADS: ${WORKER_THREADS:-4}
-      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
-      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
-      MYSQL_MASTER_HOST: mysql_master
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
-      MYSQL_USER: ${MYSQL_USER:-agro}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
-      SIDRA_TABELA: ${SIDRA_TABELA:-6588}
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mysql_master:
-        condition: service_healthy
-    networks:
-      - agrodata_net
+    deploy:
+      replicas: 3
 
 networks:
-  agrodata_net:
+  app_network:
     driver: bridge
+
+volumes:
+  master_data:
+  slave1_data:
+  slave2_data:
+  slave3_data:

@@ -1,68 +1,89 @@
-import pika
+"""Producer RabbitMQ do Manager.
+
+Publica as fatias de trabalho (uma tarefa por UF) na fila `sidra_tasks`.
+A fila e duravel e possui Dead Letter Queue para tarefas que falharem
+repetidamente nos workers (padrao visto em aula).
+"""
 import json
-import datetime
-from app.config import (
-    RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASS,
-    RABBITMQ_QUEUE, RABBITMQ_DLQ, UFS, SIDRA_TABELA, SIDRA_PRODUTOS, SIDRA_PERIODOS
-)
+import time
+import uuid
 
-def publicar_tarefas() -> dict:
-    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-    try:
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=RABBITMQ_HOST,
-                port=RABBITMQ_PORT,
-                credentials=credentials,
-                connection_attempts=5,
-                retry_delay=2
-            )
-        )
-    except Exception as e:
-        return {"status": "erro", "mensagem": f"Falha ao conectar no RabbitMQ: {e}"}
+import pika
 
-    channel = connection.channel()
+from . import config
 
-    channel.exchange_declare(exchange='dlx', exchange_type='direct', durable=True)
-    channel.queue_declare(queue=RABBITMQ_DLQ, durable=True)
-    channel.queue_bind(exchange='dlx', queue=RABBITMQ_DLQ, routing_key='sidra_tasks')
 
+def _conectar() -> pika.BlockingConnection:
+    credenciais = pika.PlainCredentials(config.RABBITMQ_USER, config.RABBITMQ_PASS)
+    parametros = pika.ConnectionParameters(
+        host=config.RABBITMQ_HOST, credentials=credenciais, heartbeat=60
+    )
+    return pika.BlockingConnection(parametros)
+
+
+def declarar_topologia(channel: pika.adapters.blocking_connection.BlockingChannel) -> None:
+    """Declara a fila de tarefas (duravel) e sua DLQ."""
+    channel.queue_declare(queue=config.FILA_DLQ, durable=True)
     channel.queue_declare(
-        queue=RABBITMQ_QUEUE,
+        queue=config.FILA_TAREFAS,
         durable=True,
         arguments={
-            'x-dead-letter-exchange': 'dlx',
-            'x-dead-letter-routing-key': 'sidra_tasks'
-        }
+            "x-dead-letter-exchange": "",
+            "x-dead-letter-routing-key": config.FILA_DLQ,
+            "x-message-ttl": 600000,  # 10 min na fila
+        },
     )
 
-    publicadas = 0
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    for uf in UFS:
-        payload = {
-            "uf": uf,
-            "tabela": SIDRA_TABELA,
-            "produtos": SIDRA_PRODUTOS,
-            "periodos": SIDRA_PERIODOS,
-            "timestamp": timestamp
+def publicar_coleta(tarefa_id: str | None = None) -> dict:
+    """Fatia a coleta da LSPA em 1 tarefa por UF e publica na fila.
+
+    Estrategia de participonamento: PARALELISMO DE DADOS — cada worker
+    recebe um recorte territorial (UF) e processa todos os produtos e
+    variaveis daquele recorte em threads internas.
+    """
+    tarefa_id = tarefa_id or str(uuid.uuid4())
+    conexao = _conectar()
+    canal = conexao.channel()
+    declarar_topologia(canal)
+
+    total = 0
+    for uf_cod, uf_nome in config.UFS.items():
+        mensagem = {
+            "id": str(uuid.uuid4()),
+            "tarefa_id": tarefa_id,
+            "tipo": "COLETA_UF",
+            "uf_cod": uf_cod,
+            "uf_nome": uf_nome,
+            "tabela": config.SIDRA_TABELA,
+            "periodos": config.SIDRA_PERIODOS,
+            "variaveis": config.SIDRA_VARIAVEIS,
+            "produtos": config.SIDRA_PRODUTOS,
+            "timestamp": time.time(),
         }
-
-        channel.basic_publish(
-            exchange='',
-            routing_key=RABBITMQ_QUEUE,
-            body=json.dumps(payload, ensure_ascii=False),
+        canal.basic_publish(
+            exchange="",
+            routing_key=config.FILA_TAREFAS,
+            body=json.dumps(mensagem, ensure_ascii=False),
             properties=pika.BasicProperties(
-                delivery_mode=2,  
-                content_type='application/json'
-            )
+                delivery_mode=2,  # mensagem persistente
+                content_type="application/json",
+            ),
         )
-        publicadas += 1
+        total += 1
 
-    connection.close()
+    conexao.close()
+    return {"tarefa_id": tarefa_id, "tarefas_publicadas": total}
 
-    return {
-        "status": "sucesso",
-        "mensagem": f"{publicadas} tarefas enviadas para a fila '{RABBITMQ_QUEUE}'.",
-        "total_tarefas": publicadas
-    }
+
+def profundidade_filas() -> dict:
+    """Retorna quantas mensagens estao pendentes em cada fila."""
+    conexao = _conectar()
+    canal = conexao.channel()
+    declarar_topologia(canal)
+    filas = {}
+    for nome in (config.FILA_TAREFAS, config.FILA_DLQ):
+        declarada = canal.queue_declare(queue=nome, durable=True, passive=True)
+        filas[nome] = declarada.method.message_count
+    conexao.close()
+    return filas
