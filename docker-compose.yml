@@ -169,14 +169,25 @@ services:
       - agrodata_net
 
   worker1:
-    image: python:3.12-slim
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
     container_name: agrodata-worker1
-    command: ["sleep", "infinity"]
     environment:
       WORKER_ID: worker1
       WORKER_THREADS: ${WORKER_THREADS:-4}
+      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
+      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
       RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
       MYSQL_MASTER_HOST: mysql_master
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
+      MYSQL_USER: ${MYSQL_USER:-agro}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+      SIDRA_TABELA: ${SIDRA_TABELA:-6588}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -186,14 +197,25 @@ services:
       - agrodata_net
 
   worker2:
-    image: python:3.12-slim
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
     container_name: agrodata-worker2
-    command: ["sleep", "infinity"]
     environment:
       WORKER_ID: worker2
       WORKER_THREADS: ${WORKER_THREADS:-4}
+      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
+      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
       RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
       MYSQL_MASTER_HOST: mysql_master
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
+      MYSQL_USER: ${MYSQL_USER:-agro}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+      SIDRA_TABELA: ${SIDRA_TABELA:-6588}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -203,14 +225,25 @@ services:
       - agrodata_net
 
   worker3:
-    image: python:3.12-slim
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
     container_name: agrodata-worker3
-    command: ["sleep", "infinity"]
     environment:
       WORKER_ID: worker3
       WORKER_THREADS: ${WORKER_THREADS:-4}
+      WORKER_MAX_TENTATIVAS: ${WORKER_MAX_TENTATIVAS:-2}
+      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-2}
       RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
       MYSQL_MASTER_HOST: mysql_master
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-agrodata}
+      MYSQL_USER: ${MYSQL_USER:-agro}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agropass}
+      SIDRA_TABELA: ${SIDRA_TABELA:-6588}
     depends_on:
       rabbitmq:
         condition: service_healthy
