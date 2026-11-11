@@ -21,8 +21,10 @@ from app import config
 
 log = logging.getLogger(__name__)
 
-# Identificação educada exigida pelos serviços do IBGE
-HTTP_HEADERS = {"User-Agent": "AgroDataDistribuido/1.0 (projeto acadêmico FATEC)"}
+# Identificação educada exigida pelos serviços do IBGE.
+# ATENÇÃO: deve conter apenas ASCII. Headers HTTP não admitem bytes não-ASCII
+# (RFC 7230) e o Cloudflare do IBGE responde 403 a User-Agents com acentos.
+HTTP_HEADERS = {"User-Agent": "AgroDataDistribuido/1.0 (projeto academico FATEC)"}
 
 
 class SidraErroParametro(Exception):
